@@ -1,0 +1,41 @@
+expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 64
+  Ny_lvl: 64
+  Nz_lvl: 64
+  Nx_eval: 64
+  Ny_eval: 64
+  Nz_eval: 64
+solver:
+  Nx_tr: 32
+  Ny_tr: 32
+  Nz_tr: 32
+  num_epochs: 1000
+  batch_size: 32768
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints

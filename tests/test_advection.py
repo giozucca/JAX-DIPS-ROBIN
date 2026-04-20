@@ -47,12 +47,20 @@ from jax_dips.domain import mesh
 from jax_dips.geometry import geometric_integrations
 from jax_dips.solvers.advection import solver_advection
 
+import os 
+print("Current working directory:", os.getcwd())
 
-@hydra.main(config_path="confs", config_name="advection", version_base="1.1")
-def test_spinning_sphere(cfg: DictConfig):
+
+def test_spinning_sphere(monkeypatch):
+    monkeypatch.setattr(sys,'argv',['spinning_sphere.py'])
+    spinning_sphere()
+
+@hydra.main(config_path=os.path.join(os.path.dirname(__file__),"confs"), config_name="advection", version_base="1.1")
+def spinning_sphere(cfg: DictConfig):
+    print(OmegaConf.to_yaml(cfg))
     logger.info(f"Starting {__file__}")
     logger.info(OmegaConf.to_yaml(cfg))
-
+     
     dim = i32(3)
     xmin = ymin = zmin = f32(cfg.gridstates.Lmin)
     xmax = ymax = zmax = f32(cfg.gridstates.Lmax)
@@ -94,6 +102,7 @@ def test_spinning_sphere(cfg: DictConfig):
         y = r[1]
         z = r[2]
         return jnp.sqrt(x**2 + (y - 1.0) ** 2 + z**2) - 0.5
+
 
     (
         init_fn,
@@ -177,3 +186,5 @@ def test_spinning_sphere(cfg: DictConfig):
 
 if __name__ == "__main__":
     test_spinning_sphere()
+    
+   

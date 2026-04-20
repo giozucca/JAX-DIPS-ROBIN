@@ -95,6 +95,14 @@ def sphere():
         n_vec = normal_fn(r)
         return jnp.dot(vec_1 - vec_2, n_vec) * (-1.0)
 
+
+    # @jit
+    # def g_fn(r):    # For Robin BC
+    #     return 1
+    # @jit
+    # def alphaRobin(r): # For Robin BC
+    #     return 1
+
     @jit
     def k_m_fn(r):
         r"""
@@ -154,6 +162,8 @@ def sphere():
 
         return laplacian_p_fn(r) * (-1.0)
 
+
+
     @jit
     def f_m_fn(r):
         x = r[0]
@@ -184,6 +194,172 @@ def sphere():
         exact_sol_p_fn,
         evaluate_exact_solution_fn,
     )
+
+#####################################################
+#
+#   Sphere Interface with Robin
+#
+#####################################################
+def sphere_Robin():
+    # -- 3d example according to 4.6 in Guittet 2015 (VIM) paper
+    @jit
+    def exact_sol_m_fn(r):
+        x = r[0]
+        y = r[1]
+        z = r[2]
+        return jnp.cos(x)*jnp.sin(y)*jnp.cos(z)
+
+    @jit
+    def exact_sol_p_fn(r):
+        x = r[0]
+        y = r[1]
+        z = r[2]
+        return jnp.cos(x)*jnp.sin(y)*jnp.cos(z)
+
+    @jit
+    def dirichlet_bc_fn(r):
+        return exact_sol_p_fn(r)
+
+    @jit
+    def unperturbed_phi_fn(r):
+        """
+        Level-set function for the interface
+        """
+        x = r[0]
+        y = r[1]
+        z = r[2]
+        return jnp.sqrt(x**2 + y**2 + z**2) - 0.5
+
+    phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
+
+    @jit
+    def evaluate_exact_solution_fn(r):
+        return jnp.where(phi_fn(r) >= 0, exact_sol_p_fn(r), exact_sol_m_fn(r))
+
+    @jit
+    def mu_m_fn(r):
+        r"""
+        Diffusion coefficient function in $\Omega^-$
+        """
+        x = r[0]
+        y = r[1]
+        z = r[2]
+        return 2
+
+    @jit
+    def mu_p_fn(r):
+        r"""
+        Diffusion coefficient function in $\Omega^+$
+        """
+        x = r[0]
+        y = r[1]
+        z = r[2]
+        return 2
+
+        # Changes made: moved the U_ext to be included in the division by norm
+    @jit 
+    def g_m_fn(r):    # For Robin BC
+        x = r[0]
+        y = r[1]
+        z = r[2]
+        # print("WE ARE USING G_M_FN")
+        # import time
+        # time.sleep(2)
+        return ((alphaRobin(r)*jnp.cos(x)*jnp.sin(y)*jnp.cos(z) +
+                - 2*x*jnp.sin(x)*jnp.sin(y)*jnp.cos(z)
+                 + 2*y*jnp.cos(x)*jnp.cos(y)*jnp.cos(z)
+                 - 2*z*jnp.cos(x)*jnp.sin(y)*jnp.sin(z)) / jnp.sqrt(x**2 + y**2 + z**2)) # added the divsion by norm
+
+    @jit
+    def g_p_fn(r):
+        x = r[0]
+        y = r[1]
+        z = r[2]
+        # print("WE ARE USING G_P_FN")
+        # import time
+        # time.sleep(2)
+        return ((alphaRobin(r)*jnp.cos(x)*jnp.sin(y)*jnp.cos(z) +
+                - 2*x*jnp.sin(x)*jnp.sin(y)*jnp.cos(z)
+                 + 2*y*jnp.cos(x)*jnp.cos(y)*jnp.cos(z)
+                 - 2*z*jnp.cos(x)*jnp.sin(y)*jnp.sin(z)) / jnp.sqrt(x**2 + y**2 + z**2) # added the divsion by norm
+                 + alphaRobin(r))
+
+
+    @jit
+    def alphaRobin(r): # For Robin BC
+        return 1
+
+    @jit
+    def k_m_fn(r):
+        r"""
+        Linear term function in $\Omega^-$
+        """
+        return 0.0
+
+    @jit
+    def k_p_fn(r):
+        r"""
+        Linear term function in $\Omega^+$
+        """
+        return 0.0
+
+    @jit
+    def initial_value_fn(r):
+        x = r[0]
+        y = r[1]
+        z = r[2]
+        return 0.0  # evaluate_exact_solution_fn(r)
+
+    @jit
+    def f_m_fn(r):
+        x = r[0]
+        y = r[1]
+        z = r[2]
+        return 6*jnp.cos(x)*jnp.sin(y)*jnp.cos(z) # Changed from -6 to 6
+
+    @jit
+    def f_p_fn(r):
+        x = r[0]
+        y = r[1]
+        z = r[2]
+        return 6*jnp.cos(x)*jnp.sin(y)*jnp.cos(z) # Changed from -6 to 6
+
+    @jit
+    def beta_fn(r):
+        r"""
+        Jump in flux at interface
+        """
+        normal_fn = grad(phi_fn)
+        grad_u_p_fn = grad(exact_sol_p_fn)
+        grad_u_m_fn = grad(exact_sol_m_fn)
+
+        vec_1 = mu_p_fn(r) * grad_u_p_fn(r)
+        vec_2 = mu_m_fn(r) * grad_u_m_fn(r)
+        n_vec = normal_fn(r)
+        return jnp.dot(vec_1 - vec_2, n_vec) * (-1.0)
+
+    return (
+        initial_value_fn,
+        dirichlet_bc_fn,
+        phi_fn,
+        mu_m_fn,
+        mu_p_fn,
+        k_m_fn,
+        k_p_fn,
+        f_m_fn,
+        f_p_fn,
+        alphaRobin,
+        exact_sol_m_fn,
+        exact_sol_p_fn,
+        evaluate_exact_solution_fn,
+        g_m_fn,
+        g_p_fn,
+        beta_fn
+    )
+# We have stopped here.
+# We got rid of some stuff (beta, rename dirichlet), added g+ and g- (need to add to the return)
+# Make sure to look at cfg and setup robin bc cfg before you run (otherwise it will blow up)
+
 
 
 #####################################################
@@ -294,6 +470,12 @@ def star():
         n_vec = normal_fn(r)
         return jnp.nan_to_num(jnp.dot(vec_1 - vec_2, n_vec) * (-1.0))
 
+    @custom_jit
+    def g_fn(r):
+        return 1
+    @custom_jit
+    def alpha_robin(r):
+        return 1
     @custom_jit
     def k_m_fn(r):
         r"""
@@ -480,6 +662,9 @@ def no_jump():
         Jump in solution at interface
         """
         return exact_sol_p_fn(r) - exact_sol_m_fn(r)
+    @jit
+    def alpha_robin(r):
+        return 1
 
     @jit
     def beta_fn(r):
@@ -495,6 +680,9 @@ def no_jump():
         n_vec = normal_fn(r)
         return jnp.dot(vec_1 - vec_2, n_vec)
 
+    @jit
+    def g_fn(r):
+        return 1
     @jit
     def k_m_fn(r):
         r"""

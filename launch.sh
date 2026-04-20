@@ -113,6 +113,7 @@ fi
 DOCKER_CMD="docker run \
     --network host \
     --gpus all \
+    --runtime=nvidia \
     -p ${JUPYTER_PORT}:8888 \
     -v ${DATA_PATH}:${DATA_MOUNT_PATH} \
     -v ${RESULT_PATH}:${RESULT_MOUNT_PATH} \

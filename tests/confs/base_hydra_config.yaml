@@ -4,7 +4,7 @@ defaults:
 
 hydra:
   run:
-    dir: results/${expname}-${now:%Y-%m-%d-%H-%M-%S}
+    dir: .
 
   job_logging:
     formatters:

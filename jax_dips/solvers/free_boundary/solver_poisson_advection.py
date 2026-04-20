@@ -446,7 +446,7 @@ class PoissonAdvectionTrainer:
             boundary *= jnp.where(abs(z - self.zmin) < 1e-6 * dz, 0, 1) * jnp.where(
                 abs(z - self.zmax) < 1e-6 * dz, 0, 1
             )
-            return jnp.where(boundary == 0, True, False)
+            return jnp.where(boundary == 0, True, False) # grid point absolute distance to obj
 
         def evaluate_discretization_lhs_rhs_at_point(point, dx, dy, dz):
             # --- LHS
@@ -459,6 +459,12 @@ class PoissonAdvectionTrainer:
             Vol_cell_nominal = dx * dy * dz
 
             def get_lhs_at_interior_point(point):
+                """
+                ijk, m stands for minus, p stands for plus
+                i.e. ipjk is 'i plus j k'
+
+                FLAG - formula is on page 12
+                """
                 point_ijk = point
                 point_imjk = jnp.array([point[0] - dx, point[1], point[2]], dtype=f32)
                 point_ipjk = jnp.array([point[0] + dx, point[1], point[2]], dtype=f32)

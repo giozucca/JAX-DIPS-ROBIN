@@ -19,11 +19,16 @@ class PoissonSimStateFn:
     k_p_fn: Callable[..., Array]
     f_m_fn: Callable[..., Array]
     f_p_fn: Callable[..., Array]
-    alpha_fn: Callable[..., Array]
-    beta_fn: Callable[..., Array]
-    nonlinear_op_m: Callable[..., T]
-    nonlinear_op_p: Callable[..., T]
+    g_m_fn: Callable[..., Array] = None  # For Robin BC
+    g_p_fn: Callable[..., Array] = None  # For Robin BC
+    alpha_fn: Callable[..., Array] = None
+    beta_fn: Callable[..., Array] = None
+    nonlinear_op_m: Callable[..., T] = None
+    nonlinear_op_p: Callable[..., T] = None
 
+#    g_m_fn: Callable[..., Array]  # For Robin BC
+#     g_p_fn: Callable[..., Array]
+#     alpha_fn: Callable[..., Array]  # For Robin BC
 
 @dataclasses.dataclass
 class PoissonAdvectionSimStateFn:
@@ -75,7 +80,9 @@ class PoissonSimState:
     f_m: Array
     f_p: Array
     alpha: Array
-    beta: Array
+    g_m: Array    # For Robin BC
+    g_p: Array
+    beta_fn: Array
     grad_solution: Array
     grad_normal_solution: Array
 

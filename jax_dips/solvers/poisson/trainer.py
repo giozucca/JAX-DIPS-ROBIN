@@ -62,8 +62,16 @@ InitFn = Callable[
     [GridState, GridState, int, int, int, int, int, int, int, bool, int, str, str, str],
     Tuple[PoissonSimState, SolveFn],
 ]
-Simulator = Tuple[InitFn, SolveFn]
 
+InitFn_Robin = Callable[
+    [GridState, GridState, int, int, int, int, int, int, int, bool, int, str, str, str],
+    Tuple[PoissonSimState, SolveFn],
+]
+
+
+
+Simulator = Tuple[InitFn, SolveFn]
+Simulator_Robin = Tuple[InitFn_Robin, SolveFn]
 
 stop_training = False
 
@@ -192,7 +200,7 @@ class Trainer(Discretization):
         else:
             raise NotImplementedError
 
-        #########################################################################
+        ###################################################################
 
         if optimizer_dict["optimizer_name"] != "lbfgs":
             self.optimizer = get_optimizer(
@@ -223,7 +231,7 @@ class Trainer(Discretization):
             self.params = self.forward.init(rng, x=jnp.array([0.0, 0.0, 0.0]), phi_x=f32(0.1))
             try:
                 logger.info(self.forward.tabulate(rng, x=jnp.array([0.0, 0.0, 0.0]), phi_x=f32(0.1)))
-            except NotImplemented:
+            except (AttributeError, NotImplementedError):
                 print_architecture(self.params)
 
             if model_dict["preconditioner"]["enable"]:
@@ -978,19 +986,19 @@ class Trainer(Discretization):
 
 
 def setup(
-    initial_value_fn: Callable[..., Array],
-    dirichlet_bc_fn: Callable[..., Array],
-    lvl_set_fn: Callable[..., Array],
-    mu_m_fn_: Callable[..., Array],
-    mu_p_fn_: Callable[..., Array],
-    k_m_fn_: Callable[..., Array],
-    k_p_fn_: Callable[..., Array],
-    f_m_fn_: Callable[..., Array],
-    f_p_fn_: Callable[..., Array],
-    alpha_fn_: Callable[..., Array],
-    beta_fn_: Callable[..., Array],
-    nonlinear_op_m=None,
-    nonlinear_op_p=None,
+        initial_value_fn: Callable[..., Array],
+        dirichlet_bc_fn: Callable[..., Array],
+        lvl_set_fn: Callable[..., Array],
+        mu_m_fn_: Callable[..., Array],
+        mu_p_fn_: Callable[..., Array],
+        k_m_fn_: Callable[..., Array],
+        k_p_fn_: Callable[..., Array],
+        f_m_fn_: Callable[..., Array],
+        f_p_fn_: Callable[..., Array],
+        alpha_fn_: Callable[..., Array],
+        beta_fn_: Callable[..., Array],
+        nonlinear_op_m=None,
+        nonlinear_op_p=None,
 ) -> InitFn:
     u_0_fn = vmap(initial_value_fn)
     dir_bc_fn = vmap(dirichlet_bc_fn)
@@ -1026,53 +1034,56 @@ def setup(
         k_p_fn,
         f_m_fn,
         f_p_fn,
-        alpha_fn,
-        beta_fn,
-        nonlinear_op_m,
-        nonlinear_op_p,
+        alpha_fn=alpha_fn,
+        beta_fn=beta_fn,
+        nonlinear_op_m=nonlinear_op_m,
+        nonlinear_op_p=nonlinear_op_p,
     )
 
     def init_fn(
-        lvl_gstate: GridState = None,
-        tr_gstate: GridState = None,
-        eval_gstate: GridState = None,
-        num_epochs: int = 1000,
-        batch_size: int = 131072,
-        algorithm: int = 0,
-        mgrad_over_pgrad_scalefactor: int = 1,
-        multi_gpu: bool = False,
-        checkpoint_interval: int = 1000,
-        checkpoint_dir: str = "./checkpoints",
-        results_dir: str = "./",
-        loss_plot_name: str = "solver_loss",
-        optimizer_dict: dict = {
-            "optimizer_name": "custom",
-            "learning_rate": 1e-3,
-            "sched": {"scheduler_name": "exponential", "decay_rate": 0.9},
-        },
-        model_dict: dict = {
-            "name": None,
-            "model_type": "mlp",
-            "mlp": {
-                "hidden_layers_m": 1,
-                "hidden_dim_m": 1,
-                "activation_m": "jnp.tanh",
-                "hidden_layers_p": 2,
-                "hidden_dim_p": 10,
-                "activation_p": "jnp.tanh",
+            lvl_gstate: GridState = None,
+            tr_gstate: GridState = None,
+            eval_gstate: GridState = None,
+            num_epochs: int = 1000,
+            batch_size: int = 131072,
+            algorithm: int = 0,
+            mgrad_over_pgrad_scalefactor: int = 1,
+            multi_gpu: bool = False,
+            checkpoint_interval: int = 1000,
+            checkpoint_dir: str = "./checkpoints",
+            results_dir: str = "./",
+            loss_plot_name: str = "solver_loss",
+            optimizer_dict: dict = {
+                "optimizer_name": "custom",
+                "learning_rate": 1e-3,
+                "sched": {"scheduler_name": "exponential", "decay_rate": 0.9},
             },
-            "resnet": {
-                "res_blocks_m": 3,
-                "res_dim_m": 40,
-                "activation_m": "nn.tanh",
-                "res_blocks_p": 3,
-                "res_dim_p": 80,
-                "activation_p": "nn.tanh",
+            model_dict: dict = {
+                "name": None,
+                "model_type": "mlp",
+                "mlp": {
+                    "hidden_layers_m": 1,
+                    "hidden_dim_m": 1,
+                    "activation_m": "jnp.tanh",
+                    "hidden_layers_p": 2,
+                    "hidden_dim_p": 10,
+                    "activation_p": "jnp.tanh",
+                },
+                "resnet": {
+                    "res_blocks_m": 3,
+                    "res_dim_m": 40,
+                    "activation_m": "nn.tanh",
+                    "res_blocks_p": 3,
+                    "res_dim_p": 80,
+                    "activation_p": "nn.tanh",
+                },
+                "preconditioner": {
+                    "enable": False,
+                },
             },
-        },
-        restart: bool = False,
-        restart_checkpoint_dir: str = "./checkpoints",
-        print_rate: int = 1,
+            restart: bool = False,
+            restart_checkpoint_dir: str = "./checkpoints",
+            print_rate: int = 1,
     ) -> Tuple[PoissonSimState, SolveFn]:
         R = eval_gstate.R
         PHI = phi_fn(R)
@@ -1130,8 +1141,186 @@ def setup(
             return sim_state
 
         return (
-            PoissonSimState(PHI, U, DIRBC, MU_M, MU_P, K_M, K_P, F_M, F_P, ALPHA, BETA, None, None),
+            PoissonSimState(PHI, U, DIRBC, MU_M, MU_P, K_M, K_P, F_M, F_P, ALPHA, None, None, BETA, None, None),
             solve_fn,
         )
+
+    return init_fn
+
+# gang
+def setup_Robin(
+        initial_value_fn: Callable[..., Array],
+        dirichlet_bc_fn: Callable[..., Array],
+        lvl_set_fn: Callable[..., Array],
+        mu_m_fn_: Callable[..., Array],
+        mu_p_fn_: Callable[..., Array],
+        k_m_fn_: Callable[..., Array],
+        k_p_fn_: Callable[..., Array],
+        f_m_fn_: Callable[..., Array],
+        f_p_fn_: Callable[..., Array],
+        g_m_fn_: Callable[..., Array],
+        g_p_fn_: Callable[..., Array],
+        alpha_fn_: Callable[..., Array],
+        beta_fn_: Callable[..., Array],
+        nonlinear_op_m=None,
+        nonlinear_op_p=None
+) -> InitFn_Robin:
+    u_0_fn = vmap(initial_value_fn)
+    dir_bc_fn = vmap(dirichlet_bc_fn)
+    phi_fn = vmap(lvl_set_fn)
+    mu_m_fn = vmap(mu_m_fn_)
+    mu_p_fn = vmap(mu_p_fn_)
+    k_m_fn = vmap(k_m_fn_)
+    k_p_fn = vmap(k_p_fn_)
+    f_m_fn = vmap(f_m_fn_)
+    f_p_fn = vmap(f_p_fn_)
+    g_m_fn = vmap(g_m_fn_)
+    g_p_fn = vmap(g_p_fn_)
+    alpha_fn = vmap(alpha_fn_)
+    beta_fn = vmap(beta_fn_)
+
+    if nonlinear_op_m is None:
+        logger.warning("nonlinear_op_m(u) is not defined. Setting it to zero.")
+
+        def nonlinear_op_m(x):
+            return 0.0
+
+    if nonlinear_op_p is None:
+        logger.warning("nonlinear_op_m(u) is not defined. Setting it to zero.")
+
+        def nonlinear_op_p(x):
+            return 0.0
+
+    print("Hello-1")
+    sim_state_fn = PoissonSimStateFn(
+        u_0_fn,
+        dir_bc_fn,
+        phi_fn,
+        mu_m_fn,
+        mu_p_fn,
+        k_m_fn,
+        k_p_fn,
+        f_m_fn,
+        f_p_fn,
+        g_m_fn,
+        g_p_fn,
+        alpha_fn,
+        beta_fn,
+        nonlinear_op_m,
+        nonlinear_op_p
+    )
+    print("Hello")
+
+    def init_fn(
+            lvl_gstate: GridState = None,
+            tr_gstate: GridState = None,
+            eval_gstate: GridState = None,
+            num_epochs: int = 1000,
+            batch_size: int = 131072,
+            algorithm: int = 0,
+            mgrad_over_pgrad_scalefactor: int = 1,
+            multi_gpu: bool = False,
+            checkpoint_interval: int = 1000,
+            checkpoint_dir: str = "./checkpoints",
+            results_dir: str = "./",
+            loss_plot_name: str = "solver_loss",
+            optimizer_dict: dict = {
+                "optimizer_name": "custom",
+                "learning_rate": 1e-3,
+                "sched": {"scheduler_name": "exponential", "decay_rate": 0.9},
+            },
+            model_dict: dict = {
+                "name": None,
+                "model_type": "mlp",
+                "mlp": {
+                    "hidden_layers_m": 1,
+                    "hidden_dim_m": 1,
+                    "activation_m": "jnp.tanh",
+                    "hidden_layers_p": 2,
+                    "hidden_dim_p": 10,
+                    "activation_p": "jnp.tanh",
+                },
+                "resnet": {
+                    "res_blocks_m": 3,
+                    "res_dim_m": 40,
+                    "activation_m": "nn.tanh",
+                    "res_blocks_p": 3,
+                    "res_dim_p": 80,
+                    "activation_p": "nn.tanh",
+                },
+                "preconditioner": {
+                    "enable": False,
+                },
+            },
+            restart: bool = False,
+            restart_checkpoint_dir: str = "./checkpoints",
+            print_rate: int = 1,
+    ) -> Tuple[PoissonSimState, SolveFn]:
+        R = eval_gstate.R
+        PHI = phi_fn(R)
+        DIRBC = dir_bc_fn(R)
+        U = u_0_fn(R)
+        MU_M = mu_m_fn(R)
+        MU_P = mu_p_fn(R)
+        K_M = k_m_fn(R)
+        K_P = k_p_fn(R)
+        F_M = f_m_fn(R)
+        F_P = f_p_fn(R)
+        G_M = g_m_fn(R)
+        G_P = g_p_fn(R)
+        ALPHA = alpha_fn(R)
+        BETA = beta_fn(R)
+
+
+
+
+        def solve_fn(sim_state: PoissonSimState) -> PoissonSimState:
+            trainer = Trainer(
+                lvl_gstate,
+                tr_gstate,
+                eval_gstate,
+                sim_state,
+                sim_state_fn,
+                algorithm,
+                mgrad_over_pgrad_scalefactor=mgrad_over_pgrad_scalefactor,
+                lvl_set_fn=lvl_set_fn,
+                num_epochs=num_epochs,
+                multi_gpu=multi_gpu,
+                batch_size=batch_size,
+                checkpoint_dir=checkpoint_dir,
+                checkpoint_interval=checkpoint_interval,
+                results_dir=results_dir,
+                loss_plot_name=loss_plot_name,
+                optimizer_dict=optimizer_dict,
+                restart=restart,
+                restart_checkpoint_dir=restart_checkpoint_dir,
+                print_rate=print_rate,
+                model_dict=model_dict,
+            )
+            (
+                final_solution,
+                grad_u,
+                grad_u_normal_to_interface,
+                epoch_store,
+                loss_epochs,
+            ) = trainer.solve()
+            sim_state = (
+                dataclasses.replace(
+                    sim_state,
+                    solution=final_solution,
+                    grad_solution=grad_u,
+                    grad_normal_solution=grad_u_normal_to_interface,
+                ),
+                epoch_store,
+                loss_epochs,
+            )
+            return sim_state
+        # PoissonSimState(PHI, U, DIRBC, MU_M, MU_P, K_M, K_P, F_M, F_P, ALPHA, BETA, None, None),
+        return (
+            PoissonSimState(PHI, U, DIRBC, MU_M, MU_P, K_M, K_P, F_M, F_P, ALPHA, G_M, G_P, BETA, None, None),
+            solve_fn,
+        )
+
+
 
     return init_fn
