@@ -562,8 +562,11 @@ def poisson_solve_Robin(
 
     rms_err = jnp.square(sim_state.solution - exact_sol).mean() ** 0.5
     L_inf_err = abs(sim_state.solution - exact_sol).max()
-    L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum())
+    L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (Nx_eval*Ny_eval*Nz_eval))
     L2_rel_loss = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (exact_sol**2).sum())
+
+    print(num_epochs)
+    logger.info(f"Num_epochs: {num_epochs}")
 
     logger.info(
         f"Accuracy: \n L_inf : {L_inf_err} \n \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSD error : {rms_err}"
