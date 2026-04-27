@@ -49,6 +49,7 @@ third_party/
 .dotnet
 .hydra
 *.log
+*.vts
 
 # release to PyPI
 dist
