@@ -174,8 +174,13 @@ class Discretization:
         )
         self.compute_gradient_solution = self.compute_gradient_solution_neural_network
 
+        self.robin = self.sim_state_fn.g_p_fn is not None
+
         if precondition == 1:
-            self.compute_Ax_and_b_fn = self.compute_Ax_and_b_preconditioned_fn
+            if self.robin:
+                self.compute_Ax_and_b_fn = self.compute_Ax_and_b_preconditioned_fn_Robin
+            else:
+                self.compute_Ax_and_b_fn = self.compute_Ax_and_b_preconditioned_fn
         elif precondition == 0:
             self.compute_Ax_and_b_fn = self.compute_Ax_and_b_vanilla_fn
 
@@ -453,170 +458,198 @@ class Discretization:
         lhs_rhs = evaluate_discretization_lhs_rhs_at_point(point, dx, dy, dz)
         return lhs_rhs
 
-#     def compute_Ax_and_b_preconditioned_fn_Robin(self, params, point, dx, dy, dz):
-#         """
-#         This function calculates  A @ u for a given vector of unknowns u in the case of a Robin boundary condition
-#         This evaluates the rhs in Au^k=b given estimate u^k.
-#         The purpose would be to define an optimization problem with:
-#
-#         min || A u^k - b ||^2
-#
-#         using autodiff we can compute gradients w.r.t u^k values, and optimize for the solution field.
-#
-#         * PROCEDURE:
-#             first compute u = B:u + r for each node
-#             then use the actual cell geometries (face areas and mu coeffs) to
-#             compute the rhs of the linear system given currently passed-in u vector
-#             for solution estimate.
-#
-#         """
-#
-# #        u_mp_at_point = partial(self.u_mp_fn, params, dx, dy, dz)   # Get the value of u at the current grid point using the BIAS SLOW algorithm (coded at 426 get_u_mp_by_regression_at_point_fn, which calls get_regression_coeffs_at_point where all the computations are done).
-# #        u_m_at_point = to be defined(self.u_mp_fn, params, dx, dy, dz)   # Get the value of u at the current grid point using the BIAS SLOW algorithm (coded at 426 get_u_mp_by_regression_at_point_fn, which calls get_regression_coeffs_at_point where all the computations are done).
-#
-#         def is_box_boundary_point(point):
-#             """
-#             Check if current node is on the boundary of box (i.e. the sides of the computational domain \Omega
-#             """
-#             x, y, z = point
-#             boundary = jnp.where(abs(x - self.xmin) < 1e-6 * dx, 0, 1) * jnp.where(
-#                 abs(x - self.xmax) < 1e-6 * dx, 0, 1
-#             )
-#             boundary *= jnp.where(abs(y - self.ymin) < 1e-6 * dy, 0, 1) * jnp.where(
-#                 abs(y - self.ymax) < 1e-6 * dy, 0, 1
-#             )
-#             boundary *= jnp.where(abs(z - self.zmin) < 1e-6 * dz, 0, 1) * jnp.where(
-#                 abs(z - self.zmax) < 1e-6 * dz, 0, 1
-#             )
-#             return jnp.where(boundary == 0, True, False)
-#
-#         def evaluate_discretization_lhs_rhs_at_point(point, dx, dy, dz):
-#             # --- LHS
-#             #coeffs_ = self.compute_face_centroids_values_plus_minus_at_point(point, dx, dy, dz)
-#             coeffs_ = self.compute_face_centroids_values_minus_at_point(point, dx, dy, dz) # to be defined
-#             coeffs = coeffs_[:12]
-#             precond = self.precond_fn(params, coeffs_)  # TODO learning voxel-level preconditioner
-#
-#             vols = coeffs_[12:14]
-#             V_m_ijk = vols[0]   # Volume of the partial cell in the minus region.
-#             #V_p_ijk = vols[1]    (not used) Volume of the partial cell in the plus  region.
-#             Vol_cell_nominal = dx * dy * dz # Elementary volume
-#
-#             def get_lhs_at_interior_point(point):
-#                 point_ijk = point                                                       # Current point
-#                 point_imjk = jnp.array([point[0] - dx, point[1], point[2]], dtype=f32)  # Coordinate of the grid point to the left.
-#                 point_ipjk = jnp.array([point[0] + dx, point[1], point[2]], dtype=f32)  # Coordinate of the grid point to the right.
-#                 point_ijmk = jnp.array([point[0], point[1] - dy, point[2]], dtype=f32)  # Coordinate of the grid point to the bottom.
-#                 point_ijpk = jnp.array([point[0], point[1] + dy, point[2]], dtype=f32)  # Coordinate of the grid point to the top.
-#                 point_ijkm = jnp.array([point[0], point[1], point[2] - dz], dtype=f32)  # Coordinate of the grid point to the back.
-#                 point_ijkp = jnp.array([point[0], point[1], point[2] + dz], dtype=f32)  # Coordinate of the grid point to the front.
-#
-#                 k_m_ijk = self.k_m_interp_fn(point[jnp.newaxis])    # Reaction coefficient in the minus region.
-#                 #k_p_ijk = self.k_p_interp_fn(point[jnp.newaxis])    # (Likely dont use)Reaction coefficient in the plus  region.
-#
-#
-#                 # rewrite ump at point to be just um at point (only minus side)
-#                 u_m_ijk , u_p_ijk  = u_mp_at_point(point_ijk)               # Current point
-#                 u_m_imjk, u_p_imjk = u_mp_at_point(point_imjk)            # u value at the grid point to the left.
-#                 u_m_ipjk, u_p_ipjk = u_mp_at_point(point_ipjk)            # u value at the grid point to the right.
-#                 u_m_ijmk, u_p_ijmk = u_mp_at_point(point_ijmk)            # u value at the grid point to the bottom
-#                 u_m_ijpk, u_p_ijpk = u_mp_at_point(point_ijpk)            # u value at the grid point to the top.
-#                 u_m_ijkm, u_p_ijkm = u_mp_at_point(point_ijkm)            # u value at the grid point to the back.
-#                 u_m_ijkp, u_p_ijkp = u_mp_at_point(point_ijkp)            # u value at the grid point to the front.
-#
-#                 # \sum_{\pm} k^s_{i,j} u^s_{i,j} u^s_{i,j}, i.e. the first term in (Equation Standard of JAX)
-#
-#                 lhs = k_m_ijk * u_m_ijk * V_m_ijk
-#                 # (dont use) lhs += k_p_ijk * u_p_ijk * V_p_ijk
-#
-#                 # Treating the case of a nonlinear \mu (not done here, i.e. setting it to zero). To do later if needed.
-#                 lhs += self.nonlinear_op_m(u_m_ijk) * V_m_ijk # + self.nonlinear_op_p(u_p_ijk) * V_p_ijk
-#
-#                 # We assume that the coeffs array gives the \mu_^s_{i-\frac12, j} A^s_{i-\frac12, j} / dx, etc. So the following gives
-#                 # all the coefficients of the matrix in front of u_{ijk} in the minus and plus regions:
-#                 # lhs += (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10]) * u_m_ijk + ( # can take out +()upijk
-#                 #         coeffs[1] + coeffs[3] + coeffs[5] + coeffs[7] + coeffs[9] + coeffs[11]
-#                 # ) * u_p_ijk
-#                 lhs += (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10]) * u_m_ijk
-#
-#                 # Extra diagonal coefficients of the linear system, i.e. the matrix A
-#
-#                 # Take out the upimjk
-#
-#                 # lhs = -1.0 + coeffs[i] will be 0 1 2 3 not 0 2 4 6, no plus
-#                 # lhs += -1.0 * coeffs[0] * u_m_imjk #- coeffs[1] * u_p_imjk
-#                 # lhs += -1.0 * coeffs[2] * u_m_ipjk #- coeffs[3] * u_p_ipjk
-#                 # lhs += -1.0 * coeffs[4] * u_m_ijmk #- coeffs[5] * u_p_ijmk
-#                 # lhs += -1.0 * coeffs[6] * u_m_ijpk #- coeffs[7] * u_p_ijpk
-#                 # lhs += -1.0 * coeffs[8] * u_m_ijkm #- coeffs[9] * u_p_ijkm
-#                 # lhs += -1.0 * coeffs[10] * u_m_ijkp #- coeffs[11] * u_p_ijkp
-#
-#                 lhs += -1.0 * coeffs[0] * u_m_imjk
-#                 lhs += -1.0 * coeffs[2] * u_m_ipjk
-#                 lhs += -1.0 * coeffs[4] * u_m_ijmk
-#                 lhs += -1.0 * coeffs[6] * u_m_ijpk
-#                 lhs += -1.0 * coeffs[8] * u_m_ijkm
-#                 lhs += -1.0 * coeffs[10] * u_m_ijkp
-#
-#                 # Impose the Robin boundary condition:
-#                 alpha = 1       # TO BE DEFINED AS A PARAMETER OF THE PROBLEM.
-#                 lhs += alpha * u_m_ijk * LENGTH
-#
-#                 # At this point, the matrix A is defined.
-#                 # Compute the diagonal coefficient of the assembled matrix, which will serve as the (Jacobi) preconditioner.
-#
-#
-#                 # take out KpVp, add alpha L(interface and cell, rewrite coeffs 012345)
-#                 # diag_coeff = (
-#                 #         k_p_ijk * V_p_ijk
-#                 #         + k_m_ijk * V_m_ijk
-#                 #         + (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10])
-#                 #         + (coeffs[1] + coeffs[3] + coeffs[5] + coeffs[7] + coeffs[9] + coeffs[11])
-#                 # )
-#                 diag_coeff = (
-#                         k_m_ijk * V_m_ijk
-#                         + (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10])
-#                 )
-#                 return jnp.array([lhs.reshape(), diag_coeff.reshape()])
-#
-#             def get_lhs_on_box_boundary(point): # Handle the boundary condition at the domain's wall
-#                 phi_boundary = self.phi_interp_fn(point[jnp.newaxis])
-#                 u_boundary = self.solution_at_point_fn(params, point, phi_boundary) # IS THIS GETTING U_BOUNDARY ITSELF OR DEFINING IT USING THE JUMP?????
-#                 lhs = u_boundary * Vol_cell_nominal
-#                 return jnp.array([lhs, Vol_cell_nominal])
-#
-#             lhs_diagcoeff = jnp.where(
-#                 is_box_boundary_point(point),
-#                 get_lhs_on_box_boundary(point),
-#                 get_lhs_at_interior_point(point),
-#             )
-#             lhs, diagcoeff = jnp.split(lhs_diagcoeff, [1], 0)
-#
-#             # --- RHS
-#             def get_rhs_at_interior_point(point):   # Implementation of the right-hand side of (Equation Standard)
-#                 rhs = (
-#                         # self.f_m_interp_fn(point[jnp.newaxis]) * V_m_ijk + self.f_p_interp_fn(point[jnp.newaxis]) * V_p_ijk ## remove the V_p_ijk?
-#                         self.f_m_interp_fn(point[jnp.newaxis]) * V_m_ijk
-#                 )
-#                 rhs += self.beta_integrate_over_interface_at_point(point, dx, dy, dz)
-#                 return rhs
-#
-#             def get_rhs_on_box_boundary(point):     # Impose the boundary condition at the walls of the computational domain.
-#                 return self.dir_bc_fn(point[jnp.newaxis]).reshape() * Vol_cell_nominal
-#
-#             rhs = jnp.where(
-#                 is_box_boundary_point(point),
-#                 get_rhs_on_box_boundary(point),
-#                 get_rhs_at_interior_point(point),
-#             )
-#
-#             # Apply the preconditioning of the linear system:
-#             lhs_over_diag = jnp.nan_to_num(lhs / diagcoeff) * precond   # "precond" is short for "we need to do better but we have not done it yet).
-#             rhs_over_diag = jnp.nan_to_num(rhs / diagcoeff) * precond
-#             return jnp.array([lhs_over_diag, rhs_over_diag])
-#
-#         lhs_rhs = evaluate_discretization_lhs_rhs_at_point(point, dx, dy, dz)
-#         return lhs_rhs
+    def compute_Ax_and_b_preconditioned_fn_Robin(self, params, point, dx, dy, dz):
+        """
+        This function calculates  A @ u for a given vector of unknowns u in the case of a Robin boundary condition
+        This evaluates the rhs in Au^k=b given estimate u^k.
+        The purpose would be to define an optimization problem with:
+
+        min || A u^k - b ||^2
+
+        using autodiff we can compute gradients w.r.t u^k values, and optimize for the solution field.
+
+        * PROCEDURE:
+            first compute u = B:u + r for each node
+            then use the actual cell geometries (face areas and mu coeffs) to
+            compute the rhs of the linear system given currently passed-in u vector
+            for solution estimate.
+
+        """
+
+        def u_m_at_point(pt):
+            phi_pt = self.phi_interp_fn(pt[jnp.newaxis])
+            return self.solution_at_point_fn(params, pt, phi_pt)
+
+        def is_box_boundary_point(point):
+            """
+            Check if current node is on the boundary of box (i.e. the sides of the computational domain \Omega
+            """
+            x, y, z = point
+            boundary = jnp.where(abs(x - self.xmin) < 1e-6 * dx, 0, 1) * jnp.where(
+                abs(x - self.xmax) < 1e-6 * dx, 0, 1
+            )
+            boundary *= jnp.where(abs(y - self.ymin) < 1e-6 * dy, 0, 1) * jnp.where(
+                abs(y - self.ymax) < 1e-6 * dy, 0, 1
+            )
+            boundary *= jnp.where(abs(z - self.zmin) < 1e-6 * dz, 0, 1) * jnp.where(
+                abs(z - self.zmax) < 1e-6 * dz, 0, 1
+            )
+            return jnp.where(boundary == 0, True, False)
+
+        def evaluate_discretization_lhs_rhs_at_point(point, dx, dy, dz):
+            # --- LHS
+            #coeffs_ = self.compute_face_centroids_values_plus_minus_at_point(point, dx, dy, dz)
+            coeffs_ = self.compute_face_centroids_values_plus_minus_at_point(point, dx, dy, dz)
+            # UPDATED: used to be minus at point but now its plusminus at 
+            coeffs = coeffs_[:12]
+            precond = self.precond_fn(params, coeffs_)  # TODO learning voxel-level preconditioner
+
+            vols = coeffs_[12:14]
+            V_m_ijk = vols[0]   # Volume of the partial cell in the minus region.
+            #V_p_ijk = vols[1]    (not used) Volume of the partial cell in the plus  region.
+            Vol_cell_nominal = dx * dy * dz # Elementary volume
+
+            def get_lhs_at_interior_point(point):
+                point_ijk = point                                                       # Current point
+                point_imjk = jnp.array([point[0] - dx, point[1], point[2]], dtype=f32)  # Coordinate of the grid point to the left.
+                point_ipjk = jnp.array([point[0] + dx, point[1], point[2]], dtype=f32)  # Coordinate of the grid point to the right.
+                point_ijmk = jnp.array([point[0], point[1] - dy, point[2]], dtype=f32)  # Coordinate of the grid point to the bottom.
+                point_ijpk = jnp.array([point[0], point[1] + dy, point[2]], dtype=f32)  # Coordinate of the grid point to the top.
+                point_ijkm = jnp.array([point[0], point[1], point[2] - dz], dtype=f32)  # Coordinate of the grid point to the back.
+                point_ijkp = jnp.array([point[0], point[1], point[2] + dz], dtype=f32)  # Coordinate of the grid point to the front.
+
+                k_m_ijk = self.k_m_interp_fn(point[jnp.newaxis])    # Reaction coefficient in the minus region.
+                #k_p_ijk = self.k_p_interp_fn(point[jnp.newaxis])    # (Likely dont use)Reaction coefficient in the plus  region.
+
+
+                # Only need u_m for Robin (no u_p)
+                u_m_ijk  = u_m_at_point(point_ijk)               # Current point
+                u_m_imjk = u_m_at_point(point_imjk)              # u value at the grid point to the left.
+                u_m_ipjk = u_m_at_point(point_ipjk)              # u value at the grid point to the right.
+                u_m_ijmk = u_m_at_point(point_ijmk)              # u value at the grid point to the bottom
+                u_m_ijpk = u_m_at_point(point_ijpk)              # u value at the grid point to the top.
+                u_m_ijkm = u_m_at_point(point_ijkm)              # u value at the grid point to the back.
+                u_m_ijkp = u_m_at_point(point_ijkp)              # u value at the grid point to the front.
+
+                # \sum_{\pm} k^s_{i,j} u^s_{i,j} u^s_{i,j}, i.e. the first term in (Equation Standard of JAX)
+
+                lhs = k_m_ijk * u_m_ijk * V_m_ijk
+                # (dont use) lhs += k_p_ijk * u_p_ijk * V_p_ijk
+
+                # Treating the case of a nonlinear \mu (not done here, i.e. setting it to zero). To do later if needed.
+                lhs += self.nonlinear_op_m(u_m_ijk) * V_m_ijk # + self.nonlinear_op_p(u_p_ijk) * V_p_ijk
+
+                # We assume that the coeffs array gives the \mu_^s_{i-\frac12, j} A^s_{i-\frac12, j} / dx, etc. So the following gives
+                # all the coefficients of the matrix in front of u_{ijk} in the minus and plus regions:
+                # lhs += (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10]) * u_m_ijk + ( # can take out +()upijk
+                #         coeffs[1] + coeffs[3] + coeffs[5] + coeffs[7] + coeffs[9] + coeffs[11]
+                # ) * u_p_ijk
+                lhs += (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10]) * u_m_ijk
+
+                # Extra diagonal coefficients of the linear system, i.e. the matrix A
+
+                # Take out the upimjk
+
+                # lhs = -1.0 + coeffs[i] will be 0 1 2 3 not 0 2 4 6, no plus
+                # lhs += -1.0 * coeffs[0] * u_m_imjk #- coeffs[1] * u_p_imjk
+                # lhs += -1.0 * coeffs[2] * u_m_ipjk #- coeffs[3] * u_p_ipjk
+                # lhs += -1.0 * coeffs[4] * u_m_ijmk #- coeffs[5] * u_p_ijmk
+                # lhs += -1.0 * coeffs[6] * u_m_ijpk #- coeffs[7] * u_p_ijpk
+                # lhs += -1.0 * coeffs[8] * u_m_ijkm #- coeffs[9] * u_p_ijkm
+                # lhs += -1.0 * coeffs[10] * u_m_ijkp #- coeffs[11] * u_p_ijkp
+
+                lhs += -1.0 * coeffs[0] * u_m_imjk
+                lhs += -1.0 * coeffs[2] * u_m_ipjk
+                lhs += -1.0 * coeffs[4] * u_m_ijmk
+                lhs += -1.0 * coeffs[6] * u_m_ijpk
+                lhs += -1.0 * coeffs[8] * u_m_ijkm
+                lhs += -1.0 * coeffs[10] * u_m_ijkp
+
+                # Impose the Robin boundary condition:
+                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point, dx, dy, dz)
+                lhs += alpha_ell * u_m_ijk
+
+                # At this point, the matrix A is defined.
+                # Compute the diagonal coefficient of the assembled matrix, which will serve as the (Jacobi) preconditioner.
+
+
+                # take out KpVp, add alpha L(interface and cell, rewrite coeffs 012345)
+                # diag_coeff = (
+                #         k_p_ijk * V_p_ijk
+                #         + k_m_ijk * V_m_ijk
+                #         + (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10])
+                #         + (coeffs[1] + coeffs[3] + coeffs[5] + coeffs[7] + coeffs[9] + coeffs[11])
+                # )
+                diag_coeff = (
+                        k_m_ijk * V_m_ijk
+                        + (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10])
+                        + alpha_ell
+                )
+                return jnp.array([lhs.reshape(), diag_coeff.reshape()])
+
+            def get_lhs_on_box_boundary(point): # Handle the boundary condition at the domain's wall
+                phi_boundary = self.phi_interp_fn(point[jnp.newaxis])
+                u_boundary = self.solution_at_point_fn(params, point, phi_boundary)
+                lhs = u_boundary * Vol_cell_nominal
+                return jnp.array([lhs, Vol_cell_nominal])
+
+            def get_lhs_in_omega_plus(point):
+                # In Omega+ we are not solving the PDE — enforce u = dirichlet_bc
+                phi_pt = self.phi_interp_fn(point[jnp.newaxis])
+                u_pt = self.solution_at_point_fn(params, point, phi_pt)
+                lhs = u_pt * Vol_cell_nominal
+                return jnp.array([lhs, Vol_cell_nominal])
+
+            def is_in_omega_plus(point):
+                # True if phi > 0 (outside the interface, in Omega+)
+                return self.phi_interp_fn(point[jnp.newaxis]) > 0.0
+
+            # Three-way dispatch: box boundary → Omega+ interior → Omega- interior
+            lhs_diagcoeff = jnp.where(
+                is_box_boundary_point(point),
+                get_lhs_on_box_boundary(point),
+                jnp.where(
+                    is_in_omega_plus(point),
+                    get_lhs_in_omega_plus(point),
+                    get_lhs_at_interior_point(point),
+                ),
+            )
+            lhs, diagcoeff = jnp.split(lhs_diagcoeff, [1], 0)
+
+            # --- RHS
+            def get_rhs_at_interior_point(point):   # Implementation of the right-hand side of (Equation Standard)
+                rhs = (
+                        # self.f_m_interp_fn(point[jnp.newaxis]) * V_m_ijk + self.f_p_interp_fn(point[jnp.newaxis]) * V_p_ijk ## remove the V_p_ijk?
+                        self.f_m_interp_fn(point[jnp.newaxis]) * V_m_ijk
+                )
+                rhs += self.g_integrate_over_interface_at_point(point, dx, dy, dz)
+                return rhs
+
+            def get_rhs_on_box_boundary(point):     # Impose the boundary condition at the walls of the computational domain.
+                return self.dir_bc_fn(point[jnp.newaxis]).reshape() * Vol_cell_nominal
+
+            def get_rhs_in_omega_plus(point):
+                # In Omega+ enforce u = dirichlet_bc
+                return self.dir_bc_fn(point[jnp.newaxis]).reshape() * Vol_cell_nominal
+
+            # Three-way dispatch matching LHS
+            rhs = jnp.where(
+                is_box_boundary_point(point),
+                get_rhs_on_box_boundary(point),
+                jnp.where(
+                    is_in_omega_plus(point),
+                    get_rhs_in_omega_plus(point),
+                    get_rhs_at_interior_point(point),
+                ),
+            )
+
+            # Apply the preconditioning of the linear system:
+            lhs_over_diag = jnp.nan_to_num(lhs / diagcoeff) * precond   # "precond" is short for "we need to do better but we have not done it yet).
+            rhs_over_diag = jnp.nan_to_num(rhs / diagcoeff) * precond
+            return jnp.array([lhs_over_diag, rhs_over_diag])
+
+        lhs_rhs = evaluate_discretization_lhs_rhs_at_point(point, dx, dy, dz)
+        return lhs_rhs
 
     # @partial(jit, static_argnums=(0))
     def get_u_mp_by_regression_at_point_fn(self, params, dx, dy, dz, point):
