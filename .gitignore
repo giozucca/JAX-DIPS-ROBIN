@@ -47,6 +47,8 @@ tstex_modules
 third_party/
 .notebook
 .dotnet
+.hydra
+*.log
 
 # release to PyPI
 dist
