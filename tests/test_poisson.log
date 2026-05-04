@@ -2321,3 +2321,157 @@ experiment:
  RMSD error : 0.0024881360586732626
 [2026-04-20 22:56:25,115][__main__][INFO] - Experiment robin completed! 
 
+[2026-05-04 20:41:53,265][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-05-04 20:41:53,266][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 128
+  Ny_lvl: 128
+  Nz_lvl: 128
+  Nx_eval: 256
+  Ny_eval: 256
+  Nz_eval: 256
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-05-04 20:41:53,266][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-05-04 20:41:54,056][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:41:54,056][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:42:24,033][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-05-04 20:42:24,034][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 128
+  Ny_lvl: 128
+  Nz_lvl: 128
+  Nx_eval: 256
+  Ny_eval: 256
+  Nz_eval: 256
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-05-04 20:42:24,035][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-05-04 20:42:24,824][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:42:24,824][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:44:12,865][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-05-04 20:44:12,866][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 128
+  Ny_lvl: 128
+  Nz_lvl: 128
+  Nx_eval: 256
+  Ny_eval: 256
+  Nz_eval: 256
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-05-04 20:44:12,866][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-05-04 20:44:13,641][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:44:13,641][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:44:15,383][jax_dips.solvers.optimizers][INFO] - Using chained Adam optimizer
+[2026-05-04 20:44:15,383][jax_dips.solvers.optimizers][INFO] - Using Exponential Scheduler
+[2026-05-04 20:44:18,030][jax_dips.utils.inspect][INFO] - Architecture Summary (trainable parameters):
+
+[2026-05-04 20:44:18,030][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear'                 	 has trainable parameters:	 {'b': (10,), 'w': (3, 10)}
+[2026-05-04 20:44:18,030][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_1'               	 has trainable parameters:	 {'b': (10,), 'w': (10, 10)}
+[2026-05-04 20:44:18,030][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_2'               	 has trainable parameters:	 {'b': (1,), 'w': (10, 1)}
+[2026-05-04 20:44:18,031][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear'                 	 has trainable parameters:	 {'b': (1,), 'w': (3, 1)}
+[2026-05-04 20:44:18,031][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear_1'               	 has trainable parameters:	 {'b': (1,), 'w': (1, 1)}
+[2026-05-04 20:44:18,031][jax_dips.utils.inspect][INFO] - Total number of trainable parameters = 167 ...
+
+[2026-05-04 20:44:35,693][jax_dips.utils.inspect][INFO] - iteration 0/1000 - loss: 0.0816560834646225
+[2026-05-04 20:45:14,248][jax_dips.utils.inspect][INFO] - iteration 100/1000 - loss: 0.011673898436129093

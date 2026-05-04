@@ -257,7 +257,6 @@ def sphere_Robin():
         z = r[2]
         return 2
 
-    @jit
     def computeNormal(phi, r):
         x=r[0]
         y=r[1]
