@@ -33,7 +33,8 @@ experiment:
   sphere: false
   star: false
   no_jump: false
-  sphere_Robin: true
+  sphere_Robin: false
+  star_Robin: true
   logging:
     checkpoint_interval: 5000
     log_dir: ${hydra:runtime.output_dir}

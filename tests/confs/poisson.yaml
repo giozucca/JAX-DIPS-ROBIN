@@ -42,7 +42,8 @@ experiment:
   sphere: false # sphere interface with jump conditions
   star: false # star interface with jump conditions
   no_jump: false # no interface and no jump conditions (used to be true)
-  sphere_Robin: true # sphere with Robin B.C
+  sphere_Robin: false # sphere with Robin B.C
+  star_Robin: true
 
   logging:
     checkpoint_interval: 5000

@@ -17,6 +17,7 @@
   Primary Author: mistani
 
 """
+from tests.confs.experiment_configs import star_Robin
 import logging
 import os
 import sys
@@ -82,6 +83,10 @@ def test_poisson(cfg: DictConfig):
     if cfg.experiment.sphere_Robin:
         logger.info("Performing sphere Robin B.C experiment...\n")
         poisson_solve_Robin(cfg, test_name="robin", exp_fn=sphere_Robin)
+    
+    if cfg.experiment.star_Robin:
+        logger.info("Performing star robin B.C experimenet...\n")
+        poisson_solve_Robin(cfg, test_name="star_Robin", exp_fn=star_Robin)
 
 
 def create_dirs(
