@@ -410,7 +410,20 @@ def star_Robin():
         x = r[0]
         y = r[1]
         z = r[2]
-        return jnp.sqrt(x**2 + y**2 + z**2) - 0.5
+        beta1 = -0.05 
+        beta2 = 0.05 
+        beta3 = -.1
+        n1 = 5
+        n2 = 5
+        n3 = 5
+        theta1 = 0.5
+        theta2 = 0.5
+        theta3 = 0.5
+        return (jnp.sqrt(x**2 + y**2 + z**2) - 
+                1.183 * (1 + ((x**2 + y**2)/10)**2 * 
+                ((beta1 * jnp.cos(n1 * (jnp.arctan2(y,x) - theta1))) + 
+                (beta2 * jnp.cos(n2 * (jnp.arctan2(y,x) - theta2))) + 
+                (beta3 * jnp.cos(n3 * (jnp.arctan2(y,x) - theta3))))))
 
     phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
 
@@ -438,52 +451,63 @@ def star_Robin():
         z = r[2]
         return 2
 
-        # Changes made: moved the U_ext to be included in the division by norm
+    def computeNormal(phi, r):
+        x=r[0]
+        y=r[1]
+        z=r[2]
+        h=1e-5  
+        
+        r1=jnp.array([x+h,y,z])
+        r2=jnp.array([x,y+h,z])
+        r3=jnp.array([x,y,z+h])
+
+        
+        n1 = (phi(r1)-phi(r))/h
+        n2 = (phi(r2)-phi(r))/h
+        n3 = (phi(r3)-phi(r))/h
+        norm = jnp.sqrt(n1**2 + n2**2 + n3**2)
+        
+        n1 = n1/norm
+        n2 = n2/norm
+        n3 = n3/norm
+
+        return n1,n2,n3
+
+    # Changes made: moved the U_ext to be included in the division by norm
     @jit 
     def g_m_fn(r):    # For Robin BC
         x = r[0]
         y = r[1]
         z = r[2]
-        # print("WE ARE USING G_M_FN")
-        # import time
-        # time.sleep(2)
-        return ((alphaRobin(r)*jnp.cos(x)*jnp.sin(y)*jnp.cos(z) +
-                - 2*x*jnp.sin(x)*jnp.sin(y)*jnp.cos(z)
-                 + 2*y*jnp.cos(x)*jnp.cos(y)*jnp.cos(z)
-                 - 2*z*jnp.cos(x)*jnp.sin(y)*jnp.sin(z)) / jnp.sqrt(x**2 + y**2 + z**2)) # added the divsion by norm
+        n1,n2,n3 = computeNormal(unperturbed_phi_fn,r)
+        return mu_m_fn(r)*((-jnp.sin(x)*jnp.sin(y)*jnp.cos(z)*n1)+(jnp.cos(x)*jnp.cos(y)*jnp.cos(z)*n2)+(-jnp.cos(x)*jnp.sin(y)*jnp.sin(z)*n3))+alphaRobin(r)*jnp.cos(x)*jnp.sin(y)*jnp.cos(z)
 
     @jit
     def g_p_fn(r):
         x = r[0]
         y = r[1]
         z = r[2]
-        # print("WE ARE USING G_P_FN")
-        # import time
-        # time.sleep(2)
-        return ((alphaRobin(r)*jnp.cos(x)*jnp.sin(y)*jnp.cos(z) +
-                - 2*x*jnp.sin(x)*jnp.sin(y)*jnp.cos(z)
-                 + 2*y*jnp.cos(x)*jnp.cos(y)*jnp.cos(z)
-                 - 2*z*jnp.cos(x)*jnp.sin(y)*jnp.sin(z)) / jnp.sqrt(x**2 + y**2 + z**2) # added the divsion by norm
-                 + alphaRobin(r))
+        n1,n2,n3 = computeNormal(unperturbed_phi_fn,r)
+        return mu_m_fn(r)*((-jnp.sin(x)*jnp.sin(y)*jnp.cos(z)*n1)+(jnp.cos(x)*jnp.cos(y)*jnp.cos(z)*n2)+(-jnp.cos(x)*jnp.sin(y)*jnp.sin(z)*n3))+alphaRobin(r)*jnp.cos(x)*jnp.sin(y)*jnp.cos(z)
 
 
     @jit
     def alphaRobin(r): # For Robin BC
-        return 1
+        return 0.25
 
     @jit
     def k_m_fn(r):
         r"""
         Linear term function in $\Omega^-$
         """
-        return 0.0
+        return 0.5
 
     @jit
     def k_p_fn(r):
         r"""
         Linear term function in $\Omega^+$
         """
-        return 0.0
+        return 0.5
 
     @jit
     def initial_value_fn(r):
@@ -497,14 +521,14 @@ def star_Robin():
         x = r[0]
         y = r[1]
         z = r[2]
-        return 6*jnp.cos(x)*jnp.sin(y)*jnp.cos(z) # Changed from -6 to 6
+        return 3*mu_m_fn(r)*jnp.cos(x)*jnp.sin(y)*jnp.cos(z)+ k_m_fn(r)*jnp.cos(x)*jnp.sin(y)*jnp.cos(z) # Changed from -6 to 6
 
     @jit
     def f_p_fn(r):
         x = r[0]
         y = r[1]
         z = r[2]
-        return 6*jnp.cos(x)*jnp.sin(y)*jnp.cos(z) # Changed from -6 to 6
+        return 3*mu_m_fn(r)*jnp.cos(x)*jnp.sin(y)*jnp.cos(z)+ k_m_fn(r)*jnp.cos(x)*jnp.sin(y)*jnp.cos(z) # Changed from -6 to 6
 
     @jit
     def beta_fn(r):
