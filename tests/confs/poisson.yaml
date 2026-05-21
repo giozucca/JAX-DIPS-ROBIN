@@ -44,6 +44,8 @@ experiment:
   no_jump: false # no interface and no jump conditions (used to be true)
   sphere_Robin: false # sphere with Robin B.C
   star_Robin: true
+  star_Robin3: false
+
 
   logging:
     checkpoint_interval: 5000
