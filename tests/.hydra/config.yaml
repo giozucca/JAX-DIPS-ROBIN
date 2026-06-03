@@ -1,11 +1,11 @@
 expname: poisson-tests-app
 gridstates:
-  Nx_lvl: 128
-  Ny_lvl: 128
-  Nz_lvl: 128
-  Nx_eval: 256
-  Ny_eval: 256
-  Nz_eval: 256
+  Nx_lvl: 16
+  Ny_lvl: 16
+  Nz_lvl: 16
+  Nx_eval: 32
+  Ny_eval: 32
+  Nz_eval: 32
 solver:
   Nx_tr: 64
   Ny_tr: 64
@@ -33,10 +33,11 @@ experiment:
   sphere: false
   star: false
   no_jump: false
-  sphere_Robin: false
-  star_Robin: true
+  sphere_Robin: true
+  star_Robin: false
+  star_Robin3: false
   logging:
-    checkpoint_interval: 5000
+    checkpoint_interval: 250
     log_dir: ${hydra:runtime.output_dir}
     currDir: ${hydra:runtime.cwd}
     checkpoint_dir: ${hydra:runtime.cwd}/checkpoints

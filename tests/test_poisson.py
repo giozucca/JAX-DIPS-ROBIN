@@ -82,15 +82,15 @@ def test_poisson(cfg: DictConfig):
         )
     if cfg.experiment.sphere_Robin:
         logger.info("Performing sphere Robin B.C experiment...\n")
-        poisson_solve_Robin(cfg, test_name="robin", exp_fn=sphere_Robin)
+        poisson_solve_Robin(cfg, test_name=f"sphere_Robin_{cfg.solver.Nx_tr}", exp_fn=sphere_Robin)
     
     if cfg.experiment.star_Robin:
         logger.info("Performing star robin B.C experimenet...\n")
-        poisson_solve_Robin(cfg, test_name="star_Robin", exp_fn=star_Robin)
+        poisson_solve_Robin(cfg, test_name=f"star_Robin_{cfg.solver.Nx_tr}", exp_fn=star_Robin)
 
     if cfg.experiment.star_Robin3:
         logger.info("Performing star robin 3 B.C experiment...\n")
-        poisson_solve_Robin(cfg, test_name="star_Robin3", exp_fn=star_Robin3)
+        poisson_solve_Robin(cfg, test_name=f"star_Robin3_{cfg.solver.Nx_tr}", exp_fn=star_Robin3)
 
 
 def create_dirs(

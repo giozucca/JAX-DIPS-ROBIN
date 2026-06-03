@@ -2475,3 +2475,220 @@ experiment:
 
 [2026-05-04 20:44:35,693][jax_dips.utils.inspect][INFO] - iteration 0/1000 - loss: 0.0816560834646225
 [2026-05-04 20:45:14,248][jax_dips.utils.inspect][INFO] - iteration 100/1000 - loss: 0.011673898436129093
+[2026-06-03 20:24:56,244][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-06-03 20:24:56,246][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 16
+  Ny_lvl: 16
+  Nz_lvl: 16
+  Nx_eval: 32
+  Ny_eval: 32
+  Nz_eval: 32
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 500
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: false
+  star_Robin: false
+  star_Robin3: false
+  logging:
+    checkpoint_interval: 250
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-06-03 20:25:17,925][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-06-03 20:25:17,927][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 16
+  Ny_lvl: 16
+  Nz_lvl: 16
+  Nx_eval: 32
+  Ny_eval: 32
+  Nz_eval: 32
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: false
+  star_Robin: false
+  star_Robin3: false
+  logging:
+    checkpoint_interval: 250
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-06-03 20:26:03,107][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-06-03 20:26:03,109][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 16
+  Ny_lvl: 16
+  Nz_lvl: 16
+  Nx_eval: 32
+  Ny_eval: 32
+  Nz_eval: 32
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: false
+  star_Robin: false
+  star_Robin3: false
+  logging:
+    checkpoint_interval: 250
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-06-03 20:26:45,554][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-06-03 20:26:45,556][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 16
+  Ny_lvl: 16
+  Nz_lvl: 16
+  Nx_eval: 32
+  Ny_eval: 32
+  Nz_eval: 32
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  star_Robin: false
+  star_Robin3: false
+  logging:
+    checkpoint_interval: 250
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-06-03 20:26:45,556][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-06-03 20:26:46,039][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-06-03 20:26:46,039][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-06-03 20:26:47,318][jax_dips.solvers.optimizers][INFO] - Using chained Adam optimizer
+[2026-06-03 20:26:47,318][jax_dips.solvers.optimizers][INFO] - Using Exponential Scheduler
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - Architecture Summary (trainable parameters):
+
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear'                 	 has trainable parameters:	 {'b': (10,), 'w': (3, 10)}
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_1'               	 has trainable parameters:	 {'b': (10,), 'w': (10, 10)}
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_2'               	 has trainable parameters:	 {'b': (1,), 'w': (10, 1)}
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear'                 	 has trainable parameters:	 {'b': (1,), 'w': (3, 1)}
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear_1'               	 has trainable parameters:	 {'b': (1,), 'w': (1, 1)}
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - Total number of trainable parameters = 167 ...
+
+[2026-06-03 20:27:08,202][jax_dips.utils.inspect][INFO] - iteration 0/1000 - loss: 0.0816560834646225
+[2026-06-03 20:27:48,035][jax_dips.utils.inspect][INFO] - iteration 100/1000 - loss: 0.011673898436129093
+[2026-06-03 20:28:28,416][jax_dips.utils.inspect][INFO] - iteration 200/1000 - loss: 0.00397140346467495
+[2026-06-03 20:29:08,144][jax_dips.utils.inspect][INFO] - iteration 300/1000 - loss: 0.0037827943451702595
+[2026-06-03 20:29:48,188][jax_dips.utils.inspect][INFO] - iteration 400/1000 - loss: 0.0033223433420062065
+[2026-06-03 20:30:30,150][jax_dips.utils.inspect][INFO] - iteration 500/1000 - loss: 0.002830012235790491
+[2026-06-03 20:31:11,503][jax_dips.utils.inspect][INFO] - iteration 600/1000 - loss: 0.0024159622844308615
+[2026-06-03 20:31:53,922][jax_dips.utils.inspect][INFO] - iteration 700/1000 - loss: 0.0019268186297267675
+[2026-06-03 20:32:34,441][jax_dips.utils.inspect][INFO] - iteration 800/1000 - loss: 0.0014221207238733768
+[2026-06-03 20:33:14,289][jax_dips.utils.inspect][INFO] - iteration 900/1000 - loss: 0.0010495891328901052
+[2026-06-03 20:33:53,700][jax_dips.solvers.poisson.trainer][INFO] - solve took 423.8352904319763 (sec)
+[2026-06-03 20:33:53,819][jax_dips.solvers.poisson.trainer][INFO] - Saving checkpoint sphere_Robin_64/checkpoints/checkpoint_1000
+[2026-06-03 20:33:54,644][__main__][INFO] - solve took 427.74538588523865 seconds
+[2026-06-03 20:33:55,284][__main__][INFO] - Num_epochs: 1000
+[2026-06-03 20:33:55,285][__main__][INFO] - Accuracy: 
+ L_inf : 0.20742037892341614 
+ 
+ L_2 : 0.04652412608265877 
+ Rel. L_2 : 0.12181727588176727 
+ RMSD error : 0.04652412608265877
+[2026-06-03 20:33:55,285][__main__][INFO] - Experiment sphere_Robin_64 completed! 
+
