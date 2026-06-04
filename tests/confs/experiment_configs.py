@@ -420,10 +420,10 @@ def star_Robin():
         theta2 = 0.5
         theta3 = 0.5
         return (jnp.sqrt(x**2 + y**2 + z**2) - 
-                1.183 * (1 + ((x**2 + y**2)/10)**2 + 
+                1.183 * (1 + ((x**2 + y**2)/10)**2) + 
                 ((beta1 * jnp.cos(n1 * (jnp.arctan2(y,x) - theta1))) + 
-                (beta2 * jnp.cos(n2 * (jnp.arctan2(y,x) - theta2))) + 
-                (beta3 * jnp.cos(n3 * (jnp.arctan2(y,x) - theta3))))))
+                 (beta2 * jnp.cos(n2 * (jnp.arctan2(y,x) - theta2))) + 
+                 (beta3 * jnp.cos(n3 * (jnp.arctan2(y,x) - theta3)))))
 
     phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
 

@@ -117,8 +117,12 @@ def poisson_solve(
     batch_size = cfg.solver.batch_size
 
     dim = i32(3)
-    xmin = ymin = zmin = f32(-1.0)
-    xmax = ymax = zmax = f32(1.0)
+    if "star_Robin" in test_name or "star_Robin3" in test_name:
+        xmin = ymin = zmin = f32(-2.0)
+        xmax = ymax = zmax = f32(2.0)
+    else:
+        xmin = ymin = zmin = f32(-1.0)
+        xmax = ymax = zmax = f32(1.0)
     init_mesh_fn, coord_at = mesh.construct(dim)
 
     # --------- Grid nodes for training
@@ -370,8 +374,12 @@ def poisson_solve_Robin(
     batch_size = cfg.solver.batch_size
 
     dim = i32(3)
-    xmin = ymin = zmin = f32(-1.0)
-    xmax = ymax = zmax = f32(1.0)
+    if "star_Robin" in test_name or "star_Robin3" in test_name:
+        xmin = ymin = zmin = f32(-2.0)
+        xmax = ymax = zmax = f32(2.0)
+    else:
+        xmin = ymin = zmin = f32(-1.0)
+        xmax = ymax = zmax = f32(1.0)
     init_mesh_fn, coord_at = mesh.construct(dim)
 
     # --------- Grid nodes for training
