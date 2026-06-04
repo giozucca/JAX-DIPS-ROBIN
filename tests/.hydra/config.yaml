@@ -1,17 +1,17 @@
 expname: poisson-tests-app
 gridstates:
-  Nx_lvl: 64
-  Ny_lvl: 64
-  Nz_lvl: 64
-  Nx_eval: 64
-  Ny_eval: 64
-  Nz_eval: 64
+  Nx_lvl: 16
+  Ny_lvl: 16
+  Nz_lvl: 16
+  Nx_eval: 32
+  Ny_eval: 32
+  Nz_eval: 32
 solver:
-  Nx_tr: 32
-  Ny_tr: 32
-  Nz_tr: 32
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
   num_epochs: 1000
-  batch_size: 32768
+  batch_size: 262144
   print_rate: 100
   restart_from_checkpoint: false
   restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
@@ -34,8 +34,10 @@ experiment:
   star: false
   no_jump: false
   sphere_Robin: true
+  star_Robin: false
+  star_Robin3: false
   logging:
-    checkpoint_interval: 5000
+    checkpoint_interval: 250
     log_dir: ${hydra:runtime.output_dir}
     currDir: ${hydra:runtime.cwd}
     checkpoint_dir: ${hydra:runtime.cwd}/checkpoints

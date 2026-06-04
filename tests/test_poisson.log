@@ -1137,3 +1137,1558 @@ experiment:
  RMSD error : 0.200566828250885
 [2026-04-20 21:04:17,856][__main__][INFO] - Experiment robin completed! 
 
+[2026-04-20 21:33:45,571][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-04-20 21:33:45,572][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 64
+  Ny_lvl: 64
+  Nz_lvl: 64
+  Nx_eval: 64
+  Ny_eval: 64
+  Nz_eval: 64
+solver:
+  Nx_tr: 32
+  Ny_tr: 32
+  Nz_tr: 32
+  num_epochs: 1000
+  batch_size: 32768
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-04-20 21:33:45,572][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-04-20 21:33:45,987][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 21:33:45,987][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 21:33:47,344][jax_dips.solvers.optimizers][INFO] - Using chained Adam optimizer
+[2026-04-20 21:33:47,344][jax_dips.solvers.optimizers][INFO] - Using Exponential Scheduler
+[2026-04-20 21:33:49,961][jax_dips.utils.inspect][INFO] - Architecture Summary (trainable parameters):
+
+[2026-04-20 21:33:49,962][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear'                 	 has trainable parameters:	 {'b': (10,), 'w': (3, 10)}
+[2026-04-20 21:33:49,962][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_1'               	 has trainable parameters:	 {'b': (10,), 'w': (10, 10)}
+[2026-04-20 21:33:49,962][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_2'               	 has trainable parameters:	 {'b': (1,), 'w': (10, 1)}
+[2026-04-20 21:33:49,962][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear'                 	 has trainable parameters:	 {'b': (1,), 'w': (3, 1)}
+[2026-04-20 21:33:49,962][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear_1'               	 has trainable parameters:	 {'b': (1,), 'w': (1, 1)}
+[2026-04-20 21:33:49,962][jax_dips.utils.inspect][INFO] - Total number of trainable parameters = 167 ...
+
+[2026-04-20 21:34:04,143][jax_dips.utils.inspect][INFO] - iteration 0/1000 - loss: 0.01692339777946472
+[2026-04-20 21:34:08,948][jax_dips.utils.inspect][INFO] - iteration 100/1000 - loss: 0.014375847764313221
+[2026-04-20 21:34:13,726][jax_dips.utils.inspect][INFO] - iteration 200/1000 - loss: 0.014375847764313221
+[2026-04-20 21:34:18,512][jax_dips.utils.inspect][INFO] - iteration 300/1000 - loss: 0.014375844039022923
+[2026-04-20 21:34:23,313][jax_dips.utils.inspect][INFO] - iteration 400/1000 - loss: 0.014375844039022923
+[2026-04-20 21:34:28,119][jax_dips.utils.inspect][INFO] - iteration 500/1000 - loss: 0.014375844039022923
+[2026-04-20 21:34:32,939][jax_dips.utils.inspect][INFO] - iteration 600/1000 - loss: 0.014375844039022923
+[2026-04-20 21:34:37,820][jax_dips.utils.inspect][INFO] - iteration 700/1000 - loss: 0.014375844039022923
+[2026-04-20 21:34:42,677][jax_dips.utils.inspect][INFO] - iteration 800/1000 - loss: 0.014375844039022923
+[2026-04-20 21:34:47,533][jax_dips.utils.inspect][INFO] - iteration 900/1000 - loss: 0.014375844039022923
+[2026-04-20 21:34:52,464][jax_dips.solvers.poisson.trainer][INFO] - solve took 62.362133741378784 (sec)
+[2026-04-20 21:34:52,585][jax_dips.solvers.poisson.trainer][INFO] - Saving checkpoint robin/checkpoints/checkpoint_1000
+[2026-04-20 21:34:53,245][__main__][INFO] - solve took 66.38112139701843 seconds
+[2026-04-20 21:34:54,002][__main__][INFO] - Accuracy: 
+ L_inf : nan 
+ 
+ L_2 : nan 
+ Rel. L_2 : nan 
+ RMSD error : nan
+[2026-04-20 21:34:54,002][__main__][INFO] - Experiment robin completed! 
+
+[2026-04-20 21:38:09,558][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-04-20 21:38:09,560][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 64
+  Ny_lvl: 64
+  Nz_lvl: 64
+  Nx_eval: 64
+  Ny_eval: 64
+  Nz_eval: 64
+solver:
+  Nx_tr: 32
+  Ny_tr: 32
+  Nz_tr: 32
+  num_epochs: 1000
+  batch_size: 32768
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-04-20 21:38:09,560][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-04-20 21:38:09,978][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 21:38:09,978][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 21:38:11,334][jax_dips.solvers.optimizers][INFO] - Using chained Adam optimizer
+[2026-04-20 21:38:11,335][jax_dips.solvers.optimizers][INFO] - Using Exponential Scheduler
+[2026-04-20 21:38:13,954][jax_dips.utils.inspect][INFO] - Architecture Summary (trainable parameters):
+
+[2026-04-20 21:38:13,954][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear'                 	 has trainable parameters:	 {'b': (10,), 'w': (3, 10)}
+[2026-04-20 21:38:13,954][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_1'               	 has trainable parameters:	 {'b': (10,), 'w': (10, 10)}
+[2026-04-20 21:38:13,954][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_2'               	 has trainable parameters:	 {'b': (1,), 'w': (10, 1)}
+[2026-04-20 21:38:13,954][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear'                 	 has trainable parameters:	 {'b': (1,), 'w': (3, 1)}
+[2026-04-20 21:38:13,954][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear_1'               	 has trainable parameters:	 {'b': (1,), 'w': (1, 1)}
+[2026-04-20 21:38:13,954][jax_dips.utils.inspect][INFO] - Total number of trainable parameters = 167 ...
+
+[2026-04-20 21:38:28,320][jax_dips.utils.inspect][INFO] - iteration 0/1000 - loss: 0.08234889060258865
+[2026-04-20 21:38:33,160][jax_dips.utils.inspect][INFO] - iteration 100/1000 - loss: 0.011693811044096947
+[2026-04-20 21:38:37,986][jax_dips.utils.inspect][INFO] - iteration 200/1000 - loss: 0.004276548512279987
+[2026-04-20 21:38:42,823][jax_dips.utils.inspect][INFO] - iteration 300/1000 - loss: 0.004052054136991501
+[2026-04-20 21:38:47,739][jax_dips.utils.inspect][INFO] - iteration 400/1000 - loss: 0.0035469667054712772
+[2026-04-20 21:38:52,790][jax_dips.utils.inspect][INFO] - iteration 500/1000 - loss: 0.0030215908773243427
+[2026-04-20 21:38:57,761][jax_dips.utils.inspect][INFO] - iteration 600/1000 - loss: 0.0025670663453638554
+[2026-04-20 21:39:02,732][jax_dips.utils.inspect][INFO] - iteration 700/1000 - loss: 0.0020161685533821583
+[2026-04-20 21:39:07,610][jax_dips.utils.inspect][INFO] - iteration 800/1000 - loss: 0.0014797716867178679
+[2026-04-20 21:39:12,498][jax_dips.utils.inspect][INFO] - iteration 900/1000 - loss: 0.0010940178763121367
+[2026-04-20 21:39:17,344][jax_dips.solvers.poisson.trainer][INFO] - solve took 63.24534583091736 (sec)
+[2026-04-20 21:39:17,460][jax_dips.solvers.poisson.trainer][INFO] - Saving checkpoint robin/checkpoints/checkpoint_1000
+[2026-04-20 21:39:18,226][__main__][INFO] - solve took 67.3558599948883 seconds
+[2026-04-20 21:39:18,998][__main__][INFO] - Accuracy: 
+ L_inf : 0.3067910075187683 
+ 
+ L_2 : 26.321800231933594 
+ Rel. L_2 : 0.13496194779872894 
+ RMSD error : 0.051409762352705
+[2026-04-20 21:39:18,998][__main__][INFO] - Experiment robin completed! 
+
+[2026-04-20 21:39:55,993][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-04-20 21:39:55,995][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 64
+  Ny_lvl: 64
+  Nz_lvl: 64
+  Nx_eval: 64
+  Ny_eval: 64
+  Nz_eval: 64
+solver:
+  Nx_tr: 32
+  Ny_tr: 32
+  Nz_tr: 32
+  num_epochs: 5000
+  batch_size: 32768
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-04-20 21:39:55,995][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-04-20 21:39:56,425][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 21:39:56,425][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 21:39:57,780][jax_dips.solvers.optimizers][INFO] - Using chained Adam optimizer
+[2026-04-20 21:39:57,781][jax_dips.solvers.optimizers][INFO] - Using Exponential Scheduler
+[2026-04-20 21:40:00,403][jax_dips.utils.inspect][INFO] - Architecture Summary (trainable parameters):
+
+[2026-04-20 21:40:00,403][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear'                 	 has trainable parameters:	 {'b': (10,), 'w': (3, 10)}
+[2026-04-20 21:40:00,403][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_1'               	 has trainable parameters:	 {'b': (10,), 'w': (10, 10)}
+[2026-04-20 21:40:00,404][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_2'               	 has trainable parameters:	 {'b': (1,), 'w': (10, 1)}
+[2026-04-20 21:40:00,404][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear'                 	 has trainable parameters:	 {'b': (1,), 'w': (3, 1)}
+[2026-04-20 21:40:00,404][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear_1'               	 has trainable parameters:	 {'b': (1,), 'w': (1, 1)}
+[2026-04-20 21:40:00,404][jax_dips.utils.inspect][INFO] - Total number of trainable parameters = 167 ...
+
+[2026-04-20 21:40:14,931][jax_dips.utils.inspect][INFO] - iteration 0/5000 - loss: 0.08234889060258865
+[2026-04-20 21:40:19,812][jax_dips.utils.inspect][INFO] - iteration 100/5000 - loss: 0.011693811044096947
+[2026-04-20 21:40:24,660][jax_dips.utils.inspect][INFO] - iteration 200/5000 - loss: 0.004276548512279987
+[2026-04-20 21:40:29,521][jax_dips.utils.inspect][INFO] - iteration 300/5000 - loss: 0.004057000856846571
+[2026-04-20 21:40:34,393][jax_dips.utils.inspect][INFO] - iteration 400/5000 - loss: 0.003548665437847376
+[2026-04-20 21:40:39,268][jax_dips.utils.inspect][INFO] - iteration 500/5000 - loss: 0.003023103578016162
+[2026-04-20 21:40:44,154][jax_dips.utils.inspect][INFO] - iteration 600/5000 - loss: 0.002567836083471775
+[2026-04-20 21:40:49,049][jax_dips.utils.inspect][INFO] - iteration 700/5000 - loss: 0.0020168880000710487
+[2026-04-20 21:40:53,948][jax_dips.utils.inspect][INFO] - iteration 800/5000 - loss: 0.0014801445649936795
+[2026-04-20 21:40:58,850][jax_dips.utils.inspect][INFO] - iteration 900/5000 - loss: 0.0010941564105451107
+[2026-04-20 21:41:03,755][jax_dips.utils.inspect][INFO] - iteration 1000/5000 - loss: 0.0008272877894341946
+[2026-04-20 21:41:08,664][jax_dips.utils.inspect][INFO] - iteration 1100/5000 - loss: 0.0006404632003977895
+[2026-04-20 21:41:13,586][jax_dips.utils.inspect][INFO] - iteration 1200/5000 - loss: 0.0005082190036773682
+[2026-04-20 21:41:18,509][jax_dips.utils.inspect][INFO] - iteration 1300/5000 - loss: 0.0004170056199654937
+[2026-04-20 21:41:23,432][jax_dips.utils.inspect][INFO] - iteration 1400/5000 - loss: 0.0003575697774067521
+[2026-04-20 21:41:28,358][jax_dips.utils.inspect][INFO] - iteration 1500/5000 - loss: 0.00031994853634387255
+[2026-04-20 21:41:33,285][jax_dips.utils.inspect][INFO] - iteration 1600/5000 - loss: 0.0002957891265396029
+[2026-04-20 21:41:38,215][jax_dips.utils.inspect][INFO] - iteration 1700/5000 - loss: 0.00028001496684737504
+[2026-04-20 21:41:43,148][jax_dips.utils.inspect][INFO] - iteration 1800/5000 - loss: 0.0002681759651750326
+[2026-04-20 21:41:48,080][jax_dips.utils.inspect][INFO] - iteration 1900/5000 - loss: 0.00025983754312619567
+[2026-04-20 21:41:53,011][jax_dips.utils.inspect][INFO] - iteration 2000/5000 - loss: 0.0002535610110498965
+[2026-04-20 21:41:57,943][jax_dips.utils.inspect][INFO] - iteration 2100/5000 - loss: 0.0002485868171788752
+[2026-04-20 21:42:02,877][jax_dips.utils.inspect][INFO] - iteration 2200/5000 - loss: 0.0002446733124088496
+[2026-04-20 21:42:07,809][jax_dips.utils.inspect][INFO] - iteration 2300/5000 - loss: 0.00024112954270094633
+[2026-04-20 21:42:12,739][jax_dips.utils.inspect][INFO] - iteration 2400/5000 - loss: 0.0002380895457463339
+[2026-04-20 21:42:17,671][jax_dips.utils.inspect][INFO] - iteration 2500/5000 - loss: 0.00023526560107711703
+[2026-04-20 21:42:22,602][jax_dips.utils.inspect][INFO] - iteration 2600/5000 - loss: 0.0002325955720152706
+[2026-04-20 21:42:27,649][jax_dips.utils.inspect][INFO] - iteration 2700/5000 - loss: 0.0002299874322488904
+[2026-04-20 21:42:32,581][jax_dips.utils.inspect][INFO] - iteration 2800/5000 - loss: 0.00022737172548659146
+[2026-04-20 21:42:37,517][jax_dips.utils.inspect][INFO] - iteration 2900/5000 - loss: 0.0002247131196781993
+[2026-04-20 21:42:42,452][jax_dips.utils.inspect][INFO] - iteration 3000/5000 - loss: 0.0002219655434601009
+[2026-04-20 21:42:47,387][jax_dips.utils.inspect][INFO] - iteration 3100/5000 - loss: 0.00021908740745857358
+[2026-04-20 21:42:52,324][jax_dips.utils.inspect][INFO] - iteration 3200/5000 - loss: 0.00021605291112791747
+[2026-04-20 21:42:57,260][jax_dips.utils.inspect][INFO] - iteration 3300/5000 - loss: 0.00021275512699503452
+[2026-04-20 21:43:02,198][jax_dips.utils.inspect][INFO] - iteration 3400/5000 - loss: 0.0002091903006657958
+[2026-04-20 21:43:07,134][jax_dips.utils.inspect][INFO] - iteration 3500/5000 - loss: 0.00020526896696537733
+[2026-04-20 21:43:12,070][jax_dips.utils.inspect][INFO] - iteration 3600/5000 - loss: 0.00020089533063583076
+[2026-04-20 21:43:17,006][jax_dips.utils.inspect][INFO] - iteration 3700/5000 - loss: 0.00019596419588197023
+[2026-04-20 21:43:21,941][jax_dips.utils.inspect][INFO] - iteration 3800/5000 - loss: 0.0001903333468362689
+[2026-04-20 21:43:26,876][jax_dips.utils.inspect][INFO] - iteration 3900/5000 - loss: 0.00018382989219389856
+[2026-04-20 21:43:31,812][jax_dips.utils.inspect][INFO] - iteration 4000/5000 - loss: 0.0001762434549164027
+[2026-04-20 21:43:36,748][jax_dips.utils.inspect][INFO] - iteration 4100/5000 - loss: 0.00016732265066821128
+[2026-04-20 21:43:41,684][jax_dips.utils.inspect][INFO] - iteration 4200/5000 - loss: 0.00015682894445490092
+[2026-04-20 21:43:46,620][jax_dips.utils.inspect][INFO] - iteration 4300/5000 - loss: 0.00014453893527388573
+[2026-04-20 21:43:51,556][jax_dips.utils.inspect][INFO] - iteration 4400/5000 - loss: 0.00013059302000328898
+[2026-04-20 21:43:56,492][jax_dips.utils.inspect][INFO] - iteration 4500/5000 - loss: 0.00011559428094187751
+[2026-04-20 21:44:01,428][jax_dips.utils.inspect][INFO] - iteration 4600/5000 - loss: 0.00010073841986013576
+[2026-04-20 21:44:06,364][jax_dips.utils.inspect][INFO] - iteration 4700/5000 - loss: 8.732272544875741e-05
+[2026-04-20 21:44:11,298][jax_dips.utils.inspect][INFO] - iteration 4800/5000 - loss: 7.601623656228185e-05
+[2026-04-20 21:44:16,234][jax_dips.utils.inspect][INFO] - iteration 4900/5000 - loss: 6.677350029349327e-05
+[2026-04-20 21:44:21,120][jax_dips.solvers.poisson.trainer][INFO] - solve took 260.5662648677826 (sec)
+[2026-04-20 21:44:21,234][jax_dips.solvers.poisson.trainer][INFO] - Saving checkpoint robin/checkpoints/checkpoint_5000
+[2026-04-20 21:44:22,011][__main__][INFO] - solve took 264.70121335983276 seconds
+[2026-04-20 21:44:22,756][__main__][INFO] - Accuracy: 
+ L_inf : 0.06341403722763062 
+ 
+ L_2 : 5.703005313873291 
+ Rel. L_2 : 0.029241492971777916 
+ RMSD error : 0.011138682253658772
+[2026-04-20 21:44:22,756][__main__][INFO] - Experiment robin completed! 
+
+[2026-04-20 21:45:49,369][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-04-20 21:45:49,371][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 64
+  Ny_lvl: 64
+  Nz_lvl: 64
+  Nx_eval: 64
+  Ny_eval: 64
+  Nz_eval: 64
+solver:
+  Nx_tr: 32
+  Ny_tr: 32
+  Nz_tr: 32
+  num_epochs: 10000
+  batch_size: 32768
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-04-20 21:45:49,371][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-04-20 21:45:49,749][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 21:45:49,749][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 21:45:50,996][jax_dips.solvers.optimizers][INFO] - Using chained Adam optimizer
+[2026-04-20 21:45:50,997][jax_dips.solvers.optimizers][INFO] - Using Exponential Scheduler
+[2026-04-20 21:45:53,356][jax_dips.utils.inspect][INFO] - Architecture Summary (trainable parameters):
+
+[2026-04-20 21:45:53,356][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear'                 	 has trainable parameters:	 {'b': (10,), 'w': (3, 10)}
+[2026-04-20 21:45:53,356][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_1'               	 has trainable parameters:	 {'b': (10,), 'w': (10, 10)}
+[2026-04-20 21:45:53,356][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_2'               	 has trainable parameters:	 {'b': (1,), 'w': (10, 1)}
+[2026-04-20 21:45:53,356][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear'                 	 has trainable parameters:	 {'b': (1,), 'w': (3, 1)}
+[2026-04-20 21:45:53,356][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear_1'               	 has trainable parameters:	 {'b': (1,), 'w': (1, 1)}
+[2026-04-20 21:45:53,356][jax_dips.utils.inspect][INFO] - Total number of trainable parameters = 167 ...
+
+[2026-04-20 21:46:07,489][jax_dips.utils.inspect][INFO] - iteration 0/10000 - loss: 0.08234889060258865
+[2026-04-20 21:46:12,452][jax_dips.utils.inspect][INFO] - iteration 100/10000 - loss: 0.011693811044096947
+[2026-04-20 21:46:17,321][jax_dips.utils.inspect][INFO] - iteration 200/10000 - loss: 0.004276548512279987
+[2026-04-20 21:46:22,278][jax_dips.utils.inspect][INFO] - iteration 300/10000 - loss: 0.004057000856846571
+[2026-04-20 21:46:27,147][jax_dips.utils.inspect][INFO] - iteration 400/10000 - loss: 0.003548665437847376
+[2026-04-20 21:46:32,031][jax_dips.utils.inspect][INFO] - iteration 500/10000 - loss: 0.003023103578016162
+[2026-04-20 21:46:36,919][jax_dips.utils.inspect][INFO] - iteration 600/10000 - loss: 0.002567836083471775
+[2026-04-20 21:46:41,815][jax_dips.utils.inspect][INFO] - iteration 700/10000 - loss: 0.0020168880000710487
+[2026-04-20 21:46:46,724][jax_dips.utils.inspect][INFO] - iteration 800/10000 - loss: 0.0014801445649936795
+[2026-04-20 21:46:51,636][jax_dips.utils.inspect][INFO] - iteration 900/10000 - loss: 0.0010941564105451107
+[2026-04-20 21:46:56,552][jax_dips.utils.inspect][INFO] - iteration 1000/10000 - loss: 0.0008272877894341946
+[2026-04-20 21:47:01,564][jax_dips.utils.inspect][INFO] - iteration 1100/10000 - loss: 0.0006404632003977895
+[2026-04-20 21:47:06,579][jax_dips.utils.inspect][INFO] - iteration 1200/10000 - loss: 0.0005082190036773682
+[2026-04-20 21:47:11,597][jax_dips.utils.inspect][INFO] - iteration 1300/10000 - loss: 0.00041717314161360264
+[2026-04-20 21:47:16,653][jax_dips.utils.inspect][INFO] - iteration 1400/10000 - loss: 0.00035775519791059196
+[2026-04-20 21:47:21,635][jax_dips.utils.inspect][INFO] - iteration 1500/10000 - loss: 0.0003201435902155936
+[2026-04-20 21:47:26,758][jax_dips.utils.inspect][INFO] - iteration 1600/10000 - loss: 0.0002959909616038203
+[2026-04-20 21:47:31,825][jax_dips.utils.inspect][INFO] - iteration 1700/10000 - loss: 0.0002798758796416223
+[2026-04-20 21:47:36,881][jax_dips.utils.inspect][INFO] - iteration 1800/10000 - loss: 0.00026838021585717797
+[2026-04-20 21:47:41,948][jax_dips.utils.inspect][INFO] - iteration 1900/10000 - loss: 0.00026004682877101004
+[2026-04-20 21:47:47,079][jax_dips.utils.inspect][INFO] - iteration 2000/10000 - loss: 0.0002537335967645049
+[2026-04-20 21:47:52,283][jax_dips.utils.inspect][INFO] - iteration 2100/10000 - loss: 0.00024879013653844595
+[2026-04-20 21:47:57,410][jax_dips.utils.inspect][INFO] - iteration 2200/10000 - loss: 0.00024476315593346953
+[2026-04-20 21:48:02,437][jax_dips.utils.inspect][INFO] - iteration 2300/10000 - loss: 0.0002413322072243318
+[2026-04-20 21:48:07,425][jax_dips.utils.inspect][INFO] - iteration 2400/10000 - loss: 0.0002384165272815153
+[2026-04-20 21:48:12,417][jax_dips.utils.inspect][INFO] - iteration 2500/10000 - loss: 0.00023531264741905034
+[2026-04-20 21:48:17,369][jax_dips.utils.inspect][INFO] - iteration 2600/10000 - loss: 0.00023262237664312124
+[2026-04-20 21:48:22,319][jax_dips.utils.inspect][INFO] - iteration 2700/10000 - loss: 0.00023000896908342838
+[2026-04-20 21:48:27,353][jax_dips.utils.inspect][INFO] - iteration 2800/10000 - loss: 0.00022739812266081572
+[2026-04-20 21:48:32,305][jax_dips.utils.inspect][INFO] - iteration 2900/10000 - loss: 0.0002247682132292539
+[2026-04-20 21:48:37,422][jax_dips.utils.inspect][INFO] - iteration 3000/10000 - loss: 0.00022199423983693123
+[2026-04-20 21:48:42,519][jax_dips.utils.inspect][INFO] - iteration 3100/10000 - loss: 0.00021911700605414808
+[2026-04-20 21:48:47,745][jax_dips.utils.inspect][INFO] - iteration 3200/10000 - loss: 0.00021606474183499813
+[2026-04-20 21:48:52,823][jax_dips.utils.inspect][INFO] - iteration 3300/10000 - loss: 0.00021278607891872525
+[2026-04-20 21:48:58,100][jax_dips.utils.inspect][INFO] - iteration 3400/10000 - loss: 0.00020922214025631547
+[2026-04-20 21:49:03,350][jax_dips.utils.inspect][INFO] - iteration 3500/10000 - loss: 0.00020529876928776503
+[2026-04-20 21:49:08,318][jax_dips.utils.inspect][INFO] - iteration 3600/10000 - loss: 0.00020092737395316362
+[2026-04-20 21:49:13,282][jax_dips.utils.inspect][INFO] - iteration 3700/10000 - loss: 0.00019599658844526857
+[2026-04-20 21:49:18,247][jax_dips.utils.inspect][INFO] - iteration 3800/10000 - loss: 0.00019036669982597232
+[2026-04-20 21:49:23,214][jax_dips.utils.inspect][INFO] - iteration 3900/10000 - loss: 0.0001838654570747167
+[2026-04-20 21:49:28,181][jax_dips.utils.inspect][INFO] - iteration 4000/10000 - loss: 0.00017627789929974824
+[2026-04-20 21:49:33,146][jax_dips.utils.inspect][INFO] - iteration 4100/10000 - loss: 0.0001673634396865964
+[2026-04-20 21:49:38,112][jax_dips.utils.inspect][INFO] - iteration 4200/10000 - loss: 0.0001568482693983242
+[2026-04-20 21:49:43,078][jax_dips.utils.inspect][INFO] - iteration 4300/10000 - loss: 0.0001446110982215032
+[2026-04-20 21:49:48,042][jax_dips.utils.inspect][INFO] - iteration 4400/10000 - loss: 0.00013062711514066905
+[2026-04-20 21:49:53,008][jax_dips.utils.inspect][INFO] - iteration 4500/10000 - loss: 0.00011562705913092941
+[2026-04-20 21:49:57,974][jax_dips.utils.inspect][INFO] - iteration 4600/10000 - loss: 0.00010077073966385797
+[2026-04-20 21:50:02,941][jax_dips.utils.inspect][INFO] - iteration 4700/10000 - loss: 8.735018491279334e-05
+[2026-04-20 21:50:07,906][jax_dips.utils.inspect][INFO] - iteration 4800/10000 - loss: 7.604669372085482e-05
+[2026-04-20 21:50:12,871][jax_dips.utils.inspect][INFO] - iteration 4900/10000 - loss: 6.680076330667362e-05
+[2026-04-20 21:50:17,836][jax_dips.utils.inspect][INFO] - iteration 5000/10000 - loss: 5.921675619902089e-05
+[2026-04-20 21:50:22,803][jax_dips.utils.inspect][INFO] - iteration 5100/10000 - loss: 5.321932621882297e-05
+[2026-04-20 21:50:27,768][jax_dips.utils.inspect][INFO] - iteration 5200/10000 - loss: 4.843694478040561e-05
+[2026-04-20 21:50:32,734][jax_dips.utils.inspect][INFO] - iteration 5300/10000 - loss: 4.464231096790172e-05
+[2026-04-20 21:50:37,699][jax_dips.utils.inspect][INFO] - iteration 5400/10000 - loss: 4.159027594141662e-05
+[2026-04-20 21:50:42,661][jax_dips.utils.inspect][INFO] - iteration 5500/10000 - loss: 3.917953290510923e-05
+[2026-04-20 21:50:47,625][jax_dips.utils.inspect][INFO] - iteration 5600/10000 - loss: 3.689232107717544e-05
+[2026-04-20 21:50:52,590][jax_dips.utils.inspect][INFO] - iteration 5700/10000 - loss: 3.5004602978006005e-05
+[2026-04-20 21:50:57,553][jax_dips.utils.inspect][INFO] - iteration 5800/10000 - loss: 3.335042129037902e-05
+[2026-04-20 21:51:02,520][jax_dips.utils.inspect][INFO] - iteration 5900/10000 - loss: 3.185711466358043e-05
+[2026-04-20 21:51:07,484][jax_dips.utils.inspect][INFO] - iteration 6000/10000 - loss: 3.049339647986926e-05
+[2026-04-20 21:51:12,450][jax_dips.utils.inspect][INFO] - iteration 6100/10000 - loss: 2.921585473814048e-05
+[2026-04-20 21:51:17,415][jax_dips.utils.inspect][INFO] - iteration 6200/10000 - loss: 2.831596248142887e-05
+[2026-04-20 21:51:22,381][jax_dips.utils.inspect][INFO] - iteration 6300/10000 - loss: 2.7005358788301237e-05
+[2026-04-20 21:51:27,346][jax_dips.utils.inspect][INFO] - iteration 6400/10000 - loss: 2.6447025447851047e-05
+[2026-04-20 21:51:32,308][jax_dips.utils.inspect][INFO] - iteration 6500/10000 - loss: 2.52702539000893e-05
+[2026-04-20 21:51:37,271][jax_dips.utils.inspect][INFO] - iteration 6600/10000 - loss: 2.4300610675709322e-05
+[2026-04-20 21:51:42,233][jax_dips.utils.inspect][INFO] - iteration 6700/10000 - loss: 2.3472948669223115e-05
+[2026-04-20 21:51:47,197][jax_dips.utils.inspect][INFO] - iteration 6800/10000 - loss: 2.2764714231016114e-05
+[2026-04-20 21:51:52,163][jax_dips.utils.inspect][INFO] - iteration 6900/10000 - loss: 2.2123465896584094e-05
+[2026-04-20 21:51:57,130][jax_dips.utils.inspect][INFO] - iteration 7000/10000 - loss: 2.158416828024201e-05
+[2026-04-20 21:52:02,096][jax_dips.utils.inspect][INFO] - iteration 7100/10000 - loss: 2.073420910164714e-05
+[2026-04-20 21:52:07,062][jax_dips.utils.inspect][INFO] - iteration 7200/10000 - loss: 2.013830453506671e-05
+[2026-04-20 21:52:12,026][jax_dips.utils.inspect][INFO] - iteration 7300/10000 - loss: 1.9579107174649835e-05
+[2026-04-20 21:52:16,990][jax_dips.utils.inspect][INFO] - iteration 7400/10000 - loss: 1.9311633877805434e-05
+[2026-04-20 21:52:21,957][jax_dips.utils.inspect][INFO] - iteration 7500/10000 - loss: 1.853388312156312e-05
+[2026-04-20 21:52:26,920][jax_dips.utils.inspect][INFO] - iteration 7600/10000 - loss: 1.8035028915619478e-05
+[2026-04-20 21:52:31,884][jax_dips.utils.inspect][INFO] - iteration 7700/10000 - loss: 1.7632171875447966e-05
+[2026-04-20 21:52:36,848][jax_dips.utils.inspect][INFO] - iteration 7800/10000 - loss: 1.7113436115323566e-05
+[2026-04-20 21:52:41,813][jax_dips.utils.inspect][INFO] - iteration 7900/10000 - loss: 1.68343358382117e-05
+[2026-04-20 21:52:46,779][jax_dips.utils.inspect][INFO] - iteration 8000/10000 - loss: 1.6352511011064053e-05
+[2026-04-20 21:52:51,743][jax_dips.utils.inspect][INFO] - iteration 8100/10000 - loss: 1.6241578123299405e-05
+[2026-04-20 21:52:56,708][jax_dips.utils.inspect][INFO] - iteration 8200/10000 - loss: 1.5497229469474405e-05
+[2026-04-20 21:53:01,675][jax_dips.utils.inspect][INFO] - iteration 8300/10000 - loss: 1.5131427971937228e-05
+[2026-04-20 21:53:06,638][jax_dips.utils.inspect][INFO] - iteration 8400/10000 - loss: 1.5171043742157053e-05
+[2026-04-20 21:53:11,604][jax_dips.utils.inspect][INFO] - iteration 8500/10000 - loss: 1.457119287806563e-05
+[2026-04-20 21:53:16,568][jax_dips.utils.inspect][INFO] - iteration 8600/10000 - loss: 1.4126671885605901e-05
+[2026-04-20 21:53:21,530][jax_dips.utils.inspect][INFO] - iteration 8700/10000 - loss: 1.377139960823115e-05
+[2026-04-20 21:53:26,495][jax_dips.utils.inspect][INFO] - iteration 8800/10000 - loss: 1.3499378837877885e-05
+[2026-04-20 21:53:31,457][jax_dips.utils.inspect][INFO] - iteration 8900/10000 - loss: 1.3164463780412916e-05
+[2026-04-20 21:53:36,422][jax_dips.utils.inspect][INFO] - iteration 9000/10000 - loss: 1.2874657841166481e-05
+[2026-04-20 21:53:41,387][jax_dips.utils.inspect][INFO] - iteration 9100/10000 - loss: 1.2580071597767528e-05
+[2026-04-20 21:53:46,351][jax_dips.utils.inspect][INFO] - iteration 9200/10000 - loss: 1.2311013051657937e-05
+[2026-04-20 21:53:51,315][jax_dips.utils.inspect][INFO] - iteration 9300/10000 - loss: 1.2050450095557608e-05
+[2026-04-20 21:53:56,279][jax_dips.utils.inspect][INFO] - iteration 9400/10000 - loss: 1.2175843949080445e-05
+[2026-04-20 21:54:01,244][jax_dips.utils.inspect][INFO] - iteration 9500/10000 - loss: 1.1535612429725006e-05
+[2026-04-20 21:54:06,358][jax_dips.utils.inspect][INFO] - iteration 9600/10000 - loss: 1.1348300176905468e-05
+[2026-04-20 21:54:11,405][jax_dips.utils.inspect][INFO] - iteration 9700/10000 - loss: 1.105951378121972e-05
+[2026-04-20 21:54:17,084][jax_dips.utils.inspect][INFO] - iteration 9800/10000 - loss: 1.0866242519114166e-05
+[2026-04-20 21:54:23,353][jax_dips.utils.inspect][INFO] - iteration 9900/10000 - loss: 1.0618876331136562e-05
+[2026-04-20 21:54:29,560][jax_dips.solvers.poisson.trainer][INFO] - solve took 516.0708863735199 (sec)
+[2026-04-20 21:54:29,675][jax_dips.solvers.poisson.trainer][INFO] - Saving checkpoint robin/checkpoints/checkpoint_10000
+[2026-04-20 21:54:30,537][__main__][INFO] - solve took 519.9567964076996 seconds
+[2026-04-20 21:54:31,274][__main__][INFO] - Accuracy: 
+ L_inf : 0.03722444176673889 
+ 
+ L_2 : 3.155223846435547 
+ Rel. L_2 : 0.016178039833903313 
+ RMSD error : 0.00616254610940814
+[2026-04-20 21:54:31,274][__main__][INFO] - Experiment robin completed! 
+
+[2026-04-20 22:00:52,209][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-04-20 22:00:52,211][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 64
+  Ny_lvl: 64
+  Nz_lvl: 64
+  Nx_eval: 64
+  Ny_eval: 64
+  Nz_eval: 64
+solver:
+  Nx_tr: 32
+  Ny_tr: 32
+  Nz_tr: 32
+  num_epochs: 20000
+  batch_size: 32768
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-04-20 22:00:52,211][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-04-20 22:00:52,642][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 22:00:52,642][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 22:00:54,001][jax_dips.solvers.optimizers][INFO] - Using chained Adam optimizer
+[2026-04-20 22:00:54,001][jax_dips.solvers.optimizers][INFO] - Using Exponential Scheduler
+[2026-04-20 22:00:56,656][jax_dips.utils.inspect][INFO] - Architecture Summary (trainable parameters):
+
+[2026-04-20 22:00:56,656][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear'                 	 has trainable parameters:	 {'b': (10,), 'w': (3, 10)}
+[2026-04-20 22:00:56,656][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_1'               	 has trainable parameters:	 {'b': (10,), 'w': (10, 10)}
+[2026-04-20 22:00:56,656][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_2'               	 has trainable parameters:	 {'b': (1,), 'w': (10, 1)}
+[2026-04-20 22:00:56,656][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear'                 	 has trainable parameters:	 {'b': (1,), 'w': (3, 1)}
+[2026-04-20 22:00:56,657][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear_1'               	 has trainable parameters:	 {'b': (1,), 'w': (1, 1)}
+[2026-04-20 22:00:56,657][jax_dips.utils.inspect][INFO] - Total number of trainable parameters = 167 ...
+
+[2026-04-20 22:01:11,249][jax_dips.utils.inspect][INFO] - iteration 0/20000 - loss: 0.08234889060258865
+[2026-04-20 22:01:16,182][jax_dips.utils.inspect][INFO] - iteration 100/20000 - loss: 0.011693811044096947
+[2026-04-20 22:01:21,003][jax_dips.utils.inspect][INFO] - iteration 200/20000 - loss: 0.004276548512279987
+[2026-04-20 22:01:25,838][jax_dips.utils.inspect][INFO] - iteration 300/20000 - loss: 0.004057000856846571
+[2026-04-20 22:01:30,682][jax_dips.utils.inspect][INFO] - iteration 400/20000 - loss: 0.003548665437847376
+[2026-04-20 22:01:35,541][jax_dips.utils.inspect][INFO] - iteration 500/20000 - loss: 0.003023103578016162
+[2026-04-20 22:01:40,405][jax_dips.utils.inspect][INFO] - iteration 600/20000 - loss: 0.002567836083471775
+[2026-04-20 22:01:45,281][jax_dips.utils.inspect][INFO] - iteration 700/20000 - loss: 0.0020168880000710487
+[2026-04-20 22:01:50,166][jax_dips.utils.inspect][INFO] - iteration 800/20000 - loss: 0.0014801445649936795
+[2026-04-20 22:01:55,055][jax_dips.utils.inspect][INFO] - iteration 900/20000 - loss: 0.0010941564105451107
+[2026-04-20 22:01:59,950][jax_dips.utils.inspect][INFO] - iteration 1000/20000 - loss: 0.0008272877894341946
+[2026-04-20 22:02:04,854][jax_dips.utils.inspect][INFO] - iteration 1100/20000 - loss: 0.0006404632003977895
+[2026-04-20 22:02:09,764][jax_dips.utils.inspect][INFO] - iteration 1200/20000 - loss: 0.0005082190036773682
+[2026-04-20 22:02:14,684][jax_dips.utils.inspect][INFO] - iteration 1300/20000 - loss: 0.00041717314161360264
+[2026-04-20 22:02:19,600][jax_dips.utils.inspect][INFO] - iteration 1400/20000 - loss: 0.00035775519791059196
+[2026-04-20 22:02:24,521][jax_dips.utils.inspect][INFO] - iteration 1500/20000 - loss: 0.0003201435902155936
+[2026-04-20 22:02:29,445][jax_dips.utils.inspect][INFO] - iteration 1600/20000 - loss: 0.0002959909616038203
+[2026-04-20 22:02:34,370][jax_dips.utils.inspect][INFO] - iteration 1700/20000 - loss: 0.0002798758796416223
+[2026-04-20 22:02:39,296][jax_dips.utils.inspect][INFO] - iteration 1800/20000 - loss: 0.00026838021585717797
+[2026-04-20 22:02:44,235][jax_dips.utils.inspect][INFO] - iteration 1900/20000 - loss: 0.00026004682877101004
+[2026-04-20 22:02:49,179][jax_dips.utils.inspect][INFO] - iteration 2000/20000 - loss: 0.0002537335967645049
+[2026-04-20 22:02:54,121][jax_dips.utils.inspect][INFO] - iteration 2100/20000 - loss: 0.00024879013653844595
+[2026-04-20 22:02:59,070][jax_dips.utils.inspect][INFO] - iteration 2200/20000 - loss: 0.00024476315593346953
+[2026-04-20 22:03:04,015][jax_dips.utils.inspect][INFO] - iteration 2300/20000 - loss: 0.0002413322072243318
+[2026-04-20 22:03:08,963][jax_dips.utils.inspect][INFO] - iteration 2400/20000 - loss: 0.0002384165272815153
+[2026-04-20 22:03:13,909][jax_dips.utils.inspect][INFO] - iteration 2500/20000 - loss: 0.00023549003526568413
+[2026-04-20 22:03:18,858][jax_dips.utils.inspect][INFO] - iteration 2600/20000 - loss: 0.00023282147594727576
+[2026-04-20 22:03:23,805][jax_dips.utils.inspect][INFO] - iteration 2700/20000 - loss: 0.00023021097877062857
+[2026-04-20 22:03:28,754][jax_dips.utils.inspect][INFO] - iteration 2800/20000 - loss: 0.0002275999286212027
+[2026-04-20 22:03:33,702][jax_dips.utils.inspect][INFO] - iteration 2900/20000 - loss: 0.00022495005396194756
+[2026-04-20 22:03:38,653][jax_dips.utils.inspect][INFO] - iteration 3000/20000 - loss: 0.00022219539096113294
+[2026-04-20 22:03:43,605][jax_dips.utils.inspect][INFO] - iteration 3100/20000 - loss: 0.00021940399892628193
+[2026-04-20 22:03:48,557][jax_dips.utils.inspect][INFO] - iteration 3200/20000 - loss: 0.00021626500529237092
+[2026-04-20 22:03:53,510][jax_dips.utils.inspect][INFO] - iteration 3300/20000 - loss: 0.00021298625506460667
+[2026-04-20 22:03:58,459][jax_dips.utils.inspect][INFO] - iteration 3400/20000 - loss: 0.00020942158880643547
+[2026-04-20 22:04:03,411][jax_dips.utils.inspect][INFO] - iteration 3500/20000 - loss: 0.00020549827604554594
+[2026-04-20 22:04:08,363][jax_dips.utils.inspect][INFO] - iteration 3600/20000 - loss: 0.00020112679339945316
+[2026-04-20 22:04:13,314][jax_dips.utils.inspect][INFO] - iteration 3700/20000 - loss: 0.0001961956440936774
+[2026-04-20 22:04:18,265][jax_dips.utils.inspect][INFO] - iteration 3800/20000 - loss: 0.00019056574092246592
+[2026-04-20 22:04:23,216][jax_dips.utils.inspect][INFO] - iteration 3900/20000 - loss: 0.0001840802578954026
+[2026-04-20 22:04:28,169][jax_dips.utils.inspect][INFO] - iteration 4000/20000 - loss: 0.00017647718777880073
+[2026-04-20 22:04:33,120][jax_dips.utils.inspect][INFO] - iteration 4100/20000 - loss: 0.00016757682897150517
+[2026-04-20 22:04:38,074][jax_dips.utils.inspect][INFO] - iteration 4200/20000 - loss: 0.00015704851830378175
+[2026-04-20 22:04:43,027][jax_dips.utils.inspect][INFO] - iteration 4300/20000 - loss: 0.00014485599240288138
+[2026-04-20 22:04:47,980][jax_dips.utils.inspect][INFO] - iteration 4400/20000 - loss: 0.0001308275095652789
+[2026-04-20 22:04:52,932][jax_dips.utils.inspect][INFO] - iteration 4500/20000 - loss: 0.00011589491623453796
+[2026-04-20 22:04:57,884][jax_dips.utils.inspect][INFO] - iteration 4600/20000 - loss: 0.00010096609184984118
+[2026-04-20 22:05:02,839][jax_dips.utils.inspect][INFO] - iteration 4700/20000 - loss: 8.75468977028504e-05
+[2026-04-20 22:05:07,790][jax_dips.utils.inspect][INFO] - iteration 4800/20000 - loss: 7.623502460774034e-05
+[2026-04-20 22:05:12,746][jax_dips.utils.inspect][INFO] - iteration 4900/20000 - loss: 6.701066013192758e-05
+[2026-04-20 22:05:17,699][jax_dips.utils.inspect][INFO] - iteration 5000/20000 - loss: 5.9253954532323405e-05
+[2026-04-20 22:05:22,650][jax_dips.utils.inspect][INFO] - iteration 5100/20000 - loss: 5.324009180185385e-05
+[2026-04-20 22:05:27,601][jax_dips.utils.inspect][INFO] - iteration 5200/20000 - loss: 4.844469731324352e-05
+[2026-04-20 22:05:32,555][jax_dips.utils.inspect][INFO] - iteration 5300/20000 - loss: 4.4692416850011796e-05
+[2026-04-20 22:05:37,507][jax_dips.utils.inspect][INFO] - iteration 5400/20000 - loss: 4.1623570723459125e-05
+[2026-04-20 22:05:42,459][jax_dips.utils.inspect][INFO] - iteration 5500/20000 - loss: 3.908442522515543e-05
+[2026-04-20 22:05:47,409][jax_dips.utils.inspect][INFO] - iteration 5600/20000 - loss: 3.693359030876309e-05
+[2026-04-20 22:05:52,361][jax_dips.utils.inspect][INFO] - iteration 5700/20000 - loss: 3.503583138808608e-05
+[2026-04-20 22:05:57,311][jax_dips.utils.inspect][INFO] - iteration 5800/20000 - loss: 3.33985808538273e-05
+[2026-04-20 22:06:02,266][jax_dips.utils.inspect][INFO] - iteration 5900/20000 - loss: 3.1872848921921104e-05
+[2026-04-20 22:06:07,218][jax_dips.utils.inspect][INFO] - iteration 6000/20000 - loss: 3.052394458791241e-05
+[2026-04-20 22:06:12,170][jax_dips.utils.inspect][INFO] - iteration 6100/20000 - loss: 2.9223228921182454e-05
+[2026-04-20 22:06:17,308][jax_dips.utils.inspect][INFO] - iteration 6200/20000 - loss: 2.8232872864464298e-05
+[2026-04-20 22:06:22,345][jax_dips.utils.inspect][INFO] - iteration 6300/20000 - loss: 2.728529943851754e-05
+[2026-04-20 22:06:28,150][jax_dips.utils.inspect][INFO] - iteration 6400/20000 - loss: 2.609845978440717e-05
+[2026-04-20 22:06:34,420][jax_dips.utils.inspect][INFO] - iteration 6500/20000 - loss: 2.513425533834379e-05
+[2026-04-20 22:06:40,689][jax_dips.utils.inspect][INFO] - iteration 6600/20000 - loss: 2.436910835967865e-05
+[2026-04-20 22:06:46,958][jax_dips.utils.inspect][INFO] - iteration 6700/20000 - loss: 2.3499635062762536e-05
+[2026-04-20 22:06:53,230][jax_dips.utils.inspect][INFO] - iteration 6800/20000 - loss: 2.275990482303314e-05
+[2026-04-20 22:06:59,502][jax_dips.utils.inspect][INFO] - iteration 6900/20000 - loss: 2.2335480025503784e-05
+[2026-04-20 22:07:05,770][jax_dips.utils.inspect][INFO] - iteration 7000/20000 - loss: 2.177611349907238e-05
+[2026-04-20 22:07:12,080][jax_dips.utils.inspect][INFO] - iteration 7100/20000 - loss: 2.1038702470832504e-05
+[2026-04-20 22:07:16,978][jax_dips.utils.inspect][INFO] - iteration 7200/20000 - loss: 2.0174933524685912e-05
+[2026-04-20 22:07:21,946][jax_dips.utils.inspect][INFO] - iteration 7300/20000 - loss: 1.962273017852567e-05
+[2026-04-20 22:07:26,856][jax_dips.utils.inspect][INFO] - iteration 7400/20000 - loss: 1.9075996533501893e-05
+[2026-04-20 22:07:31,772][jax_dips.utils.inspect][INFO] - iteration 7500/20000 - loss: 1.8620523405843414e-05
+[2026-04-20 22:07:36,690][jax_dips.utils.inspect][INFO] - iteration 7600/20000 - loss: 1.8096354324370623e-05
+[2026-04-20 22:07:41,610][jax_dips.utils.inspect][INFO] - iteration 7700/20000 - loss: 1.7637112250667997e-05
+[2026-04-20 22:07:46,532][jax_dips.utils.inspect][INFO] - iteration 7800/20000 - loss: 1.715899634291418e-05
+[2026-04-20 22:07:51,455][jax_dips.utils.inspect][INFO] - iteration 7900/20000 - loss: 1.674675877438858e-05
+[2026-04-20 22:07:56,379][jax_dips.utils.inspect][INFO] - iteration 8000/20000 - loss: 1.657576285651885e-05
+[2026-04-20 22:08:01,319][jax_dips.utils.inspect][INFO] - iteration 8100/20000 - loss: 1.5919487850624137e-05
+[2026-04-20 22:08:06,260][jax_dips.utils.inspect][INFO] - iteration 8200/20000 - loss: 1.553413676447235e-05
+[2026-04-20 22:08:11,208][jax_dips.utils.inspect][INFO] - iteration 8300/20000 - loss: 1.5178828107309528e-05
+[2026-04-20 22:08:16,155][jax_dips.utils.inspect][INFO] - iteration 8400/20000 - loss: 1.5117071598069742e-05
+[2026-04-20 22:08:21,102][jax_dips.utils.inspect][INFO] - iteration 8500/20000 - loss: 1.5121483556868043e-05
+[2026-04-20 22:08:26,054][jax_dips.utils.inspect][INFO] - iteration 8600/20000 - loss: 1.4136126083030831e-05
+[2026-04-20 22:08:31,002][jax_dips.utils.inspect][INFO] - iteration 8700/20000 - loss: 1.3859392311132979e-05
+[2026-04-20 22:08:36,074][jax_dips.utils.inspect][INFO] - iteration 8800/20000 - loss: 1.3582457540906034e-05
+[2026-04-20 22:08:41,116][jax_dips.utils.inspect][INFO] - iteration 8900/20000 - loss: 1.3354134352994151e-05
+[2026-04-20 22:08:46,142][jax_dips.utils.inspect][INFO] - iteration 9000/20000 - loss: 1.2958984370925464e-05
+[2026-04-20 22:08:51,248][jax_dips.utils.inspect][INFO] - iteration 9100/20000 - loss: 1.2654478268814273e-05
+[2026-04-20 22:08:56,361][jax_dips.utils.inspect][INFO] - iteration 9200/20000 - loss: 1.3791417586617172e-05
+[2026-04-20 22:09:01,569][jax_dips.utils.inspect][INFO] - iteration 9300/20000 - loss: 1.2601863090822008e-05
+[2026-04-20 22:09:06,722][jax_dips.utils.inspect][INFO] - iteration 9400/20000 - loss: 1.2477237760322168e-05
+[2026-04-20 22:09:12,291][jax_dips.utils.inspect][INFO] - iteration 9500/20000 - loss: 1.1657056347758044e-05
+[2026-04-20 22:09:17,859][jax_dips.utils.inspect][INFO] - iteration 9600/20000 - loss: 1.137094932346372e-05
+[2026-04-20 22:09:23,437][jax_dips.utils.inspect][INFO] - iteration 9700/20000 - loss: 1.1623764294199646e-05
+[2026-04-20 22:09:29,016][jax_dips.utils.inspect][INFO] - iteration 9800/20000 - loss: 1.1416648703743704e-05
+[2026-04-20 22:09:34,595][jax_dips.utils.inspect][INFO] - iteration 9900/20000 - loss: 1.090767818823224e-05
+[2026-04-20 22:09:40,157][jax_dips.utils.inspect][INFO] - iteration 10000/20000 - loss: 1.0432705494167749e-05
+[2026-04-20 22:09:45,727][jax_dips.utils.inspect][INFO] - iteration 10100/20000 - loss: 1.1188112694071606e-05
+[2026-04-20 22:09:51,296][jax_dips.utils.inspect][INFO] - iteration 10200/20000 - loss: 1.0024373295891564e-05
+[2026-04-20 22:09:56,869][jax_dips.utils.inspect][INFO] - iteration 10300/20000 - loss: 1.0027813914348371e-05
+[2026-04-20 22:10:02,446][jax_dips.utils.inspect][INFO] - iteration 10400/20000 - loss: 1.0337291314499453e-05
+[2026-04-20 22:10:08,018][jax_dips.utils.inspect][INFO] - iteration 10500/20000 - loss: 1.1227593859075569e-05
+[2026-04-20 22:10:13,594][jax_dips.utils.inspect][INFO] - iteration 10600/20000 - loss: 9.559567843098193e-06
+[2026-04-20 22:10:19,155][jax_dips.utils.inspect][INFO] - iteration 10700/20000 - loss: 9.324920029030181e-06
+[2026-04-20 22:10:24,722][jax_dips.utils.inspect][INFO] - iteration 10800/20000 - loss: 9.434285857423674e-06
+[2026-04-20 22:10:30,281][jax_dips.utils.inspect][INFO] - iteration 10900/20000 - loss: 8.797314876574092e-06
+[2026-04-20 22:10:35,858][jax_dips.utils.inspect][INFO] - iteration 11000/20000 - loss: 8.863957191351801e-06
+[2026-04-20 22:10:41,430][jax_dips.utils.inspect][INFO] - iteration 11100/20000 - loss: 8.526161764166318e-06
+[2026-04-20 22:10:47,003][jax_dips.utils.inspect][INFO] - iteration 11200/20000 - loss: 8.61342232383322e-06
+[2026-04-20 22:10:52,581][jax_dips.utils.inspect][INFO] - iteration 11300/20000 - loss: 8.22350375528913e-06
+[2026-04-20 22:10:57,881][jax_dips.utils.inspect][INFO] - iteration 11400/20000 - loss: 8.090057235676795e-06
+[2026-04-20 22:11:03,235][jax_dips.utils.inspect][INFO] - iteration 11500/20000 - loss: 8.026610885281116e-06
+[2026-04-20 22:11:08,519][jax_dips.utils.inspect][INFO] - iteration 11600/20000 - loss: 7.831058610463515e-06
+[2026-04-20 22:11:13,691][jax_dips.utils.inspect][INFO] - iteration 11700/20000 - loss: 7.72373823565431e-06
+[2026-04-20 22:11:18,704][jax_dips.utils.inspect][INFO] - iteration 11800/20000 - loss: 7.766125236230437e-06
+[2026-04-20 22:11:23,770][jax_dips.utils.inspect][INFO] - iteration 11900/20000 - loss: 7.510464456572663e-06
+[2026-04-20 22:11:28,734][jax_dips.utils.inspect][INFO] - iteration 12000/20000 - loss: 7.361027201113757e-06
+[2026-04-20 22:11:33,696][jax_dips.utils.inspect][INFO] - iteration 12100/20000 - loss: 7.260065103764646e-06
+[2026-04-20 22:11:38,661][jax_dips.utils.inspect][INFO] - iteration 12200/20000 - loss: 7.144287337723654e-06
+[2026-04-20 22:11:43,625][jax_dips.utils.inspect][INFO] - iteration 12300/20000 - loss: 7.041771823423915e-06
+[2026-04-20 22:11:48,593][jax_dips.utils.inspect][INFO] - iteration 12400/20000 - loss: 7.157610525609925e-06
+[2026-04-20 22:11:53,558][jax_dips.utils.inspect][INFO] - iteration 12500/20000 - loss: 6.846486940048635e-06
+[2026-04-20 22:11:58,524][jax_dips.utils.inspect][INFO] - iteration 12600/20000 - loss: 6.758214567526011e-06
+[2026-04-20 22:12:03,490][jax_dips.utils.inspect][INFO] - iteration 12700/20000 - loss: 6.6586953835212626e-06
+[2026-04-20 22:12:08,457][jax_dips.utils.inspect][INFO] - iteration 12800/20000 - loss: 6.569699962710729e-06
+[2026-04-20 22:12:13,421][jax_dips.utils.inspect][INFO] - iteration 12900/20000 - loss: 6.506882527901325e-06
+[2026-04-20 22:12:18,386][jax_dips.utils.inspect][INFO] - iteration 13000/20000 - loss: 6.451047283917433e-06
+[2026-04-20 22:12:23,350][jax_dips.utils.inspect][INFO] - iteration 13100/20000 - loss: 6.322119133983506e-06
+[2026-04-20 22:12:28,314][jax_dips.utils.inspect][INFO] - iteration 13200/20000 - loss: 6.237358320504427e-06
+[2026-04-20 22:12:33,276][jax_dips.utils.inspect][INFO] - iteration 13300/20000 - loss: 6.1598134379892144e-06
+[2026-04-20 22:12:38,242][jax_dips.utils.inspect][INFO] - iteration 13400/20000 - loss: 6.104878593760077e-06
+[2026-04-20 22:12:43,208][jax_dips.utils.inspect][INFO] - iteration 13500/20000 - loss: 6.022457000653958e-06
+[2026-04-20 22:12:48,171][jax_dips.utils.inspect][INFO] - iteration 13600/20000 - loss: 5.9844642237294465e-06
+[2026-04-20 22:12:53,135][jax_dips.utils.inspect][INFO] - iteration 13700/20000 - loss: 5.864124887011712e-06
+[2026-04-20 22:12:58,101][jax_dips.utils.inspect][INFO] - iteration 13800/20000 - loss: 5.8623259064916056e-06
+[2026-04-20 22:13:03,067][jax_dips.utils.inspect][INFO] - iteration 13900/20000 - loss: 5.7783986449067015e-06
+[2026-04-20 22:13:08,031][jax_dips.utils.inspect][INFO] - iteration 14000/20000 - loss: 6.8271710915723816e-06
+[2026-04-20 22:13:12,995][jax_dips.utils.inspect][INFO] - iteration 14100/20000 - loss: 5.591431090579135e-06
+[2026-04-20 22:13:17,963][jax_dips.utils.inspect][INFO] - iteration 14200/20000 - loss: 5.535673153644893e-06
+[2026-04-20 22:13:22,930][jax_dips.utils.inspect][INFO] - iteration 14300/20000 - loss: 5.4877286856935825e-06
+[2026-04-20 22:13:27,896][jax_dips.utils.inspect][INFO] - iteration 14400/20000 - loss: 5.591916306002531e-06
+[2026-04-20 22:13:32,862][jax_dips.utils.inspect][INFO] - iteration 14500/20000 - loss: 5.344708824850386e-06
+[2026-04-20 22:13:37,827][jax_dips.utils.inspect][INFO] - iteration 14600/20000 - loss: 5.319360752764624e-06
+[2026-04-20 22:13:42,793][jax_dips.utils.inspect][INFO] - iteration 14700/20000 - loss: 5.281780431687366e-06
+[2026-04-20 22:13:47,760][jax_dips.utils.inspect][INFO] - iteration 14800/20000 - loss: 5.389349098550156e-06
+[2026-04-20 22:13:52,727][jax_dips.utils.inspect][INFO] - iteration 14900/20000 - loss: 6.131513600848848e-06
+[2026-04-20 22:13:57,692][jax_dips.utils.inspect][INFO] - iteration 15000/20000 - loss: 5.256787972029997e-06
+[2026-04-20 22:14:02,657][jax_dips.utils.inspect][INFO] - iteration 15100/20000 - loss: 6.332739758363459e-06
+[2026-04-20 22:14:07,622][jax_dips.utils.inspect][INFO] - iteration 15200/20000 - loss: 4.960938895237632e-06
+[2026-04-20 22:14:12,590][jax_dips.utils.inspect][INFO] - iteration 15300/20000 - loss: 4.900102794636041e-06
+[2026-04-20 22:14:17,554][jax_dips.utils.inspect][INFO] - iteration 15400/20000 - loss: 5.440619133878499e-06
+[2026-04-20 22:14:22,520][jax_dips.utils.inspect][INFO] - iteration 15500/20000 - loss: 4.795486347575206e-06
+[2026-04-20 22:14:27,484][jax_dips.utils.inspect][INFO] - iteration 15600/20000 - loss: 4.76118475489784e-06
+[2026-04-20 22:14:32,448][jax_dips.utils.inspect][INFO] - iteration 15700/20000 - loss: 4.7668554543633945e-06
+[2026-04-20 22:14:37,408][jax_dips.utils.inspect][INFO] - iteration 15800/20000 - loss: 4.695029019785579e-06
+[2026-04-20 22:14:42,373][jax_dips.utils.inspect][INFO] - iteration 15900/20000 - loss: 4.6048926378716715e-06
+[2026-04-20 22:14:47,336][jax_dips.utils.inspect][INFO] - iteration 16000/20000 - loss: 4.6284790187201e-06
+[2026-04-20 22:14:52,302][jax_dips.utils.inspect][INFO] - iteration 16100/20000 - loss: 4.611507392837666e-06
+[2026-04-20 22:14:57,267][jax_dips.utils.inspect][INFO] - iteration 16200/20000 - loss: 4.789311333297519e-06
+[2026-04-20 22:15:02,234][jax_dips.utils.inspect][INFO] - iteration 16300/20000 - loss: 5.625594894809183e-06
+[2026-04-20 22:15:07,199][jax_dips.utils.inspect][INFO] - iteration 16400/20000 - loss: 4.824508778256131e-06
+[2026-04-20 22:15:12,164][jax_dips.utils.inspect][INFO] - iteration 16500/20000 - loss: 4.348793936514994e-06
+[2026-04-20 22:15:17,129][jax_dips.utils.inspect][INFO] - iteration 16600/20000 - loss: 4.3044974518124945e-06
+[2026-04-20 22:15:22,095][jax_dips.utils.inspect][INFO] - iteration 16700/20000 - loss: 4.265844836481847e-06
+[2026-04-20 22:15:27,059][jax_dips.utils.inspect][INFO] - iteration 16800/20000 - loss: 4.277947027730988e-06
+[2026-04-20 22:15:32,023][jax_dips.utils.inspect][INFO] - iteration 16900/20000 - loss: 4.1819071157078724e-06
+[2026-04-20 22:15:36,984][jax_dips.utils.inspect][INFO] - iteration 17000/20000 - loss: 5.4564670790568925e-06
+[2026-04-20 22:15:41,948][jax_dips.utils.inspect][INFO] - iteration 17100/20000 - loss: 4.113810973649379e-06
+[2026-04-20 22:15:46,912][jax_dips.utils.inspect][INFO] - iteration 17200/20000 - loss: 4.065032499056542e-06
+[2026-04-20 22:15:51,873][jax_dips.utils.inspect][INFO] - iteration 17300/20000 - loss: 4.028902367281262e-06
+[2026-04-20 22:15:56,835][jax_dips.utils.inspect][INFO] - iteration 17400/20000 - loss: 3.996810846729204e-06
+[2026-04-20 22:16:01,804][jax_dips.utils.inspect][INFO] - iteration 17500/20000 - loss: 3.955980446335161e-06
+[2026-04-20 22:16:06,766][jax_dips.utils.inspect][INFO] - iteration 17600/20000 - loss: 3.925381861336064e-06
+[2026-04-20 22:16:11,728][jax_dips.utils.inspect][INFO] - iteration 17700/20000 - loss: 4.221379640512168e-06
+[2026-04-20 22:16:16,690][jax_dips.utils.inspect][INFO] - iteration 17800/20000 - loss: 3.904853656422347e-06
+[2026-04-20 22:16:21,654][jax_dips.utils.inspect][INFO] - iteration 17900/20000 - loss: 3.838605152850505e-06
+[2026-04-20 22:16:26,688][jax_dips.utils.inspect][INFO] - iteration 18000/20000 - loss: 3.878890311170835e-06
+[2026-04-20 22:16:31,797][jax_dips.utils.inspect][INFO] - iteration 18100/20000 - loss: 3.819817266048631e-06
+[2026-04-20 22:16:36,880][jax_dips.utils.inspect][INFO] - iteration 18200/20000 - loss: 4.022185748908669e-06
+[2026-04-20 22:16:43,148][jax_dips.utils.inspect][INFO] - iteration 18300/20000 - loss: 3.6875214846077142e-06
+[2026-04-20 22:16:49,417][jax_dips.utils.inspect][INFO] - iteration 18400/20000 - loss: 5.330509338818956e-06
+[2026-04-20 22:16:55,683][jax_dips.utils.inspect][INFO] - iteration 18500/20000 - loss: 4.46122885477962e-06
+[2026-04-20 22:17:01,954][jax_dips.utils.inspect][INFO] - iteration 18600/20000 - loss: 4.055860699736513e-06
+[2026-04-20 22:17:08,222][jax_dips.utils.inspect][INFO] - iteration 18700/20000 - loss: 3.6703447676700307e-06
+[2026-04-20 22:17:14,489][jax_dips.utils.inspect][INFO] - iteration 18800/20000 - loss: 4.17442151956493e-06
+[2026-04-20 22:17:20,757][jax_dips.utils.inspect][INFO] - iteration 18900/20000 - loss: 3.509851239869022e-06
+[2026-04-20 22:17:27,024][jax_dips.utils.inspect][INFO] - iteration 19000/20000 - loss: 3.610371322793071e-06
+[2026-04-20 22:17:33,291][jax_dips.utils.inspect][INFO] - iteration 19100/20000 - loss: 3.4759818845486734e-06
+[2026-04-20 22:17:39,559][jax_dips.utils.inspect][INFO] - iteration 19200/20000 - loss: 3.417397238081321e-06
+[2026-04-20 22:17:45,827][jax_dips.utils.inspect][INFO] - iteration 19300/20000 - loss: 3.551187546690926e-06
+[2026-04-20 22:17:52,094][jax_dips.utils.inspect][INFO] - iteration 19400/20000 - loss: 3.3895676097017713e-06
+[2026-04-20 22:17:58,364][jax_dips.utils.inspect][INFO] - iteration 19500/20000 - loss: 3.812825980276102e-06
+[2026-04-20 22:18:04,632][jax_dips.utils.inspect][INFO] - iteration 19600/20000 - loss: 3.474292952887481e-06
+[2026-04-20 22:18:10,897][jax_dips.utils.inspect][INFO] - iteration 19700/20000 - loss: 3.2791831472422928e-06
+[2026-04-20 22:18:17,164][jax_dips.utils.inspect][INFO] - iteration 19800/20000 - loss: 3.256664967921097e-06
+[2026-04-20 22:18:23,429][jax_dips.utils.inspect][INFO] - iteration 19900/20000 - loss: 3.2376565286540426e-06
+[2026-04-20 22:18:29,632][jax_dips.solvers.poisson.trainer][INFO] - solve took 1052.817195892334 (sec)
+[2026-04-20 22:18:29,751][jax_dips.solvers.poisson.trainer][INFO] - Saving checkpoint robin/checkpoints/checkpoint_20000
+[2026-04-20 22:18:30,624][__main__][INFO] - solve took 1057.0942928791046 seconds
+[2026-04-20 22:18:31,384][__main__][INFO] - Accuracy: 
+ L_inf : 0.026535362005233765 
+ 
+ L_2 : 1.851115107536316 
+ Rel. L_2 : 0.009491375647485256 
+ RMSD error : 0.003615459194406867
+[2026-04-20 22:18:31,384][__main__][INFO] - Experiment robin completed! 
+
+[2026-04-20 22:21:24,440][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-04-20 22:21:24,441][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 64
+  Ny_lvl: 64
+  Nz_lvl: 64
+  Nx_eval: 64
+  Ny_eval: 64
+  Nz_eval: 64
+solver:
+  Nx_tr: 32
+  Ny_tr: 32
+  Nz_tr: 32
+  num_epochs: 40000
+  batch_size: 32768
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-04-20 22:21:24,441][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-04-20 22:21:24,858][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 22:21:24,858][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-04-20 22:21:26,220][jax_dips.solvers.optimizers][INFO] - Using chained Adam optimizer
+[2026-04-20 22:21:26,221][jax_dips.solvers.optimizers][INFO] - Using Exponential Scheduler
+[2026-04-20 22:21:28,881][jax_dips.utils.inspect][INFO] - Architecture Summary (trainable parameters):
+
+[2026-04-20 22:21:28,882][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear'                 	 has trainable parameters:	 {'b': (10,), 'w': (3, 10)}
+[2026-04-20 22:21:28,882][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_1'               	 has trainable parameters:	 {'b': (10,), 'w': (10, 10)}
+[2026-04-20 22:21:28,882][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_2'               	 has trainable parameters:	 {'b': (1,), 'w': (10, 1)}
+[2026-04-20 22:21:28,882][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear'                 	 has trainable parameters:	 {'b': (1,), 'w': (3, 1)}
+[2026-04-20 22:21:28,882][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear_1'               	 has trainable parameters:	 {'b': (1,), 'w': (1, 1)}
+[2026-04-20 22:21:28,882][jax_dips.utils.inspect][INFO] - Total number of trainable parameters = 167 ...
+
+[2026-04-20 22:21:43,398][jax_dips.utils.inspect][INFO] - iteration 0/40000 - loss: 0.08234889060258865
+[2026-04-20 22:21:48,593][jax_dips.utils.inspect][INFO] - iteration 100/40000 - loss: 0.011693811044096947
+[2026-04-20 22:21:53,459][jax_dips.utils.inspect][INFO] - iteration 200/40000 - loss: 0.004276548512279987
+[2026-04-20 22:21:58,522][jax_dips.utils.inspect][INFO] - iteration 300/40000 - loss: 0.004057000856846571
+[2026-04-20 22:22:03,438][jax_dips.utils.inspect][INFO] - iteration 400/40000 - loss: 0.003548665437847376
+[2026-04-20 22:22:08,434][jax_dips.utils.inspect][INFO] - iteration 500/40000 - loss: 0.003023103578016162
+[2026-04-20 22:22:13,451][jax_dips.utils.inspect][INFO] - iteration 600/40000 - loss: 0.002567836083471775
+[2026-04-20 22:22:18,390][jax_dips.utils.inspect][INFO] - iteration 700/40000 - loss: 0.0020168880000710487
+[2026-04-20 22:22:23,359][jax_dips.utils.inspect][INFO] - iteration 800/40000 - loss: 0.0014801445649936795
+[2026-04-20 22:22:28,406][jax_dips.utils.inspect][INFO] - iteration 900/40000 - loss: 0.0010941564105451107
+[2026-04-20 22:22:33,350][jax_dips.utils.inspect][INFO] - iteration 1000/40000 - loss: 0.0008272877894341946
+[2026-04-20 22:22:38,347][jax_dips.utils.inspect][INFO] - iteration 1100/40000 - loss: 0.0006404632003977895
+[2026-04-20 22:22:43,372][jax_dips.utils.inspect][INFO] - iteration 1200/40000 - loss: 0.0005082190036773682
+[2026-04-20 22:22:48,350][jax_dips.utils.inspect][INFO] - iteration 1300/40000 - loss: 0.00041717314161360264
+[2026-04-20 22:22:53,391][jax_dips.utils.inspect][INFO] - iteration 1400/40000 - loss: 0.00035775519791059196
+[2026-04-20 22:22:58,485][jax_dips.utils.inspect][INFO] - iteration 1500/40000 - loss: 0.0003201435902155936
+[2026-04-20 22:23:03,435][jax_dips.utils.inspect][INFO] - iteration 1600/40000 - loss: 0.0002959909616038203
+[2026-04-20 22:23:08,382][jax_dips.utils.inspect][INFO] - iteration 1700/40000 - loss: 0.0002798758796416223
+[2026-04-20 22:23:13,335][jax_dips.utils.inspect][INFO] - iteration 1800/40000 - loss: 0.00026838021585717797
+[2026-04-20 22:23:18,299][jax_dips.utils.inspect][INFO] - iteration 1900/40000 - loss: 0.00026004682877101004
+[2026-04-20 22:23:23,268][jax_dips.utils.inspect][INFO] - iteration 2000/40000 - loss: 0.0002537335967645049
+[2026-04-20 22:23:28,238][jax_dips.utils.inspect][INFO] - iteration 2100/40000 - loss: 0.00024879013653844595
+[2026-04-20 22:23:33,210][jax_dips.utils.inspect][INFO] - iteration 2200/40000 - loss: 0.00024476315593346953
+[2026-04-20 22:23:38,180][jax_dips.utils.inspect][INFO] - iteration 2300/40000 - loss: 0.0002413322072243318
+[2026-04-20 22:23:43,150][jax_dips.utils.inspect][INFO] - iteration 2400/40000 - loss: 0.0002384165272815153
+[2026-04-20 22:23:48,119][jax_dips.utils.inspect][INFO] - iteration 2500/40000 - loss: 0.00023549003526568413
+[2026-04-20 22:23:53,090][jax_dips.utils.inspect][INFO] - iteration 2600/40000 - loss: 0.00023282147594727576
+[2026-04-20 22:23:58,061][jax_dips.utils.inspect][INFO] - iteration 2700/40000 - loss: 0.00023021097877062857
+[2026-04-20 22:24:03,032][jax_dips.utils.inspect][INFO] - iteration 2800/40000 - loss: 0.0002275999286212027
+[2026-04-20 22:24:08,003][jax_dips.utils.inspect][INFO] - iteration 2900/40000 - loss: 0.00022495005396194756
+[2026-04-20 22:24:12,976][jax_dips.utils.inspect][INFO] - iteration 3000/40000 - loss: 0.00022219539096113294
+[2026-04-20 22:24:17,949][jax_dips.utils.inspect][INFO] - iteration 3100/40000 - loss: 0.00021940399892628193
+[2026-04-20 22:24:22,924][jax_dips.utils.inspect][INFO] - iteration 3200/40000 - loss: 0.00021626500529237092
+[2026-04-20 22:24:27,900][jax_dips.utils.inspect][INFO] - iteration 3300/40000 - loss: 0.00021298625506460667
+[2026-04-20 22:24:32,873][jax_dips.utils.inspect][INFO] - iteration 3400/40000 - loss: 0.00020942158880643547
+[2026-04-20 22:24:37,847][jax_dips.utils.inspect][INFO] - iteration 3500/40000 - loss: 0.00020549827604554594
+[2026-04-20 22:24:42,824][jax_dips.utils.inspect][INFO] - iteration 3600/40000 - loss: 0.00020112679339945316
+[2026-04-20 22:24:47,799][jax_dips.utils.inspect][INFO] - iteration 3700/40000 - loss: 0.0001961956440936774
+[2026-04-20 22:24:52,771][jax_dips.utils.inspect][INFO] - iteration 3800/40000 - loss: 0.00019056574092246592
+[2026-04-20 22:24:57,745][jax_dips.utils.inspect][INFO] - iteration 3900/40000 - loss: 0.0001840802578954026
+[2026-04-20 22:25:02,722][jax_dips.utils.inspect][INFO] - iteration 4000/40000 - loss: 0.00017647718777880073
+[2026-04-20 22:25:07,694][jax_dips.utils.inspect][INFO] - iteration 4100/40000 - loss: 0.00016757682897150517
+[2026-04-20 22:25:12,673][jax_dips.utils.inspect][INFO] - iteration 4200/40000 - loss: 0.00015704851830378175
+[2026-04-20 22:25:17,646][jax_dips.utils.inspect][INFO] - iteration 4300/40000 - loss: 0.00014485599240288138
+[2026-04-20 22:25:22,618][jax_dips.utils.inspect][INFO] - iteration 4400/40000 - loss: 0.0001308275095652789
+[2026-04-20 22:25:27,592][jax_dips.utils.inspect][INFO] - iteration 4500/40000 - loss: 0.00011589491623453796
+[2026-04-20 22:25:32,566][jax_dips.utils.inspect][INFO] - iteration 4600/40000 - loss: 0.00010096609184984118
+[2026-04-20 22:25:37,546][jax_dips.utils.inspect][INFO] - iteration 4700/40000 - loss: 8.75468977028504e-05
+[2026-04-20 22:25:42,515][jax_dips.utils.inspect][INFO] - iteration 4800/40000 - loss: 7.623502460774034e-05
+[2026-04-20 22:25:47,486][jax_dips.utils.inspect][INFO] - iteration 4900/40000 - loss: 6.701066013192758e-05
+[2026-04-20 22:25:52,459][jax_dips.utils.inspect][INFO] - iteration 5000/40000 - loss: 5.9419486206024885e-05
+[2026-04-20 22:25:57,436][jax_dips.utils.inspect][INFO] - iteration 5100/40000 - loss: 5.343185330275446e-05
+[2026-04-20 22:26:02,411][jax_dips.utils.inspect][INFO] - iteration 5200/40000 - loss: 4.863669164478779e-05
+[2026-04-20 22:26:07,385][jax_dips.utils.inspect][INFO] - iteration 5300/40000 - loss: 4.484187957132235e-05
+[2026-04-20 22:26:12,358][jax_dips.utils.inspect][INFO] - iteration 5400/40000 - loss: 4.1774277633521706e-05
+[2026-04-20 22:26:17,334][jax_dips.utils.inspect][INFO] - iteration 5500/40000 - loss: 3.924237171304412e-05
+[2026-04-20 22:26:22,306][jax_dips.utils.inspect][INFO] - iteration 5600/40000 - loss: 3.707590440171771e-05
+[2026-04-20 22:26:27,283][jax_dips.utils.inspect][INFO] - iteration 5700/40000 - loss: 3.5211727663408965e-05
+[2026-04-20 22:26:32,260][jax_dips.utils.inspect][INFO] - iteration 5800/40000 - loss: 3.353710053488612e-05
+[2026-04-20 22:26:37,236][jax_dips.utils.inspect][INFO] - iteration 5900/40000 - loss: 3.2268020731862634e-05
+[2026-04-20 22:26:42,213][jax_dips.utils.inspect][INFO] - iteration 6000/40000 - loss: 3.065484997932799e-05
+[2026-04-20 22:26:47,193][jax_dips.utils.inspect][INFO] - iteration 6100/40000 - loss: 2.9567701858468354e-05
+[2026-04-20 22:26:52,171][jax_dips.utils.inspect][INFO] - iteration 6200/40000 - loss: 2.8257140002097003e-05
+[2026-04-20 22:26:57,148][jax_dips.utils.inspect][INFO] - iteration 6300/40000 - loss: 2.7204920115764253e-05
+[2026-04-20 22:27:02,127][jax_dips.utils.inspect][INFO] - iteration 6400/40000 - loss: 2.621172825456597e-05
+[2026-04-20 22:27:07,103][jax_dips.utils.inspect][INFO] - iteration 6500/40000 - loss: 2.5301804271293804e-05
+[2026-04-20 22:27:12,079][jax_dips.utils.inspect][INFO] - iteration 6600/40000 - loss: 2.4458304324070923e-05
+[2026-04-20 22:27:17,054][jax_dips.utils.inspect][INFO] - iteration 6700/40000 - loss: 2.4191042029997334e-05
+[2026-04-20 22:27:22,028][jax_dips.utils.inspect][INFO] - iteration 6800/40000 - loss: 2.294059595442377e-05
+[2026-04-20 22:27:27,003][jax_dips.utils.inspect][INFO] - iteration 6900/40000 - loss: 2.2248630557442084e-05
+[2026-04-20 22:27:31,980][jax_dips.utils.inspect][INFO] - iteration 7000/40000 - loss: 2.1743206161772832e-05
+[2026-04-20 22:27:36,957][jax_dips.utils.inspect][INFO] - iteration 7100/40000 - loss: 2.0915846107527614e-05
+[2026-04-20 22:27:41,932][jax_dips.utils.inspect][INFO] - iteration 7200/40000 - loss: 2.0334478904260322e-05
+[2026-04-20 22:27:46,909][jax_dips.utils.inspect][INFO] - iteration 7300/40000 - loss: 1.9749801140278578e-05
+[2026-04-20 22:27:51,885][jax_dips.utils.inspect][INFO] - iteration 7400/40000 - loss: 1.921528200909961e-05
+[2026-04-20 22:27:56,896][jax_dips.utils.inspect][INFO] - iteration 7500/40000 - loss: 1.8760620150715113e-05
+[2026-04-20 22:28:02,033][jax_dips.utils.inspect][INFO] - iteration 7600/40000 - loss: 1.848563988460228e-05
+[2026-04-20 22:28:07,086][jax_dips.utils.inspect][INFO] - iteration 7700/40000 - loss: 1.7838116036728024e-05
+[2026-04-20 22:28:13,212][jax_dips.utils.inspect][INFO] - iteration 7800/40000 - loss: 1.7524667782709002e-05
+[2026-04-20 22:28:19,487][jax_dips.utils.inspect][INFO] - iteration 7900/40000 - loss: 1.686643372522667e-05
+[2026-04-20 22:28:25,761][jax_dips.utils.inspect][INFO] - iteration 8000/40000 - loss: 1.682033689576201e-05
+[2026-04-20 22:28:32,035][jax_dips.utils.inspect][INFO] - iteration 8100/40000 - loss: 1.606262958375737e-05
+[2026-04-20 22:28:38,309][jax_dips.utils.inspect][INFO] - iteration 8200/40000 - loss: 1.5662195437471382e-05
+[2026-04-20 22:28:44,574][jax_dips.utils.inspect][INFO] - iteration 8300/40000 - loss: 1.5296263882191852e-05
+[2026-04-20 22:28:50,838][jax_dips.utils.inspect][INFO] - iteration 8400/40000 - loss: 1.5094024092832115e-05
+[2026-04-20 22:28:57,102][jax_dips.utils.inspect][INFO] - iteration 8500/40000 - loss: 1.4601100701838732e-05
+[2026-04-20 22:29:03,368][jax_dips.utils.inspect][INFO] - iteration 8600/40000 - loss: 1.4881385141052306e-05
+[2026-04-20 22:29:09,629][jax_dips.utils.inspect][INFO] - iteration 8700/40000 - loss: 1.410629556630738e-05
+[2026-04-20 22:29:15,892][jax_dips.utils.inspect][INFO] - iteration 8800/40000 - loss: 1.3633252820000052e-05
+[2026-04-20 22:29:22,156][jax_dips.utils.inspect][INFO] - iteration 8900/40000 - loss: 1.3358443538891152e-05
+[2026-04-20 22:29:28,419][jax_dips.utils.inspect][INFO] - iteration 9000/40000 - loss: 1.3039652003499214e-05
+[2026-04-20 22:29:34,682][jax_dips.utils.inspect][INFO] - iteration 9100/40000 - loss: 1.2854161468567327e-05
+[2026-04-20 22:29:40,945][jax_dips.utils.inspect][INFO] - iteration 9200/40000 - loss: 1.2678657185460906e-05
+[2026-04-20 22:29:47,210][jax_dips.utils.inspect][INFO] - iteration 9300/40000 - loss: 1.2324442650424317e-05
+[2026-04-20 22:29:53,475][jax_dips.utils.inspect][INFO] - iteration 9400/40000 - loss: 1.1958786672039423e-05
+[2026-04-20 22:29:59,744][jax_dips.utils.inspect][INFO] - iteration 9500/40000 - loss: 1.1925729268114083e-05
+[2026-04-20 22:30:06,015][jax_dips.utils.inspect][INFO] - iteration 9600/40000 - loss: 1.194513424707111e-05
+[2026-04-20 22:30:12,287][jax_dips.utils.inspect][INFO] - iteration 9700/40000 - loss: 1.1272564734099433e-05
+[2026-04-20 22:30:18,555][jax_dips.utils.inspect][INFO] - iteration 9800/40000 - loss: 1.1590505891945213e-05
+[2026-04-20 22:30:24,826][jax_dips.utils.inspect][INFO] - iteration 9900/40000 - loss: 1.079568210116122e-05
+[2026-04-20 22:30:31,096][jax_dips.utils.inspect][INFO] - iteration 10000/40000 - loss: 1.0447027307236567e-05
+[2026-04-20 22:30:37,367][jax_dips.utils.inspect][INFO] - iteration 10100/40000 - loss: 1.0207259037997574e-05
+[2026-04-20 22:30:43,636][jax_dips.utils.inspect][INFO] - iteration 10200/40000 - loss: 1.001621967589017e-05
+[2026-04-20 22:30:49,905][jax_dips.utils.inspect][INFO] - iteration 10300/40000 - loss: 9.941006283042952e-06
+[2026-04-20 22:30:56,175][jax_dips.utils.inspect][INFO] - iteration 10400/40000 - loss: 9.840294296736829e-06
+[2026-04-20 22:31:02,449][jax_dips.utils.inspect][INFO] - iteration 10500/40000 - loss: 1.0554086657066364e-05
+[2026-04-20 22:31:08,718][jax_dips.utils.inspect][INFO] - iteration 10600/40000 - loss: 9.366443009639625e-06
+[2026-04-20 22:31:14,989][jax_dips.utils.inspect][INFO] - iteration 10700/40000 - loss: 9.16797034733463e-06
+[2026-04-20 22:31:21,259][jax_dips.utils.inspect][INFO] - iteration 10800/40000 - loss: 8.953518772614188e-06
+[2026-04-20 22:31:27,528][jax_dips.utils.inspect][INFO] - iteration 10900/40000 - loss: 8.80243896972388e-06
+[2026-04-20 22:31:33,797][jax_dips.utils.inspect][INFO] - iteration 11000/40000 - loss: 1.0294339517713524e-05
+[2026-04-20 22:31:40,066][jax_dips.utils.inspect][INFO] - iteration 11100/40000 - loss: 8.732806236366741e-06
+[2026-04-20 22:31:46,335][jax_dips.utils.inspect][INFO] - iteration 11200/40000 - loss: 8.528795660822652e-06
+[2026-04-20 22:31:52,604][jax_dips.utils.inspect][INFO] - iteration 11300/40000 - loss: 8.2217957242392e-06
+[2026-04-20 22:31:58,872][jax_dips.utils.inspect][INFO] - iteration 11400/40000 - loss: 8.097709724097513e-06
+[2026-04-20 22:32:05,143][jax_dips.utils.inspect][INFO] - iteration 11500/40000 - loss: 7.978350367920939e-06
+[2026-04-20 22:32:11,414][jax_dips.utils.inspect][INFO] - iteration 11600/40000 - loss: 7.84559961175546e-06
+[2026-04-20 22:32:17,682][jax_dips.utils.inspect][INFO] - iteration 11700/40000 - loss: 7.882003046688624e-06
+[2026-04-20 22:32:23,952][jax_dips.utils.inspect][INFO] - iteration 11800/40000 - loss: 7.702950824750587e-06
+[2026-04-20 22:32:30,223][jax_dips.utils.inspect][INFO] - iteration 11900/40000 - loss: 7.914230081951246e-06
+[2026-04-20 22:32:36,491][jax_dips.utils.inspect][INFO] - iteration 12000/40000 - loss: 7.458710570062976e-06
+[2026-04-20 22:32:42,760][jax_dips.utils.inspect][INFO] - iteration 12100/40000 - loss: 7.292102964129299e-06
+[2026-04-20 22:32:49,029][jax_dips.utils.inspect][INFO] - iteration 12200/40000 - loss: 7.176539838837925e-06
+[2026-04-20 22:32:55,278][jax_dips.utils.inspect][INFO] - iteration 12300/40000 - loss: 8.232273103203624e-06
+[2026-04-20 22:33:00,155][jax_dips.utils.inspect][INFO] - iteration 12400/40000 - loss: 6.959689926588908e-06
+[2026-04-20 22:33:05,141][jax_dips.utils.inspect][INFO] - iteration 12500/40000 - loss: 7.3066798904619645e-06
+[2026-04-20 22:33:10,028][jax_dips.utils.inspect][INFO] - iteration 12600/40000 - loss: 6.7689661591430195e-06
+[2026-04-20 22:33:14,931][jax_dips.utils.inspect][INFO] - iteration 12700/40000 - loss: 6.8256454142101575e-06
+[2026-04-20 22:33:19,839][jax_dips.utils.inspect][INFO] - iteration 12800/40000 - loss: 6.58759381622076e-06
+[2026-04-20 22:33:24,749][jax_dips.utils.inspect][INFO] - iteration 12900/40000 - loss: 6.695923730148934e-06
+[2026-04-20 22:33:29,663][jax_dips.utils.inspect][INFO] - iteration 13000/40000 - loss: 6.426193976949435e-06
+[2026-04-20 22:33:34,578][jax_dips.utils.inspect][INFO] - iteration 13100/40000 - loss: 6.403041879821103e-06
+[2026-04-20 22:33:39,496][jax_dips.utils.inspect][INFO] - iteration 13200/40000 - loss: 6.253691481106216e-06
+[2026-04-20 22:33:44,415][jax_dips.utils.inspect][INFO] - iteration 13300/40000 - loss: 6.217534973984584e-06
+[2026-04-20 22:33:49,348][jax_dips.utils.inspect][INFO] - iteration 13400/40000 - loss: 6.147979547677096e-06
+[2026-04-20 22:33:54,282][jax_dips.utils.inspect][INFO] - iteration 13500/40000 - loss: 6.7196483541920315e-06
+[2026-04-20 22:33:59,219][jax_dips.utils.inspect][INFO] - iteration 13600/40000 - loss: 6.92043204253423e-06
+[2026-04-20 22:34:04,159][jax_dips.utils.inspect][INFO] - iteration 13700/40000 - loss: 5.8826885833696e-06
+[2026-04-20 22:34:09,099][jax_dips.utils.inspect][INFO] - iteration 13800/40000 - loss: 6.0497432059491985e-06
+[2026-04-20 22:34:14,039][jax_dips.utils.inspect][INFO] - iteration 13900/40000 - loss: 5.904813406232279e-06
+[2026-04-20 22:34:18,977][jax_dips.utils.inspect][INFO] - iteration 14000/40000 - loss: 5.682144546881318e-06
+[2026-04-20 22:34:23,917][jax_dips.utils.inspect][INFO] - iteration 14100/40000 - loss: 5.680608410330024e-06
+[2026-04-20 22:34:28,858][jax_dips.utils.inspect][INFO] - iteration 14200/40000 - loss: 5.564074854191858e-06
+[2026-04-20 22:34:33,798][jax_dips.utils.inspect][INFO] - iteration 14300/40000 - loss: 5.482632786879549e-06
+[2026-04-20 22:34:38,738][jax_dips.utils.inspect][INFO] - iteration 14400/40000 - loss: 5.4301763157127425e-06
+[2026-04-20 22:34:43,679][jax_dips.utils.inspect][INFO] - iteration 14500/40000 - loss: 5.359056103770854e-06
+[2026-04-20 22:34:48,620][jax_dips.utils.inspect][INFO] - iteration 14600/40000 - loss: 5.384649739426095e-06
+[2026-04-20 22:34:53,562][jax_dips.utils.inspect][INFO] - iteration 14700/40000 - loss: 5.241809503786499e-06
+[2026-04-20 22:34:58,503][jax_dips.utils.inspect][INFO] - iteration 14800/40000 - loss: 5.676623004546855e-06
+[2026-04-20 22:35:03,447][jax_dips.utils.inspect][INFO] - iteration 14900/40000 - loss: 5.500909537659027e-06
+[2026-04-20 22:35:08,391][jax_dips.utils.inspect][INFO] - iteration 15000/40000 - loss: 5.096191216580337e-06
+[2026-04-20 22:35:13,335][jax_dips.utils.inspect][INFO] - iteration 15100/40000 - loss: 5.02071634400636e-06
+[2026-04-20 22:35:18,275][jax_dips.utils.inspect][INFO] - iteration 15200/40000 - loss: 5.004041668144055e-06
+[2026-04-20 22:35:23,217][jax_dips.utils.inspect][INFO] - iteration 15300/40000 - loss: 5.0068342716258485e-06
+[2026-04-20 22:35:28,156][jax_dips.utils.inspect][INFO] - iteration 15400/40000 - loss: 5.5209688980539795e-06
+[2026-04-20 22:35:33,098][jax_dips.utils.inspect][INFO] - iteration 15500/40000 - loss: 4.824294592253864e-06
+[2026-04-20 22:35:38,041][jax_dips.utils.inspect][INFO] - iteration 15600/40000 - loss: 5.201838575885631e-06
+[2026-04-20 22:35:42,985][jax_dips.utils.inspect][INFO] - iteration 15700/40000 - loss: 4.944974534737412e-06
+[2026-04-20 22:35:47,938][jax_dips.utils.inspect][INFO] - iteration 15800/40000 - loss: 7.1910144470166415e-06
+[2026-04-20 22:35:52,975][jax_dips.utils.inspect][INFO] - iteration 15900/40000 - loss: 4.62735079054255e-06
+[2026-04-20 22:35:57,946][jax_dips.utils.inspect][INFO] - iteration 16000/40000 - loss: 4.5750648496323265e-06
+[2026-04-20 22:36:02,918][jax_dips.utils.inspect][INFO] - iteration 16100/40000 - loss: 4.531373633653857e-06
+[2026-04-20 22:36:07,886][jax_dips.utils.inspect][INFO] - iteration 16200/40000 - loss: 4.4880412133352365e-06
+[2026-04-20 22:36:12,858][jax_dips.utils.inspect][INFO] - iteration 16300/40000 - loss: 4.485006684262771e-06
+[2026-04-20 22:36:17,827][jax_dips.utils.inspect][INFO] - iteration 16400/40000 - loss: 4.523432835412677e-06
+[2026-04-20 22:36:22,797][jax_dips.utils.inspect][INFO] - iteration 16500/40000 - loss: 4.3589379856712185e-06
+[2026-04-20 22:36:27,768][jax_dips.utils.inspect][INFO] - iteration 16600/40000 - loss: 4.3653744796756655e-06
+[2026-04-20 22:36:32,738][jax_dips.utils.inspect][INFO] - iteration 16700/40000 - loss: 4.533398168860003e-06
+[2026-04-20 22:36:37,707][jax_dips.utils.inspect][INFO] - iteration 16800/40000 - loss: 4.315528713050298e-06
+[2026-04-20 22:36:42,676][jax_dips.utils.inspect][INFO] - iteration 16900/40000 - loss: 4.235333108226769e-06
+[2026-04-20 22:36:47,648][jax_dips.utils.inspect][INFO] - iteration 17000/40000 - loss: 4.165555765212048e-06
+[2026-04-20 22:36:52,618][jax_dips.utils.inspect][INFO] - iteration 17100/40000 - loss: 4.124584847886581e-06
+[2026-04-20 22:36:57,648][jax_dips.utils.inspect][INFO] - iteration 17200/40000 - loss: 4.091448317922186e-06
+[2026-04-20 22:37:02,663][jax_dips.utils.inspect][INFO] - iteration 17300/40000 - loss: 4.2527926780167036e-06
+[2026-04-20 22:37:07,605][jax_dips.utils.inspect][INFO] - iteration 17400/40000 - loss: 4.03783269575797e-06
+[2026-04-20 22:37:12,549][jax_dips.utils.inspect][INFO] - iteration 17500/40000 - loss: 3.97556050302228e-06
+[2026-04-20 22:37:17,492][jax_dips.utils.inspect][INFO] - iteration 17600/40000 - loss: 4.090781203558436e-06
+[2026-04-20 22:37:22,435][jax_dips.utils.inspect][INFO] - iteration 17700/40000 - loss: 4.172913577349391e-06
+[2026-04-20 22:37:27,378][jax_dips.utils.inspect][INFO] - iteration 17800/40000 - loss: 3.915482011507265e-06
+[2026-04-20 22:37:32,321][jax_dips.utils.inspect][INFO] - iteration 17900/40000 - loss: 3.9496462704846635e-06
+[2026-04-20 22:37:37,264][jax_dips.utils.inspect][INFO] - iteration 18000/40000 - loss: 3.801664206548594e-06
+[2026-04-20 22:37:42,207][jax_dips.utils.inspect][INFO] - iteration 18100/40000 - loss: 4.40431767856353e-06
+[2026-04-20 22:37:47,148][jax_dips.utils.inspect][INFO] - iteration 18200/40000 - loss: 4.7699718379590195e-06
+[2026-04-20 22:37:52,091][jax_dips.utils.inspect][INFO] - iteration 18300/40000 - loss: 3.706516963575268e-06
+[2026-04-20 22:37:57,034][jax_dips.utils.inspect][INFO] - iteration 18400/40000 - loss: 3.679811698020785e-06
+[2026-04-20 22:38:01,978][jax_dips.utils.inspect][INFO] - iteration 18500/40000 - loss: 3.6453964185056975e-06
+[2026-04-20 22:38:06,920][jax_dips.utils.inspect][INFO] - iteration 18600/40000 - loss: 3.613126409618417e-06
+[2026-04-20 22:38:11,862][jax_dips.utils.inspect][INFO] - iteration 18700/40000 - loss: 3.5829993976221886e-06
+[2026-04-20 22:38:16,805][jax_dips.utils.inspect][INFO] - iteration 18800/40000 - loss: 4.105986590730026e-06
+[2026-04-20 22:38:21,747][jax_dips.utils.inspect][INFO] - iteration 18900/40000 - loss: 3.5904022297472693e-06
+[2026-04-20 22:38:26,690][jax_dips.utils.inspect][INFO] - iteration 19000/40000 - loss: 4.157239345659036e-06
+[2026-04-20 22:38:31,632][jax_dips.utils.inspect][INFO] - iteration 19100/40000 - loss: 3.4663521546463016e-06
+[2026-04-20 22:38:36,574][jax_dips.utils.inspect][INFO] - iteration 19200/40000 - loss: 3.437950681473012e-06
+[2026-04-20 22:38:41,517][jax_dips.utils.inspect][INFO] - iteration 19300/40000 - loss: 3.4112076718884055e-06
+[2026-04-20 22:38:46,459][jax_dips.utils.inspect][INFO] - iteration 19400/40000 - loss: 3.3931883081095293e-06
+[2026-04-20 22:38:51,401][jax_dips.utils.inspect][INFO] - iteration 19500/40000 - loss: 3.4292270356672816e-06
+[2026-04-20 22:38:56,343][jax_dips.utils.inspect][INFO] - iteration 19600/40000 - loss: 3.4815263916243566e-06
+[2026-04-20 22:39:01,286][jax_dips.utils.inspect][INFO] - iteration 19700/40000 - loss: 3.303189259895589e-06
+[2026-04-20 22:39:06,228][jax_dips.utils.inspect][INFO] - iteration 19800/40000 - loss: 3.2767529773991555e-06
+[2026-04-20 22:39:11,169][jax_dips.utils.inspect][INFO] - iteration 19900/40000 - loss: 3.2525131246075034e-06
+[2026-04-20 22:39:16,111][jax_dips.utils.inspect][INFO] - iteration 20000/40000 - loss: 3.2100087992148474e-06
+[2026-04-20 22:39:21,049][jax_dips.utils.inspect][INFO] - iteration 20100/40000 - loss: 3.3265300771745387e-06
+[2026-04-20 22:39:25,990][jax_dips.utils.inspect][INFO] - iteration 20200/40000 - loss: 3.1675783702667104e-06
+[2026-04-20 22:39:30,931][jax_dips.utils.inspect][INFO] - iteration 20300/40000 - loss: 3.1686345209891442e-06
+[2026-04-20 22:39:35,868][jax_dips.utils.inspect][INFO] - iteration 20400/40000 - loss: 3.1308622965298127e-06
+[2026-04-20 22:39:40,810][jax_dips.utils.inspect][INFO] - iteration 20500/40000 - loss: 5.092749233881477e-06
+[2026-04-20 22:39:45,751][jax_dips.utils.inspect][INFO] - iteration 20600/40000 - loss: 3.1889255751593737e-06
+[2026-04-20 22:39:50,692][jax_dips.utils.inspect][INFO] - iteration 20700/40000 - loss: 3.0340429475472774e-06
+[2026-04-20 22:39:55,631][jax_dips.utils.inspect][INFO] - iteration 20800/40000 - loss: 3.0961041375121567e-06
+[2026-04-20 22:40:00,572][jax_dips.utils.inspect][INFO] - iteration 20900/40000 - loss: 2.988395408465294e-06
+[2026-04-20 22:40:05,513][jax_dips.utils.inspect][INFO] - iteration 21000/40000 - loss: 3.4361719372100197e-06
+[2026-04-20 22:40:10,457][jax_dips.utils.inspect][INFO] - iteration 21100/40000 - loss: 2.9519246709241997e-06
+[2026-04-20 22:40:15,398][jax_dips.utils.inspect][INFO] - iteration 21200/40000 - loss: 3.6791461752727628e-06
+[2026-04-20 22:40:20,337][jax_dips.utils.inspect][INFO] - iteration 21300/40000 - loss: 2.910473085648846e-06
+[2026-04-20 22:40:25,277][jax_dips.utils.inspect][INFO] - iteration 21400/40000 - loss: 2.874912752304226e-06
+[2026-04-20 22:40:30,218][jax_dips.utils.inspect][INFO] - iteration 21500/40000 - loss: 2.874958227039315e-06
+[2026-04-20 22:40:35,159][jax_dips.utils.inspect][INFO] - iteration 21600/40000 - loss: 2.8844192456745077e-06
+[2026-04-20 22:40:40,099][jax_dips.utils.inspect][INFO] - iteration 21700/40000 - loss: 2.818413577188039e-06
+[2026-04-20 22:40:45,041][jax_dips.utils.inspect][INFO] - iteration 21800/40000 - loss: 2.7917681109101977e-06
+[2026-04-20 22:40:49,981][jax_dips.utils.inspect][INFO] - iteration 21900/40000 - loss: 2.779307124001207e-06
+[2026-04-20 22:40:54,922][jax_dips.utils.inspect][INFO] - iteration 22000/40000 - loss: 2.75553156825481e-06
+[2026-04-20 22:40:59,863][jax_dips.utils.inspect][INFO] - iteration 22100/40000 - loss: 3.0740582133148564e-06
+[2026-04-20 22:41:04,805][jax_dips.utils.inspect][INFO] - iteration 22200/40000 - loss: 2.7106284505862277e-06
+[2026-04-20 22:41:09,747][jax_dips.utils.inspect][INFO] - iteration 22300/40000 - loss: 2.692210273380624e-06
+[2026-04-20 22:41:14,688][jax_dips.utils.inspect][INFO] - iteration 22400/40000 - loss: 2.6789639377966523e-06
+[2026-04-20 22:41:19,629][jax_dips.utils.inspect][INFO] - iteration 22500/40000 - loss: 2.652654984558467e-06
+[2026-04-20 22:41:24,571][jax_dips.utils.inspect][INFO] - iteration 22600/40000 - loss: 3.0387500373763032e-06
+[2026-04-20 22:41:29,511][jax_dips.utils.inspect][INFO] - iteration 22700/40000 - loss: 2.6151044494326925e-06
+[2026-04-20 22:41:34,453][jax_dips.utils.inspect][INFO] - iteration 22800/40000 - loss: 2.761232508419198e-06
+[2026-04-20 22:41:39,395][jax_dips.utils.inspect][INFO] - iteration 22900/40000 - loss: 2.5838771762209944e-06
+[2026-04-20 22:41:44,335][jax_dips.utils.inspect][INFO] - iteration 23000/40000 - loss: 2.5881884084810736e-06
+[2026-04-20 22:41:49,277][jax_dips.utils.inspect][INFO] - iteration 23100/40000 - loss: 2.6378995698905783e-06
+[2026-04-20 22:41:54,219][jax_dips.utils.inspect][INFO] - iteration 23200/40000 - loss: 2.6157774755120045e-06
+[2026-04-20 22:41:59,160][jax_dips.utils.inspect][INFO] - iteration 23300/40000 - loss: 2.519393092370592e-06
+[2026-04-20 22:42:04,260][jax_dips.utils.inspect][INFO] - iteration 23400/40000 - loss: 2.5353349428769434e-06
+[2026-04-20 22:42:09,307][jax_dips.utils.inspect][INFO] - iteration 23500/40000 - loss: 2.477809630363481e-06
+[2026-04-20 22:42:14,288][jax_dips.utils.inspect][INFO] - iteration 23600/40000 - loss: 2.5921931410266552e-06
+[2026-04-20 22:42:19,219][jax_dips.utils.inspect][INFO] - iteration 23700/40000 - loss: 2.6592226731736446e-06
+[2026-04-20 22:42:24,150][jax_dips.utils.inspect][INFO] - iteration 23800/40000 - loss: 3.616560434238636e-06
+[2026-04-20 22:42:29,081][jax_dips.utils.inspect][INFO] - iteration 23900/40000 - loss: 2.4131991267495323e-06
+[2026-04-20 22:42:34,011][jax_dips.utils.inspect][INFO] - iteration 24000/40000 - loss: 2.3970878828549758e-06
+[2026-04-20 22:42:39,983][jax_dips.utils.inspect][INFO] - iteration 24100/40000 - loss: 2.3728966880298685e-06
+[2026-04-20 22:42:46,246][jax_dips.utils.inspect][INFO] - iteration 24200/40000 - loss: 2.500603159205639e-06
+[2026-04-20 22:42:52,506][jax_dips.utils.inspect][INFO] - iteration 24300/40000 - loss: 2.3666443667025305e-06
+[2026-04-20 22:42:58,769][jax_dips.utils.inspect][INFO] - iteration 24400/40000 - loss: 2.339456159461406e-06
+[2026-04-20 22:43:05,034][jax_dips.utils.inspect][INFO] - iteration 24500/40000 - loss: 2.3234481432155007e-06
+[2026-04-20 22:43:11,296][jax_dips.utils.inspect][INFO] - iteration 24600/40000 - loss: 2.95988138532266e-06
+[2026-04-20 22:43:17,557][jax_dips.utils.inspect][INFO] - iteration 24700/40000 - loss: 2.3595762286277022e-06
+[2026-04-20 22:43:23,819][jax_dips.utils.inspect][INFO] - iteration 24800/40000 - loss: 2.6040386273962213e-06
+[2026-04-20 22:43:30,088][jax_dips.utils.inspect][INFO] - iteration 24900/40000 - loss: 3.551252120814752e-06
+[2026-04-20 22:43:36,360][jax_dips.utils.inspect][INFO] - iteration 25000/40000 - loss: 2.2390124740923056e-06
+[2026-04-20 22:43:42,631][jax_dips.utils.inspect][INFO] - iteration 25100/40000 - loss: 2.2153076315589715e-06
+[2026-04-20 22:43:48,904][jax_dips.utils.inspect][INFO] - iteration 25200/40000 - loss: 2.202182940891362e-06
+[2026-04-20 22:43:55,176][jax_dips.utils.inspect][INFO] - iteration 25300/40000 - loss: 2.210486400144873e-06
+[2026-04-20 22:44:01,447][jax_dips.utils.inspect][INFO] - iteration 25400/40000 - loss: 2.1827470391144743e-06
+[2026-04-20 22:44:07,718][jax_dips.utils.inspect][INFO] - iteration 25500/40000 - loss: 2.165751084248768e-06
+[2026-04-20 22:44:13,992][jax_dips.utils.inspect][INFO] - iteration 25600/40000 - loss: 3.797243380176951e-06
+[2026-04-20 22:44:20,259][jax_dips.utils.inspect][INFO] - iteration 25700/40000 - loss: 2.1305354493961204e-06
+[2026-04-20 22:44:25,987][jax_dips.utils.inspect][INFO] - iteration 25800/40000 - loss: 2.1169280444155447e-06
+[2026-04-20 22:44:30,934][jax_dips.utils.inspect][INFO] - iteration 25900/40000 - loss: 2.1321534404705744e-06
+[2026-04-20 22:44:35,836][jax_dips.utils.inspect][INFO] - iteration 26000/40000 - loss: 2.5403621748409932e-06
+[2026-04-20 22:44:40,721][jax_dips.utils.inspect][INFO] - iteration 26100/40000 - loss: 2.0764416603924474e-06
+[2026-04-20 22:44:45,619][jax_dips.utils.inspect][INFO] - iteration 26200/40000 - loss: 2.08631036002771e-06
+[2026-04-20 22:44:50,525][jax_dips.utils.inspect][INFO] - iteration 26300/40000 - loss: 2.0970869627490174e-06
+[2026-04-20 22:44:55,434][jax_dips.utils.inspect][INFO] - iteration 26400/40000 - loss: 2.0391212274262216e-06
+[2026-04-20 22:45:00,346][jax_dips.utils.inspect][INFO] - iteration 26500/40000 - loss: 2.1891682990826666e-06
+[2026-04-20 22:45:05,260][jax_dips.utils.inspect][INFO] - iteration 26600/40000 - loss: 2.5525159799144603e-06
+[2026-04-20 22:45:10,181][jax_dips.utils.inspect][INFO] - iteration 26700/40000 - loss: 1.9989329302916303e-06
+[2026-04-20 22:45:15,100][jax_dips.utils.inspect][INFO] - iteration 26800/40000 - loss: 1.990463715628721e-06
+[2026-04-20 22:45:20,021][jax_dips.utils.inspect][INFO] - iteration 26900/40000 - loss: 2.8083100005460437e-06
+[2026-04-20 22:45:24,954][jax_dips.utils.inspect][INFO] - iteration 27000/40000 - loss: 2.4810683498799335e-06
+[2026-04-20 22:45:29,893][jax_dips.utils.inspect][INFO] - iteration 27100/40000 - loss: 1.9508136119839037e-06
+[2026-04-20 22:45:34,833][jax_dips.utils.inspect][INFO] - iteration 27200/40000 - loss: 1.93824098460027e-06
+[2026-04-20 22:45:39,773][jax_dips.utils.inspect][INFO] - iteration 27300/40000 - loss: 1.9605602119554533e-06
+[2026-04-20 22:45:44,711][jax_dips.utils.inspect][INFO] - iteration 27400/40000 - loss: 2.5734459541126853e-06
+[2026-04-20 22:45:49,649][jax_dips.utils.inspect][INFO] - iteration 27500/40000 - loss: 1.904819100673194e-06
+[2026-04-20 22:45:54,587][jax_dips.utils.inspect][INFO] - iteration 27600/40000 - loss: 1.8911085817308049e-06
+[2026-04-20 22:45:59,526][jax_dips.utils.inspect][INFO] - iteration 27700/40000 - loss: 1.909426828206051e-06
+[2026-04-20 22:46:04,468][jax_dips.utils.inspect][INFO] - iteration 27800/40000 - loss: 1.8749179844235186e-06
+[2026-04-20 22:46:09,408][jax_dips.utils.inspect][INFO] - iteration 27900/40000 - loss: 1.865048488980392e-06
+[2026-04-20 22:46:14,349][jax_dips.utils.inspect][INFO] - iteration 28000/40000 - loss: 2.094536739605246e-06
+[2026-04-20 22:46:19,291][jax_dips.utils.inspect][INFO] - iteration 28100/40000 - loss: 2.0946954464307055e-06
+[2026-04-20 22:46:24,232][jax_dips.utils.inspect][INFO] - iteration 28200/40000 - loss: 1.8239368273498258e-06
+[2026-04-20 22:46:29,175][jax_dips.utils.inspect][INFO] - iteration 28300/40000 - loss: 1.8143398392567178e-06
+[2026-04-20 22:46:34,117][jax_dips.utils.inspect][INFO] - iteration 28400/40000 - loss: 1.8061044784190017e-06
+[2026-04-20 22:46:39,061][jax_dips.utils.inspect][INFO] - iteration 28500/40000 - loss: 1.7920232266988023e-06
+[2026-04-20 22:46:44,002][jax_dips.utils.inspect][INFO] - iteration 28600/40000 - loss: 1.7811250927479705e-06
+[2026-04-20 22:46:48,944][jax_dips.utils.inspect][INFO] - iteration 28700/40000 - loss: 2.943356321338797e-06
+[2026-04-20 22:46:53,887][jax_dips.utils.inspect][INFO] - iteration 28800/40000 - loss: 2.127885181835154e-06
+[2026-04-20 22:46:58,826][jax_dips.utils.inspect][INFO] - iteration 28900/40000 - loss: 1.7536415271024453e-06
+[2026-04-20 22:47:03,770][jax_dips.utils.inspect][INFO] - iteration 29000/40000 - loss: 1.7402966250301688e-06
+[2026-04-20 22:47:08,714][jax_dips.utils.inspect][INFO] - iteration 29100/40000 - loss: 1.788975623639999e-06
+[2026-04-20 22:47:13,657][jax_dips.utils.inspect][INFO] - iteration 29200/40000 - loss: 1.7286702131968923e-06
+[2026-04-20 22:47:18,600][jax_dips.utils.inspect][INFO] - iteration 29300/40000 - loss: 1.7234849565284094e-06
+[2026-04-20 22:47:23,545][jax_dips.utils.inspect][INFO] - iteration 29400/40000 - loss: 1.7015581761370413e-06
+[2026-04-20 22:47:28,488][jax_dips.utils.inspect][INFO] - iteration 29500/40000 - loss: 1.8080718291457742e-06
+[2026-04-20 22:47:33,431][jax_dips.utils.inspect][INFO] - iteration 29600/40000 - loss: 1.895627292469726e-06
+[2026-04-20 22:47:38,373][jax_dips.utils.inspect][INFO] - iteration 29700/40000 - loss: 1.774326165104867e-06
+[2026-04-20 22:47:43,316][jax_dips.utils.inspect][INFO] - iteration 29800/40000 - loss: 1.6629549008939648e-06
+[2026-04-20 22:47:48,259][jax_dips.utils.inspect][INFO] - iteration 29900/40000 - loss: 1.8808402728609508e-06
+[2026-04-20 22:47:53,203][jax_dips.utils.inspect][INFO] - iteration 30000/40000 - loss: 1.6500114270456834e-06
+[2026-04-20 22:47:58,146][jax_dips.utils.inspect][INFO] - iteration 30100/40000 - loss: 2.0860888980678283e-06
+[2026-04-20 22:48:03,090][jax_dips.utils.inspect][INFO] - iteration 30200/40000 - loss: 1.6710735053493408e-06
+[2026-04-20 22:48:08,033][jax_dips.utils.inspect][INFO] - iteration 30300/40000 - loss: 1.686281166257686e-06
+[2026-04-20 22:48:12,976][jax_dips.utils.inspect][INFO] - iteration 30400/40000 - loss: 1.604660383236478e-06
+[2026-04-20 22:48:17,920][jax_dips.utils.inspect][INFO] - iteration 30500/40000 - loss: 2.882279204641236e-06
+[2026-04-20 22:48:22,863][jax_dips.utils.inspect][INFO] - iteration 30600/40000 - loss: 1.5870928109507076e-06
+[2026-04-20 22:48:27,806][jax_dips.utils.inspect][INFO] - iteration 30700/40000 - loss: 1.5825878563191509e-06
+[2026-04-20 22:48:32,749][jax_dips.utils.inspect][INFO] - iteration 30800/40000 - loss: 1.9722153865586733e-06
+[2026-04-20 22:48:37,691][jax_dips.utils.inspect][INFO] - iteration 30900/40000 - loss: 1.5602882967868936e-06
+[2026-04-20 22:48:42,635][jax_dips.utils.inspect][INFO] - iteration 31000/40000 - loss: 1.5529595884800074e-06
+[2026-04-20 22:48:47,578][jax_dips.utils.inspect][INFO] - iteration 31100/40000 - loss: 1.5438298532899353e-06
+[2026-04-20 22:48:52,521][jax_dips.utils.inspect][INFO] - iteration 31200/40000 - loss: 1.5698637980676722e-06
+[2026-04-20 22:48:57,464][jax_dips.utils.inspect][INFO] - iteration 31300/40000 - loss: 1.6482447335874895e-06
+[2026-04-20 22:49:02,407][jax_dips.utils.inspect][INFO] - iteration 31400/40000 - loss: 1.720708496577572e-06
+[2026-04-20 22:49:07,350][jax_dips.utils.inspect][INFO] - iteration 31500/40000 - loss: 1.5150842500588624e-06
+[2026-04-20 22:49:12,292][jax_dips.utils.inspect][INFO] - iteration 31600/40000 - loss: 1.5041686083350214e-06
+[2026-04-20 22:49:17,234][jax_dips.utils.inspect][INFO] - iteration 31700/40000 - loss: 1.4966628896218026e-06
+[2026-04-20 22:49:22,176][jax_dips.utils.inspect][INFO] - iteration 31800/40000 - loss: 1.4887580164213432e-06
+[2026-04-20 22:49:27,120][jax_dips.utils.inspect][INFO] - iteration 31900/40000 - loss: 1.4816507700743387e-06
+[2026-04-20 22:49:32,074][jax_dips.utils.inspect][INFO] - iteration 32000/40000 - loss: 1.4884805068504647e-06
+[2026-04-20 22:49:37,214][jax_dips.utils.inspect][INFO] - iteration 32100/40000 - loss: 1.46580259752227e-06
+[2026-04-20 22:49:42,236][jax_dips.utils.inspect][INFO] - iteration 32200/40000 - loss: 1.466365347368992e-06
+[2026-04-20 22:49:47,185][jax_dips.utils.inspect][INFO] - iteration 32300/40000 - loss: 1.451509660910233e-06
+[2026-04-20 22:49:52,115][jax_dips.utils.inspect][INFO] - iteration 32400/40000 - loss: 1.4764009392820299e-06
+[2026-04-20 22:49:57,046][jax_dips.utils.inspect][INFO] - iteration 32500/40000 - loss: 1.4413105873245513e-06
+[2026-04-20 22:50:01,976][jax_dips.utils.inspect][INFO] - iteration 32600/40000 - loss: 2.4209889488702174e-06
+[2026-04-20 22:50:06,904][jax_dips.utils.inspect][INFO] - iteration 32700/40000 - loss: 1.6803785456431797e-06
+[2026-04-20 22:50:11,840][jax_dips.utils.inspect][INFO] - iteration 32800/40000 - loss: 1.5095674825715832e-06
+[2026-04-20 22:50:18,106][jax_dips.utils.inspect][INFO] - iteration 32900/40000 - loss: 1.4086117516853847e-06
+[2026-04-20 22:50:24,368][jax_dips.utils.inspect][INFO] - iteration 33000/40000 - loss: 1.4019195759829017e-06
+[2026-04-20 22:50:30,630][jax_dips.utils.inspect][INFO] - iteration 33100/40000 - loss: 2.2915814952284563e-06
+[2026-04-20 22:50:36,890][jax_dips.utils.inspect][INFO] - iteration 33200/40000 - loss: 1.3880874121241504e-06
+[2026-04-20 22:50:43,153][jax_dips.utils.inspect][INFO] - iteration 33300/40000 - loss: 1.3813172472509905e-06
+[2026-04-20 22:50:49,413][jax_dips.utils.inspect][INFO] - iteration 33400/40000 - loss: 1.392663534716121e-06
+[2026-04-20 22:50:55,674][jax_dips.utils.inspect][INFO] - iteration 33500/40000 - loss: 1.4760133808522369e-06
+[2026-04-20 22:51:01,938][jax_dips.utils.inspect][INFO] - iteration 33600/40000 - loss: 1.4065180948819034e-06
+[2026-04-20 22:51:08,199][jax_dips.utils.inspect][INFO] - iteration 33700/40000 - loss: 1.362228431389667e-06
+[2026-04-20 22:51:14,460][jax_dips.utils.inspect][INFO] - iteration 33800/40000 - loss: 1.3916597936258768e-06
+[2026-04-20 22:51:20,720][jax_dips.utils.inspect][INFO] - iteration 33900/40000 - loss: 1.3446260709315538e-06
+[2026-04-20 22:51:27,054][jax_dips.utils.inspect][INFO] - iteration 34000/40000 - loss: 1.6669051774442778e-06
+[2026-04-20 22:51:31,966][jax_dips.utils.inspect][INFO] - iteration 34100/40000 - loss: 1.3308014104040922e-06
+[2026-04-20 22:51:36,967][jax_dips.utils.inspect][INFO] - iteration 34200/40000 - loss: 1.3258469380161841e-06
+[2026-04-20 22:51:41,895][jax_dips.utils.inspect][INFO] - iteration 34300/40000 - loss: 2.2886529222887475e-06
+[2026-04-20 22:51:46,851][jax_dips.utils.inspect][INFO] - iteration 34400/40000 - loss: 1.3115978845235077e-06
+[2026-04-20 22:51:51,810][jax_dips.utils.inspect][INFO] - iteration 34500/40000 - loss: 1.3102334150971728e-06
+[2026-04-20 22:51:56,724][jax_dips.utils.inspect][INFO] - iteration 34600/40000 - loss: 1.3135249901097268e-06
+[2026-04-20 22:52:01,638][jax_dips.utils.inspect][INFO] - iteration 34700/40000 - loss: 1.36246080728597e-06
+[2026-04-20 22:52:06,554][jax_dips.utils.inspect][INFO] - iteration 34800/40000 - loss: 2.040002300418564e-06
+[2026-04-20 22:52:11,471][jax_dips.utils.inspect][INFO] - iteration 34900/40000 - loss: 1.3321483720574179e-06
+[2026-04-20 22:52:16,389][jax_dips.utils.inspect][INFO] - iteration 35000/40000 - loss: 1.3303076684678672e-06
+[2026-04-20 22:52:21,313][jax_dips.utils.inspect][INFO] - iteration 35100/40000 - loss: 2.1219368591118837e-06
+[2026-04-20 22:52:26,248][jax_dips.utils.inspect][INFO] - iteration 35200/40000 - loss: 1.2660754009630182e-06
+[2026-04-20 22:52:31,187][jax_dips.utils.inspect][INFO] - iteration 35300/40000 - loss: 1.259750433746376e-06
+[2026-04-20 22:52:36,125][jax_dips.utils.inspect][INFO] - iteration 35400/40000 - loss: 1.2578250334627228e-06
+[2026-04-20 22:52:41,064][jax_dips.utils.inspect][INFO] - iteration 35500/40000 - loss: 1.261257807527727e-06
+[2026-04-20 22:52:46,003][jax_dips.utils.inspect][INFO] - iteration 35600/40000 - loss: 2.3222141862788703e-06
+[2026-04-20 22:52:50,941][jax_dips.utils.inspect][INFO] - iteration 35700/40000 - loss: 1.3352085943552083e-06
+[2026-04-20 22:52:55,881][jax_dips.utils.inspect][INFO] - iteration 35800/40000 - loss: 1.5364809087259346e-06
+[2026-04-20 22:53:00,822][jax_dips.utils.inspect][INFO] - iteration 35900/40000 - loss: 1.5064881608850555e-06
+[2026-04-20 22:53:05,763][jax_dips.utils.inspect][INFO] - iteration 36000/40000 - loss: 1.4536026355926879e-06
+[2026-04-20 22:53:10,704][jax_dips.utils.inspect][INFO] - iteration 36100/40000 - loss: 1.7127983937825775e-06
+[2026-04-20 22:53:15,645][jax_dips.utils.inspect][INFO] - iteration 36200/40000 - loss: 1.2126266710765776e-06
+[2026-04-20 22:53:20,586][jax_dips.utils.inspect][INFO] - iteration 36300/40000 - loss: 1.2067881698385463e-06
+[2026-04-20 22:53:25,529][jax_dips.utils.inspect][INFO] - iteration 36400/40000 - loss: 1.2446253094822168e-06
+[2026-04-20 22:53:30,471][jax_dips.utils.inspect][INFO] - iteration 36500/40000 - loss: 1.272778263228247e-06
+[2026-04-20 22:53:35,414][jax_dips.utils.inspect][INFO] - iteration 36600/40000 - loss: 1.2116551033614087e-06
+[2026-04-20 22:53:40,357][jax_dips.utils.inspect][INFO] - iteration 36700/40000 - loss: 1.3865130767953815e-06
+[2026-04-20 22:53:45,299][jax_dips.utils.inspect][INFO] - iteration 36800/40000 - loss: 1.1800692618635367e-06
+[2026-04-20 22:53:50,243][jax_dips.utils.inspect][INFO] - iteration 36900/40000 - loss: 1.1787119547079783e-06
+[2026-04-20 22:53:55,183][jax_dips.utils.inspect][INFO] - iteration 37000/40000 - loss: 1.1708052625181153e-06
+[2026-04-20 22:54:00,126][jax_dips.utils.inspect][INFO] - iteration 37100/40000 - loss: 1.1664574230962899e-06
+[2026-04-20 22:54:05,066][jax_dips.utils.inspect][INFO] - iteration 37200/40000 - loss: 1.1936278951907298e-06
+[2026-04-20 22:54:10,008][jax_dips.utils.inspect][INFO] - iteration 37300/40000 - loss: 1.2470339925130247e-06
+[2026-04-20 22:54:14,951][jax_dips.utils.inspect][INFO] - iteration 37400/40000 - loss: 1.1599395293160342e-06
+[2026-04-20 22:54:19,893][jax_dips.utils.inspect][INFO] - iteration 37500/40000 - loss: 1.148561295849504e-06
+[2026-04-20 22:54:24,835][jax_dips.utils.inspect][INFO] - iteration 37600/40000 - loss: 1.4207391814125003e-06
+[2026-04-20 22:54:29,776][jax_dips.utils.inspect][INFO] - iteration 37700/40000 - loss: 1.5085299764905358e-06
+[2026-04-20 22:54:34,719][jax_dips.utils.inspect][INFO] - iteration 37800/40000 - loss: 1.1337908745190362e-06
+[2026-04-20 22:54:39,661][jax_dips.utils.inspect][INFO] - iteration 37900/40000 - loss: 1.1282929790468188e-06
+[2026-04-20 22:54:44,603][jax_dips.utils.inspect][INFO] - iteration 38000/40000 - loss: 1.1242036634939723e-06
+[2026-04-20 22:54:49,545][jax_dips.utils.inspect][INFO] - iteration 38100/40000 - loss: 1.2163886822236236e-06
+[2026-04-20 22:54:54,487][jax_dips.utils.inspect][INFO] - iteration 38200/40000 - loss: 1.20539982617629e-06
+[2026-04-20 22:54:59,430][jax_dips.utils.inspect][INFO] - iteration 38300/40000 - loss: 1.1101921018052963e-06
+[2026-04-20 22:55:04,374][jax_dips.utils.inspect][INFO] - iteration 38400/40000 - loss: 1.1064720411013695e-06
+[2026-04-20 22:55:09,322][jax_dips.utils.inspect][INFO] - iteration 38500/40000 - loss: 1.1675774658215232e-06
+[2026-04-20 22:55:14,264][jax_dips.utils.inspect][INFO] - iteration 38600/40000 - loss: 1.0972594282065984e-06
+[2026-04-20 22:55:19,207][jax_dips.utils.inspect][INFO] - iteration 38700/40000 - loss: 1.2872258139395854e-06
+[2026-04-20 22:55:24,150][jax_dips.utils.inspect][INFO] - iteration 38800/40000 - loss: 1.0908123613262433e-06
+[2026-04-20 22:55:29,093][jax_dips.utils.inspect][INFO] - iteration 38900/40000 - loss: 1.2923030681122327e-06
+[2026-04-20 22:55:34,036][jax_dips.utils.inspect][INFO] - iteration 39000/40000 - loss: 1.0805732699736836e-06
+[2026-04-20 22:55:38,979][jax_dips.utils.inspect][INFO] - iteration 39100/40000 - loss: 1.0853066214622231e-06
+[2026-04-20 22:55:43,922][jax_dips.utils.inspect][INFO] - iteration 39200/40000 - loss: 1.082955236597627e-06
+[2026-04-20 22:55:48,865][jax_dips.utils.inspect][INFO] - iteration 39300/40000 - loss: 1.0689248028938891e-06
+[2026-04-20 22:55:53,807][jax_dips.utils.inspect][INFO] - iteration 39400/40000 - loss: 1.0644641861290438e-06
+[2026-04-20 22:55:58,750][jax_dips.utils.inspect][INFO] - iteration 39500/40000 - loss: 1.0656069662218215e-06
+[2026-04-20 22:56:03,693][jax_dips.utils.inspect][INFO] - iteration 39600/40000 - loss: 1.9023436834686436e-06
+[2026-04-20 22:56:08,634][jax_dips.utils.inspect][INFO] - iteration 39700/40000 - loss: 1.0524306617298862e-06
+[2026-04-20 22:56:13,576][jax_dips.utils.inspect][INFO] - iteration 39800/40000 - loss: 1.0488531643204624e-06
+[2026-04-20 22:56:18,519][jax_dips.utils.inspect][INFO] - iteration 39900/40000 - loss: 1.0446019587107003e-06
+[2026-04-20 22:56:23,411][jax_dips.solvers.poisson.trainer][INFO] - solve took 2094.3665204048157 (sec)
+[2026-04-20 22:56:23,529][jax_dips.solvers.poisson.trainer][INFO] - Saving checkpoint robin/checkpoints/checkpoint_40000
+[2026-04-20 22:56:24,356][__main__][INFO] - solve took 2098.610555410385 seconds
+[2026-04-20 22:56:25,115][__main__][INFO] - Accuracy: 
+ L_inf : 0.021187007427215576 
+ 
+ L_2 : 1.2739256620407104 
+ Rel. L_2 : 0.0065319049172103405 
+ RMSD error : 0.0024881360586732626
+[2026-04-20 22:56:25,115][__main__][INFO] - Experiment robin completed! 
+
+[2026-05-04 20:41:53,265][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-05-04 20:41:53,266][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 128
+  Ny_lvl: 128
+  Nz_lvl: 128
+  Nx_eval: 256
+  Ny_eval: 256
+  Nz_eval: 256
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-05-04 20:41:53,266][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-05-04 20:41:54,056][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:41:54,056][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:42:24,033][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-05-04 20:42:24,034][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 128
+  Ny_lvl: 128
+  Nz_lvl: 128
+  Nx_eval: 256
+  Ny_eval: 256
+  Nz_eval: 256
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-05-04 20:42:24,035][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-05-04 20:42:24,824][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:42:24,824][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:44:12,865][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-05-04 20:44:12,866][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 128
+  Ny_lvl: 128
+  Nz_lvl: 128
+  Nx_eval: 256
+  Ny_eval: 256
+  Nz_eval: 256
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  logging:
+    checkpoint_interval: 5000
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-05-04 20:44:12,866][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-05-04 20:44:13,641][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:44:13,641][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-05-04 20:44:15,383][jax_dips.solvers.optimizers][INFO] - Using chained Adam optimizer
+[2026-05-04 20:44:15,383][jax_dips.solvers.optimizers][INFO] - Using Exponential Scheduler
+[2026-05-04 20:44:18,030][jax_dips.utils.inspect][INFO] - Architecture Summary (trainable parameters):
+
+[2026-05-04 20:44:18,030][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear'                 	 has trainable parameters:	 {'b': (10,), 'w': (3, 10)}
+[2026-05-04 20:44:18,030][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_1'               	 has trainable parameters:	 {'b': (10,), 'w': (10, 10)}
+[2026-05-04 20:44:18,030][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_2'               	 has trainable parameters:	 {'b': (1,), 'w': (10, 1)}
+[2026-05-04 20:44:18,031][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear'                 	 has trainable parameters:	 {'b': (1,), 'w': (3, 1)}
+[2026-05-04 20:44:18,031][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear_1'               	 has trainable parameters:	 {'b': (1,), 'w': (1, 1)}
+[2026-05-04 20:44:18,031][jax_dips.utils.inspect][INFO] - Total number of trainable parameters = 167 ...
+
+[2026-05-04 20:44:35,693][jax_dips.utils.inspect][INFO] - iteration 0/1000 - loss: 0.0816560834646225
+[2026-05-04 20:45:14,248][jax_dips.utils.inspect][INFO] - iteration 100/1000 - loss: 0.011673898436129093
+[2026-06-03 20:24:56,244][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-06-03 20:24:56,246][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 16
+  Ny_lvl: 16
+  Nz_lvl: 16
+  Nx_eval: 32
+  Ny_eval: 32
+  Nz_eval: 32
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 500
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: false
+  star_Robin: false
+  star_Robin3: false
+  logging:
+    checkpoint_interval: 250
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-06-03 20:25:17,925][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-06-03 20:25:17,927][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 16
+  Ny_lvl: 16
+  Nz_lvl: 16
+  Nx_eval: 32
+  Ny_eval: 32
+  Nz_eval: 32
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: false
+  star_Robin: false
+  star_Robin3: false
+  logging:
+    checkpoint_interval: 250
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-06-03 20:26:03,107][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-06-03 20:26:03,109][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 16
+  Ny_lvl: 16
+  Nz_lvl: 16
+  Nx_eval: 32
+  Ny_eval: 32
+  Nz_eval: 32
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: false
+  star_Robin: false
+  star_Robin3: false
+  logging:
+    checkpoint_interval: 250
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-06-03 20:26:45,554][__main__][INFO] - Starting /workspace/tests/test_poisson.py
+[2026-06-03 20:26:45,556][__main__][INFO] - expname: poisson-tests-app
+gridstates:
+  Nx_lvl: 16
+  Ny_lvl: 16
+  Nz_lvl: 16
+  Nx_eval: 32
+  Ny_eval: 32
+  Nz_eval: 32
+solver:
+  Nx_tr: 64
+  Ny_tr: 64
+  Nz_tr: 64
+  num_epochs: 1000
+  batch_size: 262144
+  print_rate: 100
+  restart_from_checkpoint: false
+  restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
+  algorithm: 0
+  multi_gpu: false
+  num_gpus_ddp: 2
+  optim:
+    optimizer_name: custom
+    learning_rate: 0.001
+  sched:
+    scheduler_name: exponential
+    decay_rate: 0.975
+  data_manager:
+    refine: false
+    refine_normals: false
+    refine_lod: false
+experiment:
+  results_path: ''
+  sphere: false
+  star: false
+  no_jump: false
+  sphere_Robin: true
+  star_Robin: false
+  star_Robin3: false
+  logging:
+    checkpoint_interval: 250
+    log_dir: ${hydra:runtime.output_dir}
+    currDir: ${hydra:runtime.cwd}
+    checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
+
+[2026-06-03 20:26:45,556][__main__][INFO] - Performing sphere Robin B.C experiment...
+
+[2026-06-03 20:26:46,039][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-06-03 20:26:46,039][jax_dips.solvers.poisson.trainer][WARNING] - nonlinear_op_m(u) is not defined. Setting it to zero.
+[2026-06-03 20:26:47,318][jax_dips.solvers.optimizers][INFO] - Using chained Adam optimizer
+[2026-06-03 20:26:47,318][jax_dips.solvers.optimizers][INFO] - Using Exponential Scheduler
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - Architecture Summary (trainable parameters):
+
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear'                 	 has trainable parameters:	 {'b': (10,), 'w': (3, 10)}
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_1'               	 has trainable parameters:	 {'b': (10,), 'w': (10, 10)}
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_p_fn/linear_2'               	 has trainable parameters:	 {'b': (1,), 'w': (10, 1)}
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear'                 	 has trainable parameters:	 {'b': (1,), 'w': (3, 1)}
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - 'double_mlp/~mlp_m_fn/linear_1'               	 has trainable parameters:	 {'b': (1,), 'w': (1, 1)}
+[2026-06-03 20:26:49,725][jax_dips.utils.inspect][INFO] - Total number of trainable parameters = 167 ...
+
+[2026-06-03 20:27:08,202][jax_dips.utils.inspect][INFO] - iteration 0/1000 - loss: 0.0816560834646225
+[2026-06-03 20:27:48,035][jax_dips.utils.inspect][INFO] - iteration 100/1000 - loss: 0.011673898436129093
+[2026-06-03 20:28:28,416][jax_dips.utils.inspect][INFO] - iteration 200/1000 - loss: 0.00397140346467495
+[2026-06-03 20:29:08,144][jax_dips.utils.inspect][INFO] - iteration 300/1000 - loss: 0.0037827943451702595
+[2026-06-03 20:29:48,188][jax_dips.utils.inspect][INFO] - iteration 400/1000 - loss: 0.0033223433420062065
+[2026-06-03 20:30:30,150][jax_dips.utils.inspect][INFO] - iteration 500/1000 - loss: 0.002830012235790491
+[2026-06-03 20:31:11,503][jax_dips.utils.inspect][INFO] - iteration 600/1000 - loss: 0.0024159622844308615
+[2026-06-03 20:31:53,922][jax_dips.utils.inspect][INFO] - iteration 700/1000 - loss: 0.0019268186297267675
+[2026-06-03 20:32:34,441][jax_dips.utils.inspect][INFO] - iteration 800/1000 - loss: 0.0014221207238733768
+[2026-06-03 20:33:14,289][jax_dips.utils.inspect][INFO] - iteration 900/1000 - loss: 0.0010495891328901052
+[2026-06-03 20:33:53,700][jax_dips.solvers.poisson.trainer][INFO] - solve took 423.8352904319763 (sec)
+[2026-06-03 20:33:53,819][jax_dips.solvers.poisson.trainer][INFO] - Saving checkpoint sphere_Robin_64/checkpoints/checkpoint_1000
+[2026-06-03 20:33:54,644][__main__][INFO] - solve took 427.74538588523865 seconds
+[2026-06-03 20:33:55,284][__main__][INFO] - Num_epochs: 1000
+[2026-06-03 20:33:55,285][__main__][INFO] - Accuracy: 
+ L_inf : 0.20742037892341614 
+ 
+ L_2 : 0.04652412608265877 
+ Rel. L_2 : 0.12181727588176727 
+ RMSD error : 0.04652412608265877
+[2026-06-03 20:33:55,285][__main__][INFO] - Experiment sphere_Robin_64 completed! 
+

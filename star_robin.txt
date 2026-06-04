@@ -1,0 +1,61 @@
+xmin=-2; xmax=2;
+ymin=-2; ymax=2;
+zmin=-2; zmax=2;
+nx = 128; ny = 128; nz = 128;
+phi = zeros(nx, ny, nz);
+x = linspace(xmin, xmax, nx);
+y = linspace(ymin, ymax, ny);
+z = linspace(zmin, zmax, nz);
+
+% Irregular domain 2:
+for i=1:nx
+   for j=1:ny
+      for k=1:nz
+         xc=0; yc=+0; zc=0;
+         X=(x(i)-xc); Y = (y(j)-yc); Z = (z(k)-zc);
+         beta1 = -0.05; beta2 = 0.05; beta3 = -.1;
+         n1 = 5; n2 = 5; n3 = 5;
+         theta1 = 0.5; theta2 = 0.5; theta3 = 0.5;
+         phi(i,j,k) = sqrt( (X)^2 + (Y)^2 + (Z)^2 ) ...
+                     - 1.183 * (1 + ((X^2 + Y^2)/(10))^2) ...
+                     + beta1 * cos(n1 * (atan2(Y,X)-theta1)) ...
+                     + beta2 * cos(n2 * (atan2(Y,X)-theta2)) ...
+                     + beta3 * cos(n3 * (atan2(Y,X)-theta3));
+      end
+   end
+end
+
+figure;
+isosurface(x,y,z,phi, 0); axis square; axis equal;
+
+% Irregular domain 3:
+for i=1:nx
+   for j=1:ny
+      for k=1:nz
+         xc=-0.75; yc=+0.75; zc=-0.75;
+         X=(x(i)-xc); Y = (y(j)-yc); Z = (z(k)-zc);
+         beta1 = -0.05; beta2 = 0.05; beta3 = -.1;
+         n1 = 5; n2 = 5; n3 = 5;
+         theta1 = 0.5; theta2 = 0.5; theta3 = 0.5;
+         phi1 = sqrt( (X)^2 + (Y)^2 + (Z)^2 ) ...
+                     - 0.783 * (1 + ((X^2 + Y^2)/(10))^2) ...
+                     + beta1 * cos(n1 * (atan2(Y,X)-theta1)) ...
+                     + beta2 * cos(n2 * (atan2(Y,X)-theta2)) ...
+                     + beta3 * cos(n3 * (atan2(Y,X)-theta3));
+         xc=+0.75; yc=-0.75; zc=+0.75;
+         X=(x(i)-xc); Y = (y(j)-yc); Z = (z(k)-zc);
+         beta1 = 0.15; beta2 = -0.01; beta3 = .07;
+         n1 = 5; n2 = 5; n3 = 5;
+         theta1 = 0.5; theta2 = 1.8; theta3 = 0;
+         phi2 = sqrt( (X)^2 + (Y)^2 + (Z)^2 ) ...
+                     - 0.783 * (1 + ((X^2 + Y^2)/(10))^2) ...
+                     + beta1 * cos(n1 * (atan2(Y,X)-theta1)) ...
+                     + beta2 * cos(n2 * (atan2(Y,X)-theta2)) ...
+                     + beta3 * cos(n3 * (atan2(Y,X)-theta3));
+         phi(i,j,k) = min(phi1, phi2);
+      end
+   end
+end
+
+figure;
+isosurface(x,y,z,phi, 0); axis square; axis equal;

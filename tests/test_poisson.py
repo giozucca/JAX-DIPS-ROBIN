@@ -17,6 +17,7 @@
   Primary Author: mistani
 
 """
+from tests.confs.experiment_configs import star_Robin, star_Robin3
 import logging
 import os
 import sys
@@ -81,7 +82,15 @@ def test_poisson(cfg: DictConfig):
         )
     if cfg.experiment.sphere_Robin:
         logger.info("Performing sphere Robin B.C experiment...\n")
-        poisson_solve_Robin(cfg, test_name="robin", exp_fn=sphere_Robin)
+        poisson_solve_Robin(cfg, test_name=f"sphere_Robin_{cfg.solver.Nx_tr}", exp_fn=sphere_Robin)
+    
+    if cfg.experiment.star_Robin:
+        logger.info("Performing star robin B.C experimenet...\n")
+        poisson_solve_Robin(cfg, test_name=f"star_Robin_{cfg.solver.Nx_tr}", exp_fn=star_Robin)
+
+    if cfg.experiment.star_Robin3:
+        logger.info("Performing star robin 3 B.C experiment...\n")
+        poisson_solve_Robin(cfg, test_name=f"star_Robin3_{cfg.solver.Nx_tr}", exp_fn=star_Robin3)
 
 
 def create_dirs(
@@ -562,8 +571,11 @@ def poisson_solve_Robin(
 
     rms_err = jnp.square(sim_state.solution - exact_sol).mean() ** 0.5
     L_inf_err = abs(sim_state.solution - exact_sol).max()
-    L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum())
+    L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (Nx_eval*Ny_eval*Nz_eval))
     L2_rel_loss = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (exact_sol**2).sum())
+
+    print(num_epochs)
+    logger.info(f"Num_epochs: {num_epochs}")
 
     logger.info(
         f"Accuracy: \n L_inf : {L_inf_err} \n \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSD error : {rms_err}"
