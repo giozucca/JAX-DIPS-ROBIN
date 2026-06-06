@@ -237,6 +237,7 @@ def poisson_solve(
             beta_fn,
         )
 
+        model_dict = OmegaConf.to_container(cfg.model, resolve=True) if "model" in cfg else None
         sim_state, solve_fn = init_fn(
             lvl_gstate=gstate_lvl,
             tr_gstate=gstate_tr,
@@ -253,6 +254,7 @@ def poisson_solve(
             restart=cfg.solver.restart_from_checkpoint,
             restart_checkpoint_dir=cfg.solver.restart_checkpoint_dir,
             print_rate=cfg.solver.print_rate,
+            model_dict=model_dict,
         )
         t1 = time.time()
         sim_state, epoch_store, loss_epochs = solve_fn(sim_state=sim_state)
@@ -511,6 +513,7 @@ def poisson_solve_Robin(
         # )
         print(f"Optimizer dict: {optimizer_dict}")
         print(f"Function: {init_fn_Robin}")
+        model_dict = OmegaConf.to_container(cfg.model, resolve=True) if "model" in cfg else None
         sim_state, solve_fn = init_fn_Robin(
             lvl_gstate=gstate_lvl,
             tr_gstate=gstate_tr,
@@ -527,6 +530,7 @@ def poisson_solve_Robin(
             restart=cfg.solver.restart_from_checkpoint,
             restart_checkpoint_dir=cfg.solver.restart_checkpoint_dir,
             print_rate=cfg.solver.print_rate,
+            model_dict=model_dict,
         )
         t1 = time.time()
         sim_state, epoch_store, loss_epochs = solve_fn(sim_state=sim_state)

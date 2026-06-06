@@ -53,3 +53,20 @@ experiment:
     currDir: ${hydra:runtime.cwd}
     checkpoint_dir: ${hydra:runtime.cwd}/checkpoints
 
+model:
+  name: null
+  model_type: "mlp"
+  mlp:
+    hidden_layers_m: 3
+    hidden_dim_m: 40
+    activation_m: "jnp.tanh"
+    hidden_layers_p: 3
+    hidden_dim_p: 40
+    activation_p: "jnp.tanh"
+  resnet:
+    res_blocks_m: 3
+    res_dim_m: 40
+    activation_m: "nn.tanh"
+    res_blocks_p: 3
+    res_dim_p: 80
+    activation_p: "nn.tanh"
