@@ -7,7 +7,12 @@ from jax import vmap
 from jax_dips._jaxmd_modules.util import f32, i32
 from jax_dips.geometry import level_set
 
-COMPILE_BACKEND = "gpu"
+import jax
+try:
+    jax.devices("gpu")
+    COMPILE_BACKEND = "gpu"
+except RuntimeError:
+    COMPILE_BACKEND = "cpu"
 custom_jit = partial(jit, backend=COMPILE_BACKEND)
 
 dim = 3
