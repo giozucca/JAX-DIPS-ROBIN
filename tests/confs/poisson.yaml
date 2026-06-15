@@ -58,10 +58,10 @@ model:
   model_type: "mlp"
   mlp:
     hidden_layers_m: 3
-    hidden_dim_m: 40
+    hidden_dim_m: 80
     activation_m: "jnp.tanh"
     hidden_layers_p: 3
-    hidden_dim_p: 40
+    hidden_dim_p: 80
     activation_p: "jnp.tanh"
   resnet:
     res_blocks_m: 3
