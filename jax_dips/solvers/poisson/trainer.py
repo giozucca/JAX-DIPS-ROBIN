@@ -234,7 +234,7 @@ class Trainer(Discretization):
             except (AttributeError, NotImplementedError):
                 print_architecture(self.params)
 
-            if model_dict["preconditioner"]["enable"]:
+            if "preconditioner" in model_dict and model_dict["preconditioner"].get("enable", False):
                 self.precond = Preconditioner(
                     Ds=model_dict["preconditioner"]["layer_widths"],
                     out_dim=1,

@@ -26,7 +26,12 @@ import os
 from dataclasses import field
 
 import numpy as onp
-from evtk.hl import imageToVTK, rectilinearToVTK, structuredToVTK
+try:
+    from evtk.hl import imageToVTK, rectilinearToVTK, structuredToVTK
+except ImportError:
+    from pyevtk.hl import imageToVTK, gridToVTK
+    rectilinearToVTK = gridToVTK
+    structuredToVTK = gridToVTK
 
 
 def write_vtk(gstate, log, maxsteps=None):

@@ -20,7 +20,16 @@
 import logging
 
 import jax
-from jax.experimental import host_callback
+try:
+    from jax.experimental import host_callback
+except ImportError:
+    host_callback = None
+
+try:
+    import jax.debug
+    has_jax_debug = hasattr(jax.debug, "callback")
+except ImportError:
+    has_jax_debug = False
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +40,7 @@ def print_architecture(params):
     num_params = 0
     for pytree in params:
         leaves = jax.tree_util.tree_leaves(pytree)
-        cur_shape = jax.tree_map(lambda x: x.shape, params[leaves[0]])
+        cur_shape = jax.tree_util.tree_map(lambda x: x.shape, params[leaves[0]])
         logger.info(f"{repr(pytree):<45} \t has trainable parameters:\t {cur_shape}")
         shapes = [val for key, val in cur_shape.items()]
         for val in shapes:
@@ -54,9 +63,21 @@ def _print_callback(arg, transforms):
 def progress_bar(arg, result):
     "Print progress of loop only if iteration number is a multiple of the print_rate"
     i, n_iter, print_rate, message = arg
+    
+    if has_jax_debug:
+        def true_fn(_):
+            jax.debug.callback(lambda x: _print_callback(x, None), (i, n_iter, message))
+            return result
+    elif host_callback is not None:
+        def true_fn(_):
+            return host_callback.id_tap(_print_callback, (i, n_iter, message), result=result)
+    else:
+        def true_fn(_):
+            return result
+
     result = jax.lax.cond(
         i % print_rate == 0,
-        lambda _: host_callback.id_tap(_print_callback, (i, n_iter, message), result=result),
+        true_fn,
         lambda _: result,
         operand=None,
     )

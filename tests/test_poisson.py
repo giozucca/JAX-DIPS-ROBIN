@@ -34,7 +34,10 @@ import jax.profiler
 from jax import grad, jit, lax
 from jax import numpy as jnp
 from jax import vmap
-from jax.config import config
+try:
+    from jax.config import config
+except ImportError:
+    from jax import config
 
 from jax_dips._jaxmd_modules.util import f32, i32
 from jax_dips.domain import mesh

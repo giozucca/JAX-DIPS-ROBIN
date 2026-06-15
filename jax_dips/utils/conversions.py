@@ -1,6 +1,19 @@
 import numpy
 import torch
-import warp
+try:
+    import warp
+except ImportError:
+    class DummyTypes:
+        float32 = "float32"
+        def array(self, *args, **kwargs):
+            raise NotImplementedError("warp-lang is not installed")
+    class DummyWarp:
+        types = DummyTypes()
+        def type_length(self, dtype):
+            return 1
+        def init(self):
+            pass
+    warp = DummyWarp()
 from jax import dlpack as jax_dlpack
 from torch.utils import dlpack as torch_dlpack
 
