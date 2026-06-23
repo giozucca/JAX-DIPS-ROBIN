@@ -309,7 +309,7 @@ def poisson_solve(
     L2_rel_loss = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (exact_sol**2).sum())
 
     logger.info(
-        f"Accuracy: \n L_inf : {L_inf_err} \n \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSD error : {rms_err}"
+        f"Accuracy: \n L_inf : {L_inf_err} \n \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSE Loss: {rms_err}"
     )
     logger.info(f"Experiment {test_name} completed! \n")
 
@@ -593,7 +593,7 @@ def poisson_solve_Robin(
     logger.info(f"Num_epochs: {num_epochs}")
 
     logger.info(
-        f"Accuracy: \n L_inf : {L_inf_err} \n \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSD error : {rms_err}"
+        f"Accuracy: \n L_inf : {L_inf_err} \n \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSE Loss: {rms_err}"
     )
     logger.info(f"Experiment {test_name} completed! \n")
 

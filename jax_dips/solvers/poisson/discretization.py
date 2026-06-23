@@ -477,8 +477,8 @@ class Discretization:
         """
 
         def u_m_at_point(pt):
-            phi_pt = self.phi_interp_fn(pt[jnp.newaxis])
-            return self.solution_at_point_fn(params, pt, phi_pt)
+            # Pass a negative value to force evaluation of the Omega- MLP (mlp_m_fn)
+            return self.solution_at_point_fn(params, pt, -1.0)
 
         def is_box_boundary_point(point):
             """
@@ -602,7 +602,7 @@ class Discretization:
 
             def is_in_omega_plus(point):
                 # True if phi > 0 (outside the interface, in Omega+)
-                return self.phi_interp_fn(point[jnp.newaxis]) > 0.0
+                return self.phi_interp_fn(point[jnp.newaxis]).squeeze() > 0.0
 
             # Three-way dispatch: box boundary → Omega+ interior → Omega- interior
             lhs_diagcoeff = jnp.where(
