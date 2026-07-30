@@ -120,6 +120,13 @@ class Discretization:
                 self.is_cell_crossed_by_interface,
                 self.alphaRobin_interp_fn,
             )
+            self.alphaRobin_moment_integrate_over_interface_at_point = (
+                geometric_integrations_per_point.moment_integrate_over_gamma(
+                    self.get_vertices_of_cell_intersection_with_interface_at_point,
+                    self.is_cell_crossed_by_interface,
+                    self.alphaRobin_interp_fn,
+                )
+            )
         self.compute_face_centroids_values_plus_minus_at_point = (
             geometric_integrations_per_point.compute_cell_faces_areas_values(
                 self.get_vertices_of_cell_intersection_with_interface_at_point,
@@ -567,7 +574,14 @@ class Discretization:
 
                 # Impose the Robin boundary condition:
                 alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point, dx, dy, dz)
+                alpha_moment = self.alphaRobin_moment_integrate_over_interface_at_point(point, dx, dy, dz)
+                
+                du_dx = (u_m_ipjk - u_m_imjk) / (2.0 * dx)
+                du_dy = (u_m_ijpk - u_m_ijmk) / (2.0 * dy)
+                du_dz = (u_m_ijkp - u_m_ijkm) / (2.0 * dz)
+                
                 lhs += alpha_ell * u_m_ijk
+                lhs += (alpha_moment[0] * du_dx) + (alpha_moment[1] * du_dy) + (alpha_moment[2] * du_dz)
 
                 # At this point, the matrix A is defined.
                 # Compute the diagonal coefficient of the assembled matrix, which will serve as the (Jacobi) preconditioner.
@@ -948,7 +962,14 @@ class Discretization:
                 lhs += (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10]) * u_m_ijk
 
                 alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point, dx, dy, dz)
+                alpha_moment = self.alphaRobin_moment_integrate_over_interface_at_point(point, dx, dy, dz)
+                
+                du_dx = (u_m_ipjk - u_m_imjk) / (2.0 * dx)
+                du_dy = (u_m_ijpk - u_m_ijmk) / (2.0 * dy)
+                du_dz = (u_m_ijkp - u_m_ijkm) / (2.0 * dz)
+                
                 lhs += alpha_ell * u_m_ijk # Note, added u_m_ijk (was missing)
+                lhs += (alpha_moment[0] * du_dx) + (alpha_moment[1] * du_dy) + (alpha_moment[2] * du_dz)
 
                 
                 # do we need to add alpha ell as part of the diag_coeff?

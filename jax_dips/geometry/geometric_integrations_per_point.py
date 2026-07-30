@@ -461,6 +461,41 @@ def integrate_over_gamma_and_omega_m(get_vertices_fn, is_point_cell_crossed_by_i
     return integrate_over_interface_at_point, integrate_in_negative_domain_at_point
 
 
+def moment_integrate_over_gamma(get_vertices_fn, is_point_cell_crossed_by_interface, u_interp_fn):
+    @jit
+    def compute_interface_moment(point, dx, dy, dz):
+        pieces = get_vertices_fn(point, dx, dy, dz)
+
+        S1_Gamma = pieces[0]
+        S2_Gamma = pieces[1]
+        S3_Gamma = pieces[2]
+        S4_Gamma = pieces[3]
+        S5_Gamma = pieces[4]
+
+        def add_moment(S, integral):
+            centroid0 = S[0].mean(axis=0) - point
+            centroid1 = S[1].mean(axis=0) - point
+            integral += area_fn(S[0]) * u_interp_fn(S[0]).mean() * centroid0
+            integral += area_fn(S[1]) * u_interp_fn(S[1]).mean() * centroid1
+            return integral
+
+        integral = jnp.zeros(3)
+        integral = add_moment(S1_Gamma, integral)
+        integral = add_moment(S2_Gamma, integral)
+        integral = add_moment(S3_Gamma, integral)
+        integral = add_moment(S4_Gamma, integral)
+        integral = add_moment(S5_Gamma, integral)
+
+        return integral
+
+    @jit
+    def integrate_moment_over_interface_at_point(point, dx, dy, dz):
+        is_interface = is_point_cell_crossed_by_interface(point, dx, dy, dz)
+        return jnp.where(is_interface == 0, compute_interface_moment(point, dx, dy, dz), jnp.zeros(3))
+
+    return integrate_moment_over_interface_at_point
+
+
 def compute_cell_faces_areas_values(
     get_vertices_fn, is_point_cell_crossed_by_interface, mu_m_interp_fn, mu_p_interp_fn
 ):
