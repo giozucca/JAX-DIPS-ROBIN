@@ -17,9 +17,11 @@
   Primary Author: mistani
 
 """
+
 import logging
 
 import jax
+
 try:
     from jax.experimental import host_callback
 except ImportError:
@@ -27,6 +29,7 @@ except ImportError:
 
 try:
     import jax.debug
+
     has_jax_debug = hasattr(jax.debug, "callback")
 except ImportError:
     has_jax_debug = False
@@ -63,15 +66,22 @@ def _print_callback(arg, transforms):
 def progress_bar(arg, result):
     "Print progress of loop only if iteration number is a multiple of the print_rate"
     i, n_iter, print_rate, message = arg
-    
+
     if has_jax_debug:
+
         def true_fn(_):
             jax.debug.callback(lambda x: _print_callback(x, None), (i, n_iter, message))
             return result
+
     elif host_callback is not None:
+
         def true_fn(_):
-            return host_callback.id_tap(_print_callback, (i, n_iter, message), result=result)
+            return host_callback.id_tap(
+                _print_callback, (i, n_iter, message), result=result
+            )
+
     else:
+
         def true_fn(_):
             return result
 

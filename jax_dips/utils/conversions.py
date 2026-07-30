@@ -1,18 +1,25 @@
 import numpy
 import torch
+
 try:
     import warp
 except ImportError:
+
     class DummyTypes:
         float32 = "float32"
+
         def array(self, *args, **kwargs):
             raise NotImplementedError("warp-lang is not installed")
+
     class DummyWarp:
         types = DummyTypes()
+
         def type_length(self, dtype):
             return 1
+
         def init(self):
             pass
+
     warp = DummyWarp()
 from jax import dlpack as jax_dlpack
 from torch.utils import dlpack as torch_dlpack
@@ -42,7 +49,9 @@ def torch_to_warp(t, dtype=warp.types.float32):
         rows = t.shape[0]
 
     if t.dtype != torch.float32 and t.dtype != torch.int32:
-        raise RuntimeError("Error aliasing Torch tensor to Warp array. Torch tensor must be float32 or int32 type")
+        raise RuntimeError(
+            "Error aliasing Torch tensor to Warp array. Torch tensor must be float32 or int32 type"
+        )
 
     a = warp.types.array(
         ptr=t.data_ptr(),
