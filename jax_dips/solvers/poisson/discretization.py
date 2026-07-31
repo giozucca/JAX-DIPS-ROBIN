@@ -123,7 +123,7 @@ class Discretization:
         self.compute_face_centroids_values_plus_minus_at_point = (
             geometric_integrations_per_point.compute_cell_faces_areas_values(
                 self.get_vertices_of_cell_intersection_with_interface_at_point,
-                self.is_cell_crossed_by_interface,
+                self.is_cell_crossed_by_interface, 
                 self.mu_m_interp_fn,
                 self.mu_p_interp_fn,
             )
@@ -240,6 +240,23 @@ class Discretization:
 
         norm = jnp.sqrt(phi_x * phi_x + phi_y * phi_y + phi_z * phi_z)
         return jnp.array([phi_x / norm, phi_y / norm, phi_z / norm], dtype=f32)
+
+    def grad_phi_r(self, point,dx,dy,dz):
+        point_ip1_j_k = jnp.array([[point[0] + dx, point[1], point[2]]])
+        point_im1_j_k = jnp.array([[point[0] - dx, point[1], point[2]]])
+        phi_x = (self.phi_interp_fn(point_ip1_j_k) - self.phi_interp_fn(point_im1_j_k)) / (2 * dx)
+
+        point_i_jp1_k = jnp.array([[point[0], point[1] + dy, point[2]]])
+        point_i_jm1_k = jnp.array([[point[0], point[1] - dy, point[2]]])
+        phi_y = (self.phi_interp_fn(point_i_jp1_k) - self.phi_interp_fn(point_i_jm1_k)) / (2 * dy)
+
+        point_i_j_kp1 = jnp.array([[point[0], point[1], point[2] + dz]])
+        point_i_j_km1 = jnp.array([[point[0], point[1], point[2] - dz]])
+        phi_z = (self.phi_interp_fn(point_i_j_kp1) - self.phi_interp_fn(point_i_j_km1)) / (2 * dz)
+
+        norm = jnp.sqrt(phi_x * phi_x + phi_y * phi_y + phi_z * phi_z)
+        return norm # returns grad(phi_r) (copy of above but just return after norm)
+
 
     def initialize_neural_based_algorithm(self):
         """Initialize masks needed for neural network based extrapolation approach"""
@@ -565,9 +582,27 @@ class Discretization:
                 lhs += -1.0 * coeffs[8] * u_m_ijkm
                 lhs += -1.0 * coeffs[10] * u_m_ijkp
 
-                # Impose the Robin boundary condition:
+                # Impose the Robin boundary condition (Eq 12, 13, 14):
                 alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point, dx, dy, dz)
-                lhs += alpha_ell * u_m_ijk
+                
+                #d_ijk = self.phi_interp_fn(point) / self.grad_phi_r(point)
+
+                d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
+
+                mu_r = self.mu_m_interp_fn(point)
+                alpha_r = self.alphaRobin_interp_fn(point)
+                g_r = self.g_interp_fn(point)
+                
+                # Bochkov, Gibou paper Equation 14
+                u_interface = (u_m_ijk * mu_r * alpha_ell)/ (mu_r - (alpha_r * d_ijk) )
+                lhs += u_interface
+
+                #scnd_term = (g_r * d_ijk * alpha_ell)/ (mu_r - (alpha_r*d_ijk))
+                #lhs += scnd_term
+                # 
+
+                # what it should be u_interface = (mu_r * alpha_ell) / (mu_r - alpha_r * d_ijk)
+                #lhs += alpha_ell * u_interface
 
                 # At this point, the matrix A is defined.
                 # Compute the diagonal coefficient of the assembled matrix, which will serve as the (Jacobi) preconditioner.
@@ -583,7 +618,7 @@ class Discretization:
                 diag_coeff = (
                         k_m_ijk * V_m_ijk
                         + (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10])
-                        + alpha_ell
+                        + u_interface 
                 )
                 return jnp.array([lhs.reshape(), diag_coeff.reshape()])
 
@@ -623,6 +658,16 @@ class Discretization:
                         self.f_m_interp_fn(point[jnp.newaxis]) * V_m_ijk
                 )
                 rhs += self.g_integrate_over_interface_at_point(point, dx, dy, dz)
+                
+                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point, dx, dy, dz)
+
+                d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
+                g_r = self.g_interp_fn(point)
+                mu_r = self.mu_m_interp_fn(point)
+                alpha_r = self.alphaRobin_interp_fn(point)
+
+                rhs -= (g_r*d_ijk*alpha_ell) / (mu_r - (alpha_r*d_ijk))
+                
                 return rhs
 
             def get_rhs_on_box_boundary(point):     # Impose the boundary condition at the walls of the computational domain.
@@ -947,8 +992,16 @@ class Discretization:
                 lhs += -1.0 * coeffs[10] * u_m_ijkp # should be L(i - 0.5, j      , k + 0.5)
                 lhs += (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10]) * u_m_ijk
 
+                # Impose the Robin boundary condition (Eq 12, 13, 14):
                 alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point, dx, dy, dz)
-                lhs += alpha_ell * u_m_ijk # Note, added u_m_ijk (was missing)
+                
+                d_ijk = jnp.abs(self.phi_interp_fn(point))
+                mu_r = self.mu_m_interp_fn(point)
+                alpha_r = self.alphaRobin_interp_fn(point)
+                g_r = self.g_interp_fn(point)
+                
+                u_interface = (mu_r * u_m_ijk + g_r * d_ijk) / (mu_r + alpha_r * d_ijk)
+                lhs += alpha_ell * u_interface # Note, evaluated at interface
 
                 
                 # do we need to add alpha ell as part of the diag_coeff?
