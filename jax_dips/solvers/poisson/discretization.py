@@ -597,8 +597,6 @@ class Discretization:
                 u_interface = (u_m_ijk * mu_r * alpha_ell)/ (mu_r - (alpha_r * d_ijk) )
                 lhs += u_interface
 
-                #scnd_term = (g_r * d_ijk * alpha_ell)/ (mu_r - (alpha_r*d_ijk))
-                #lhs += scnd_term
                 # 
 
                 # what it should be u_interface = (mu_r * alpha_ell) / (mu_r - alpha_r * d_ijk)
@@ -667,7 +665,7 @@ class Discretization:
                 alpha_r = self.alphaRobin_interp_fn(point)
 
                 rhs -= (g_r*d_ijk*alpha_ell) / (mu_r - (alpha_r*d_ijk))
-                
+
                 return rhs
 
             def get_rhs_on_box_boundary(point):     # Impose the boundary condition at the walls of the computational domain.
