@@ -1,7 +1,6 @@
 import pathlib
 import setuptools
 
-
 _here = pathlib.Path(__file__).resolve().parent
 
 name = "jax-dips"
