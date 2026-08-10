@@ -30,18 +30,18 @@ source $ENV_NAME/bin/activate
 echo "Upgrading pip, setuptools, and wheel..."
 pip install --upgrade pip setuptools wheel
 
-echo "Installing JAX 0.4.13 with CUDA 12 support..."
-# The original repo targets JAX 0.4.13. 
-# Depending on the python version (assuming 3.10 here since it's standard for 2023 environments), 
-# we use the specific CUDA 12 jaxlib release index.
-pip install "jax[cuda12_pip]==0.4.13" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-
 echo "Installing exact package versions for compatibility..."
 # Extract the requirements from requirements.txt, skipping the first two lines 
 # which contain broken/hardcoded JAX wheel links
 tail -n +3 requirements.txt > linux_requirements_temp.txt
 
-# Install the rest of the dependencies
+# Force pip to resolve everything at once by appending JAX to the requirements list.
+# This prevents unpinned packages (like equinox/diffrax) from silently upgrading JAX
+# and breaking CUDA support.
+echo "jax==0.4.13" >> linux_requirements_temp.txt
+echo "https://storage.googleapis.com/jax-releases/cuda12/jaxlib-0.4.13+cuda12.cudnn89-cp310-cp310-manylinux2014_x86_64.whl" >> linux_requirements_temp.txt
+
+# Install all dependencies together
 pip install -r linux_requirements_temp.txt
 
 # PyEVTK is required in setup.py but not listed in requirements.txt directly (or cloned in Dockerfile)
