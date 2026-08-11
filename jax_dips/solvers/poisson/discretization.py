@@ -587,8 +587,8 @@ class Discretization:
                 
                 #d_ijk = self.phi_interp_fn(point) / self.grad_phi_r(point)
 
-                d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
-
+                #d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
+                d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape(-1)[0] / self.grad_phi_r(point, dx, dy, dz)
                 #mu_r = self.mu_m_interp_fn(point)
                 mu_r = self.mu_m_interp_fn(point[jnp.newaxis]).squeeze()
                 #alpha_r = self.alphaRobin_interp_fn(point)
@@ -662,7 +662,8 @@ class Discretization:
                 
                 alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point, dx, dy, dz)
 
-                d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
+                #d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
+                d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape(-1)[0] / self.grad_phi_r(point, dx, dy, dz)
                 #g_r = self.g_interp_fn(point)
                 g_r = self.g_interp_fn(point[jnp.newaxis]).squeeze()
                 #mu_r = self.mu_m_interp_fn(point)
