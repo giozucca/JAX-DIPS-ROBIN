@@ -588,13 +588,17 @@ class Discretization:
                 #d_ijk = self.phi_interp_fn(point) / self.grad_phi_r(point)
 
                 #d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
-                d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape(-1)[0] / self.grad_phi_r(point, dx, dy, dz)
+                d_ijk = self.phi_interp_fn(point[jnp.newaxis])).reshape(-1)[0] / self.grad_phi_r(point, dx, dy, dz)
+		n = self.normal_point_fn(point,dx,dy,dz)
+		
+		point_projected = point - d_ijk*n
+
                 #mu_r = self.mu_m_interp_fn(point)
-                mu_r = self.mu_m_interp_fn(point[jnp.newaxis]).squeeze()
+                mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 #alpha_r = self.alphaRobin_interp_fn(point)
-                alpha_r = self.alphaRobin_interp_fn(point[jnp.newaxis]).squeeze()
+                alpha_r = self.alphaRobin_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 #g_r = self.g_interp_fn(point)
-                g_r = self.g_interp_fn(point[jnp.newaxis]).squeeze()
+                g_r = self.g_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 
                 # Bochkov, Gibou paper Equation 14
                 u_interface = (u_m_ijk * mu_r * alpha_ell)/ (mu_r - (alpha_r * d_ijk) )
@@ -664,6 +668,10 @@ class Discretization:
 
                 #d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
                 d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape(-1)[0] / self.grad_phi_r(point, dx, dy, dz)
+		n = self.normal_point_fn(point,dx,dy,dz)
+
+                point_projected = point - d_ijk*n
+
                 #g_r = self.g_interp_fn(point)
                 g_r = self.g_interp_fn(point[jnp.newaxis]).squeeze()
                 #mu_r = self.mu_m_interp_fn(point)
