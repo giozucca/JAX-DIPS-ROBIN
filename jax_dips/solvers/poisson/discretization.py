@@ -588,7 +588,7 @@ class Discretization:
                 #d_ijk = self.phi_interp_fn(point) / self.grad_phi_r(point)
 
                 #d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
-                d_ijk = self.phi_interp_fn(point[jnp.newaxis])).reshape(-1)[0] / self.grad_phi_r(point, dx, dy, dz)
+                d_ijk = self.phi_interp_fn(point[jnp.newaxis]).reshape(-1)[0] / self.grad_phi_r(point, dx, dy, dz)
 		n = self.normal_point_fn(point,dx,dy,dz)
 		
 		point_projected = point - d_ijk*n
@@ -667,7 +667,7 @@ class Discretization:
                 alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point, dx, dy, dz)
 
                 #d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
-                d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape(-1)[0] / self.grad_phi_r(point, dx, dy, dz)
+                d_ijk = self.phi_interp_fn(point[jnp.newaxis]).reshape(-1)[0] / self.grad_phi_r(point, dx, dy, dz)
 		n = self.normal_point_fn(point,dx,dy,dz)
 
                 point_projected = point - d_ijk*n
