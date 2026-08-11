@@ -586,7 +586,14 @@ def poisson_solve_Robin(
 
     rms_err = jnp.square(sim_state.solution - exact_sol).mean() ** 0.5
     L_inf_err = abs(sim_state.solution - exact_sol).max()
-    L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (Nx_eval*Ny_eval*Nz_eval))
+    #OLD L2L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / ((Nx_eval-1)*(Ny_eval-1)*(Nz_eval-1))
+	
+    dx = (xmax-xmin) / (Nx-1)
+    dy = (ymax-ymin) / (Ny-1)
+    dz = (zmax-zmin) / (Nz-1)
+
+    L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() *dx*dy*dz)
+
     L2_rel_loss = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (exact_sol**2).sum())
 
     print(num_epochs)
