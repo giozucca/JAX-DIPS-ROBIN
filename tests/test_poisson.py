@@ -588,9 +588,9 @@ def poisson_solve_Robin(
     L_inf_err = abs(sim_state.solution - exact_sol).max()
     #OLD L2L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / ((Nx_eval-1)*(Ny_eval-1)*(Nz_eval-1))
 	
-    dx = (xmax-xmin) / (Nx-1)
-    dy = (ymax-ymin) / (Ny-1)
-    dz = (zmax-zmin) / (Nz-1)
+    dx = (xmax-xmin) / (Nx_eval-1)
+    dy = (ymax-ymin) / (Ny_eval-1)
+    dz = (zmax-zmin) / (Nz_eval-1)
 
     L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() *dx*dy*dz)
 
