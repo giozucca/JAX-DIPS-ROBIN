@@ -760,7 +760,7 @@ class Discretization:
 
                 point_projected = point - d_ijk * n
 
-                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point_projected[jnp.newaxis], dx, dy, dz)
+                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point_projected, dx, dy, dz)
 
                 # print("[LHS] Shape post-projection:", jnp.shape(point_projected))
                 
@@ -867,7 +867,7 @@ class Discretization:
                 # print("[RHS] Shape n", jnp.shape(n))
                 point_projected = point - d_ijk * n
                 alpha_ell = self.alphaRobin_integrate_over_interface_at_point(
-                                    point_projected[jnp.newaxis], dx, dy, dz
+                                    point_projected, dx, dy, dz
                                 )
                 # print("[RHS] Shape post-projection:", jnp.shape(point_projected))
                 
