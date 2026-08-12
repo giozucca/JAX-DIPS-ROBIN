@@ -750,10 +750,10 @@ class Discretization:
                 # d_ijk = self.phi_interp_fn(point) / self.grad_phi_r(point)
 
                 # d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
-                d_ijk = self.phi_interp_fn(point[jnp.newaxis]).reshape(-1)[
-                    0
-                ] / self.grad_phi_r(point, dx, dy, dz)
-                n = self.normal_point_fn(point, dx, dy, dz)
+                phi_val = self.phi_interp_fn(point[jnp.newaxis]).reshape(-1)[0]
+                grad_val = self.grad_phi_r(point, dx, dy, dz).squeeze()
+                d_ijk = phi_val / grad_val
+                n = self.normal_point_fn(point, dx, dy, dz).squeeze()
                 # print("[LHS] Shape pre-projection:", jnp.shape(point))
                 # print("[LHS] Shape d_ijk", jnp.shape(d_ijk))
                 # print("[LHS] Shape n", jnp.shape(n))
