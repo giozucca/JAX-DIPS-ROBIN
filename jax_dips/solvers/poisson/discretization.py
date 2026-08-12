@@ -756,7 +756,9 @@ class Discretization:
                     0
                 ] / self.grad_phi_r(point, dx, dy, dz)
                 n = self.normal_point_fn(point, dx, dy, dz)
+                print("Shape pre-projection:", jnp.shape(point))
                 point_projected = point - d_ijk * n
+                print("Shape pre-projection:", jnp.shape(point_projected))
                 # mu_r = self.mu_m_interp_fn(point)
                 mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
@@ -852,8 +854,11 @@ class Discretization:
                 ] / self.grad_phi_r(point, dx, dy, dz)
 
                 n = self.normal_point_fn(point, dx, dy, dz)
-
+                print("Shape pre-projection:", jnp.shape(point))
                 point_projected = point - d_ijk * n
+                print("Shape post-projection:", jnp.shape(point_projected))
+                import time
+                time.sleep(2)
 
                 # g_r = self.g_interp_fn(point)
                 g_r = self.g_interp_fn(point[jnp.newaxis]).squeeze()
