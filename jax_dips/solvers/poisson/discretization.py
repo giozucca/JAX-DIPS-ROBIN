@@ -756,11 +756,12 @@ class Discretization:
                     0
                 ] / self.grad_phi_r(point, dx, dy, dz)
                 n = self.normal_point_fn(point, dx, dy, dz)
-                print("Shape pre-projection:", jnp.shape(point))
+                print("[LHS] Shape pre-projection:", jnp.shape(point))
+                print("[LHS] Shape d_ijk", jnp.shape(d_ijk))
+                print("[LHS] Shape n", jnp.shape(n))
                 point_projected = point - d_ijk * n
-                print("Shape post-projection:", jnp.shape(point_projected))
-                import time 
-                time.sleep(2)
+                print("[LHS] Shape post-projection:", jnp.shape(point_projected))
+                
                 # mu_r = self.mu_m_interp_fn(point)
                 mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
@@ -770,10 +771,15 @@ class Discretization:
                 # g_r = self.g_interp_fn(point)
                 # g_r = self.g_interp_fn(point_projected[jnp.newaxis]).squeeze()
 
+                print("[LHS] Shape mu_r", jnp.shape(mu_r))
+                print("[LHS] Shape alpha_r", jnp.shape(alpha_r))
+
                 # Bochkov, Gibou paper Equation 14
                 u_interface = (u_m_ijk * mu_r * alpha_ell) / (mu_r - (alpha_r * d_ijk))
                 lhs += u_interface
                 print("Shape of LHS", jnp.shape(lhs))
+                import time 
+                time.sleep(2)
                 #
 
                 # what it should be u_interface = (mu_r * alpha_ell) / (mu_r - alpha_r * d_ijk)
@@ -856,11 +862,12 @@ class Discretization:
                 ] / self.grad_phi_r(point, dx, dy, dz)
 
                 n = self.normal_point_fn(point, dx, dy, dz)
-                print("Shape pre-projection:", jnp.shape(point))
+                print("[RHS] Shape pre-projection:", jnp.shape(point))
+                print("[RHS] Shape d_ijk", jnp.shape(d_ijk))
+                print("[RHS] Shape n", jnp.shape(n))
                 point_projected = point - d_ijk * n
-                print("Shape post-projection:", jnp.shape(point_projected))
-                import time
-                time.sleep(2)
+                print("[RHS] Shape post-projection:", jnp.shape(point_projected))
+                
 
                 # g_r = self.g_interp_fn(point)
                 g_r = self.g_interp_fn(point[jnp.newaxis]).squeeze()
@@ -868,9 +875,14 @@ class Discretization:
                 mu_r = self.mu_m_interp_fn(point[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
                 alpha_r = self.alphaRobin_interp_fn(point[jnp.newaxis]).squeeze()
+                print("[RHS] Shape g_r", jnp.shape(g_r))
+                print("[RHS] Shape mu_r", jnp.shape(mu_r))
+                print("[RHS] Shape alpha_r", alpha_r)
 
                 rhs -= (g_r * d_ijk * alpha_ell) / (mu_r - (alpha_r * d_ijk))
                 print("Shape of the RHS", jnp.shape(rhs))
+                import time
+                time.sleep(2)
                 return rhs
 
             def get_rhs_on_box_boundary(
