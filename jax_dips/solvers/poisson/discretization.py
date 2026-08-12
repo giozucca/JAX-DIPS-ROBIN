@@ -746,7 +746,9 @@ class Discretization:
                 lhs += -1.0 * coeffs[10] * u_m_ijkp
 
                 # Impose the Robin boundary condition (Eq 12, 13, 14):
-
+                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(
+                    point, dx, dy, dz
+                )
                 # d_ijk = self.phi_interp_fn(point) / self.grad_phi_r(point)
 
                 # d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
@@ -755,9 +757,6 @@ class Discretization:
                 ] / self.grad_phi_r(point, dx, dy, dz)
                 n = self.normal_point_fn(point, dx, dy, dz)
                 point_projected = point - d_ijk * n
-                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(
-                    point_projected, dx, dy, dz
-                )
                 # mu_r = self.mu_m_interp_fn(point)
                 mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
@@ -857,11 +856,11 @@ class Discretization:
                 point_projected = point - d_ijk * n
 
                 # g_r = self.g_interp_fn(point)
-                g_r = self.g_interp_fn(point_projected[jnp.newaxis]).squeeze()
+                g_r = self.g_interp_fn(point[jnp.newaxis]).squeeze()
                 # mu_r = self.mu_m_interp_fn(point)
-                mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
+                mu_r = self.mu_m_interp_fn(point[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
-                alpha_r = self.alphaRobin_interp_fn(point_projected[jnp.newaxis]).squeeze()
+                alpha_r = self.alphaRobin_interp_fn(point[jnp.newaxis]).squeeze()
 
                 rhs -= (g_r * d_ijk * alpha_ell) / (mu_r - (alpha_r * d_ijk))
                 print("Shape of the RHS", jnp.shape(rhs))
