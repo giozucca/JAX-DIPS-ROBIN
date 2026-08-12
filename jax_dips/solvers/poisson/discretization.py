@@ -678,7 +678,7 @@ class Discretization:
 
                 k_m_ijk = self.k_m_interp_fn(
                     point[jnp.newaxis]
-                )  # Reaction coefficient in the minus region.
+                ).squeeze()  # Reaction coefficient in the minus region.
                 # k_p_ijk = self.k_p_interp_fn(point[jnp.newaxis])    # (Likely dont use)Reaction coefficient in the plus  region.
 
                 # Only need u_m for Robin (no u_p)
@@ -746,9 +746,7 @@ class Discretization:
                 lhs += -1.0 * coeffs[10] * u_m_ijkp
 
                 # Impose the Robin boundary condition (Eq 12, 13, 14):
-                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(
-                    point, dx, dy, dz
-                )
+                
                 # d_ijk = self.phi_interp_fn(point) / self.grad_phi_r(point)
 
                 # d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
@@ -759,7 +757,11 @@ class Discretization:
                 # print("[LHS] Shape pre-projection:", jnp.shape(point))
                 # print("[LHS] Shape d_ijk", jnp.shape(d_ijk))
                 # print("[LHS] Shape n", jnp.shape(n))
+
                 point_projected = point - d_ijk * n
+
+                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point_projected[jnp.newaxis], dx, dy, dz)
+
                 # print("[LHS] Shape post-projection:", jnp.shape(point_projected))
                 
                 # mu_r = self.mu_m_interp_fn(point)
@@ -807,7 +809,7 @@ class Discretization:
                     )
                     + u_interface
                 )
-                return jnp.array([lhs.reshape(), diag_coeff.reshape()])
+                return jnp.array([lhs.squeeze(), diag_coeff.squeeze()])
 
             def get_lhs_on_box_boundary(
                 point,
@@ -846,14 +848,12 @@ class Discretization:
             ):  # Implementation of the right-hand side of (Equation Standard)
                 rhs = (
                     # self.f_m_interp_fn(point[jnp.newaxis]) * V_m_ijk + self.f_p_interp_fn(point[jnp.newaxis]) * V_p_ijk ## remove the V_p_ijk?
-                    self.f_m_interp_fn(point[jnp.newaxis])
+                    self.f_m_interp_fn(point[jnp.newaxis]).squeeze()
                     * V_m_ijk
                 )
                 rhs += self.g_integrate_over_interface_at_point(point, dx, dy, dz)
 
-                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(
-                    point, dx, dy, dz
-                )
+                
 
                 # d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
 
@@ -866,15 +866,18 @@ class Discretization:
                 # print("[RHS] Shape d_ijk", jnp.shape(d_ijk))
                 # print("[RHS] Shape n", jnp.shape(n))
                 point_projected = point - d_ijk * n
+                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(
+                                    point_projected[jnp.newaxis], dx, dy, dz
+                                )
                 # print("[RHS] Shape post-projection:", jnp.shape(point_projected))
                 
 
                 # g_r = self.g_interp_fn(point)
-                g_r = self.g_interp_fn(point[jnp.newaxis]).squeeze()
+                g_r = self.g_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # mu_r = self.mu_m_interp_fn(point)
-                mu_r = self.mu_m_interp_fn(point[jnp.newaxis]).squeeze()
+                mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
-                alpha_r = self.alphaRobin_interp_fn(point[jnp.newaxis]).squeeze()
+                alpha_r = self.alphaRobin_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # print("[RHS] Shape g_r", jnp.shape(g_r))
                 # print("[RHS] Shape mu_r", jnp.shape(mu_r))
                 # print("[RHS] Shape alpha_r", alpha_r)
@@ -883,7 +886,7 @@ class Discretization:
                 # # print("Shape of the RHS", jnp.shape(rhs))
                 # import time
                 # time.sleep(2)
-                return rhs
+                return rhs.squeeze()
 
             def get_rhs_on_box_boundary(
                 point,
