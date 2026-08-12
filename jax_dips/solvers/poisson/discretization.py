@@ -759,6 +759,8 @@ class Discretization:
                 print("Shape pre-projection:", jnp.shape(point))
                 point_projected = point - d_ijk * n
                 print("Shape pre-projection:", jnp.shape(point_projected))
+                import time 
+                time.sleep(2)
                 # mu_r = self.mu_m_interp_fn(point)
                 mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
