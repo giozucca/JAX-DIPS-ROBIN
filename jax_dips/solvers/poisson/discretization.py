@@ -746,9 +746,6 @@ class Discretization:
                 lhs += -1.0 * coeffs[10] * u_m_ijkp
 
                 # Impose the Robin boundary condition (Eq 12, 13, 14):
-                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(
-                    point, dx, dy, dz
-                )
 
                 # d_ijk = self.phi_interp_fn(point) / self.grad_phi_r(point)
 
@@ -758,7 +755,9 @@ class Discretization:
                 ] / self.grad_phi_r(point, dx, dy, dz)
                 n = self.normal_point_fn(point, dx, dy, dz)
                 point_projected = point - d_ijk * n
-
+                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(
+                    point_projected, dx, dy, dz
+                )
                 # mu_r = self.mu_m_interp_fn(point)
                 mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
@@ -771,7 +770,7 @@ class Discretization:
                 # Bochkov, Gibou paper Equation 14
                 u_interface = (u_m_ijk * mu_r * alpha_ell) / (mu_r - (alpha_r * d_ijk))
                 lhs += u_interface
-
+                print("Shape of LHS", jnp.shape(lhs))
                 #
 
                 # what it should be u_interface = (mu_r * alpha_ell) / (mu_r - alpha_r * d_ijk)
@@ -867,7 +866,7 @@ class Discretization:
                 ).squeeze()
 
                 rhs -= (g_r * d_ijk * alpha_ell) / (mu_r - (alpha_r * d_ijk))
-
+                print("Shape of the RHS", jnp.shape(rhs))
                 return rhs
 
             def get_rhs_on_box_boundary(
