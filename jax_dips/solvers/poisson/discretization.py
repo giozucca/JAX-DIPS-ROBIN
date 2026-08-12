@@ -758,7 +758,7 @@ class Discretization:
                 n = self.normal_point_fn(point, dx, dy, dz)
                 print("Shape pre-projection:", jnp.shape(point))
                 point_projected = point - d_ijk * n
-                print("Shape pre-projection:", jnp.shape(point_projected))
+                print("Shape post-projection:", jnp.shape(point_projected))
                 import time 
                 time.sleep(2)
                 # mu_r = self.mu_m_interp_fn(point)
