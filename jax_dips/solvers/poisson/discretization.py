@@ -777,8 +777,8 @@ class Discretization:
                 # print("[LHS] Shape alpha_r", jnp.shape(alpha_r))
 
                 # Bochkov, Gibou paper Equation 14
-                u_interface = (u_m_ijk * mu_r * alpha_ell) / (mu_r - (alpha_r * d_ijk))
-                lhs += u_interface
+                coeff_integral_au = (mu_r * alpha_ell) / (mu_r - (alpha_r * d_ijk))
+                lhs += coeff_integral_au * u_m_ijk
                 # print("Shape of LHS", jnp.shape(lhs))
                 # import time 
                 # time.sleep(2)
@@ -807,7 +807,7 @@ class Discretization:
                         + coeffs[8]
                         + coeffs[10]
                     )
-                    + u_interface
+                    + coeff_integral_au
                 )
                 return jnp.array([lhs.squeeze(), diag_coeff.squeeze()])
 
