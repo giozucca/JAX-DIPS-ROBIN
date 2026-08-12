@@ -857,11 +857,11 @@ class Discretization:
                 point_projected = point - d_ijk * n
 
                 # g_r = self.g_interp_fn(point)
-                g_r = self.g_interp_fn(point[jnp.newaxis]).squeeze()
+                g_r = self.g_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # mu_r = self.mu_m_interp_fn(point)
-                mu_r = self.mu_m_interp_fn(point[jnp.newaxis]).squeeze()
+                mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
-                alpha_r = self.alphaRobin_interp_fn(point[jnp.newaxis]).squeeze()
+                alpha_r = self.alphaRobin_interp_fn(point_projected[jnp.newaxis]).squeeze()
 
                 rhs -= (g_r * d_ijk * alpha_ell) / (mu_r - (alpha_r * d_ijk))
                 print("Shape of the RHS", jnp.shape(rhs))
