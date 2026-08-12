@@ -17,6 +17,7 @@
   Primary Author: mistani
 
 """
+
 from tests.confs.experiment_configs import star_Robin, star_Robin3
 import logging
 import os
@@ -34,6 +35,7 @@ import jax.profiler
 from jax import grad, jit, lax
 from jax import numpy as jnp
 from jax import vmap
+
 try:
     from jax.config import config
 except ImportError:
@@ -85,15 +87,21 @@ def test_poisson(cfg: DictConfig):
         )
     if cfg.experiment.sphere_Robin:
         logger.info("Performing sphere Robin B.C experiment...\n")
-        poisson_solve_Robin(cfg, test_name=f"sphere_Robin_{cfg.solver.Nx_tr}", exp_fn=sphere_Robin)
-    
+        poisson_solve_Robin(
+            cfg, test_name=f"sphere_Robin_{cfg.solver.Nx_tr}", exp_fn=sphere_Robin
+        )
+
     if cfg.experiment.star_Robin:
         logger.info("Performing star robin B.C experimenet...\n")
-        poisson_solve_Robin(cfg, test_name=f"star_Robin_{cfg.solver.Nx_tr}", exp_fn=star_Robin)
+        poisson_solve_Robin(
+            cfg, test_name=f"star_Robin_{cfg.solver.Nx_tr}", exp_fn=star_Robin
+        )
 
     if cfg.experiment.star_Robin3:
         logger.info("Performing star robin 3 B.C experiment...\n")
-        poisson_solve_Robin(cfg, test_name=f"star_Robin3_{cfg.solver.Nx_tr}", exp_fn=star_Robin3)
+        poisson_solve_Robin(
+            cfg, test_name=f"star_Robin3_{cfg.solver.Nx_tr}", exp_fn=star_Robin3
+        )
 
 
 def create_dirs(
@@ -106,11 +114,13 @@ def create_dirs(
 
 
 def poisson_solve(
-        cfg: DictConfig,
-        test_name: str,
-        exp_fn: object,
+    cfg: DictConfig,
+    test_name: str,
+    exp_fn: object,
 ):
-    results_path = create_dirs(results_path=cfg.experiment.results_path, test_name=test_name)
+    results_path = create_dirs(
+        results_path=cfg.experiment.results_path, test_name=test_name
+    )
     checkpoint_dir = os.path.join(results_path, "checkpoints")
     checkpoint_interval = cfg.experiment.logging.checkpoint_interval
 
@@ -186,9 +196,6 @@ def poisson_solve(
         "sched": cfg.solver.sched,
     }
 
-
-
-
     # --------- Set up first version solver
     if False:
         init_fn, solve_fn = poisson_solver_scalable.setup(
@@ -240,7 +247,9 @@ def poisson_solve(
             beta_fn,
         )
 
-        model_dict = OmegaConf.to_container(cfg.model, resolve=True) if "model" in cfg else None
+        model_dict = (
+            OmegaConf.to_container(cfg.model, resolve=True) if "model" in cfg else None
+        )
         sim_state, solve_fn = init_fn(
             lvl_gstate=gstate_lvl,
             tr_gstate=gstate_tr,
@@ -264,7 +273,9 @@ def poisson_solve(
         t2 = time.time()
 
     logger.info(f"solve took {(t2 - t1)} seconds")
-    jax.profiler.save_device_memory_profile(f"{results_path}/memory_poisson_test_{test_name}.prof")
+    jax.profiler.save_device_memory_profile(
+        f"{results_path}/memory_poisson_test_{test_name}.prof"
+    )
 
     eval_phi = vmap(phi_fn)(eval_gstate.R)
     exact_sol = vmap(evaluate_exact_solution_fn)(eval_gstate.R)
@@ -306,7 +317,9 @@ def poisson_solve(
     rms_err = jnp.square(sim_state.solution - exact_sol).mean() ** 0.5
     L_inf_err = abs(sim_state.solution - exact_sol).max()
     L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum())
-    L2_rel_loss = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (exact_sol**2).sum())
+    L2_rel_loss = jnp.sqrt(
+        ((sim_state.solution - exact_sol) ** 2).sum() / (exact_sol**2).sum()
+    )
 
     logger.info(
         f"Accuracy: \n L_inf : {L_inf_err} \n \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSE Loss: {rms_err}"
@@ -364,12 +377,15 @@ def poisson_solve(
 
     """
 
+
 def poisson_solve_Robin(
-        cfg: DictConfig,
-        test_name: str,
-        exp_fn: object,
+    cfg: DictConfig,
+    test_name: str,
+    exp_fn: object,
 ):
-    results_path = create_dirs(results_path=cfg.experiment.results_path, test_name=test_name)
+    results_path = create_dirs(
+        results_path=cfg.experiment.results_path, test_name=test_name
+    )
     checkpoint_dir = os.path.join(results_path, "checkpoints")
     checkpoint_interval = cfg.experiment.logging.checkpoint_interval
 
@@ -429,10 +445,10 @@ def poisson_solve_Robin(
         evaluate_exact_solution_fn,
         g_m_fn,
         g_p_fn,
-        beta_fn
+        beta_fn,
     ) = exp_fn()
 
-#beta_fn, # do not expect this for robin
+    # beta_fn, # do not expect this for robin
 
     # ----------- Set up optimizer
     optimizer_dict = {
@@ -447,7 +463,6 @@ def poisson_solve_Robin(
     #     "sched": cfg.solver.sched,
     #     "learning_rate": cfg.solver.optim.learning_rate
     # }
-
 
     # --------- Set up first version solver
     if False:
@@ -516,7 +531,9 @@ def poisson_solve_Robin(
         # )
         print(f"Optimizer dict: {optimizer_dict}")
         print(f"Function: {init_fn_Robin}")
-        model_dict = OmegaConf.to_container(cfg.model, resolve=True) if "model" in cfg else None
+        model_dict = (
+            OmegaConf.to_container(cfg.model, resolve=True) if "model" in cfg else None
+        )
         sim_state, solve_fn = init_fn_Robin(
             lvl_gstate=gstate_lvl,
             tr_gstate=gstate_tr,
@@ -540,7 +557,9 @@ def poisson_solve_Robin(
         t2 = time.time()
 
     logger.info(f"solve took {(t2 - t1)} seconds")
-    jax.profiler.save_device_memory_profile(f"{results_path}/memory_poisson_test_{test_name}.prof")
+    jax.profiler.save_device_memory_profile(
+        f"{results_path}/memory_poisson_test_{test_name}.prof"
+    )
 
     eval_phi = vmap(phi_fn)(eval_gstate.R)
     exact_sol = vmap(evaluate_exact_solution_fn)(eval_gstate.R)
@@ -554,8 +573,8 @@ def poisson_solve_Robin(
     print(f"DIMENSIONS:\neval_phi: {len(eval_phi)}\nU:{len(sim_state.solution)}")
     print(f"log: {log}")
 
-    #value = os.path.join(results_path, test_name)
-    #print(f"SAVING INFORMATION INTO : {value}")
+    # value = os.path.join(results_path, test_name)
+    # print(f"SAVING INFORMATION INTO : {value}")
     io.write_vtk_manual(
         eval_gstate,
         log,
@@ -586,15 +605,17 @@ def poisson_solve_Robin(
 
     rms_err = jnp.square(sim_state.solution - exact_sol).mean() ** 0.5
     L_inf_err = abs(sim_state.solution - exact_sol).max()
-    #OLD L2L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / ((Nx_eval-1)*(Ny_eval-1)*(Nz_eval-1))
-	
-    dx = (xmax-xmin) / (Nx-1)
-    dy = (ymax-ymin) / (Ny-1)
-    dz = (zmax-zmin) / (Nz-1)
+    # OLD L2L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / ((Nx_eval-1)*(Ny_eval-1)*(Nz_eval-1))
 
-    L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() *dx*dy*dz)
+    dx = (xmax - xmin) / (Nx_eval - 1)
+    dy = (ymax - ymin) / (Ny_eval - 1)
+    dz = (zmax - zmin) / (Nz_eval - 1)
 
-    L2_rel_loss = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (exact_sol**2).sum())
+    L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() * dx * dy * dz)
+
+    L2_rel_loss = jnp.sqrt(
+        ((sim_state.solution - exact_sol) ** 2).sum() / (exact_sol**2).sum()
+    )
 
     print(num_epochs)
     logger.info(f"Num_epochs: {num_epochs}")
