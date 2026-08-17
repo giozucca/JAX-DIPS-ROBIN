@@ -890,11 +890,11 @@ class Discretization:
             def get_rhs_on_box_boundary(
                 point,
             ):  # Impose the boundary condition at the walls of the computational domain.
-                return self.dir_bc_fn(point[jnp.newaxis]).reshape() * Vol_cell_nominal
+                return self.dir_bc_fn(point[jnp.newaxis]).squeeze() * Vol_cell_nominal
 
             def get_rhs_in_omega_plus(point):
                 # In Omega+ enforce u = dirichlet_bc
-                return self.dir_bc_fn(point[jnp.newaxis]).reshape() * Vol_cell_nominal
+                return self.dir_bc_fn(point[jnp.newaxis]).squeeze() * Vol_cell_nominal
 
             # Three-way dispatch matching LHS
             rhs = jnp.where(

@@ -1147,7 +1147,7 @@ def setup(
 
     return init_fn
 
-# gang
+
 def setup_Robin(
         initial_value_fn: Callable[..., Array],
         dirichlet_bc_fn: Callable[..., Array],
@@ -1191,7 +1191,7 @@ def setup_Robin(
         def nonlinear_op_p(x):
             return 0.0
 
-    print("Hello-1")
+   
     sim_state_fn = PoissonSimStateFn(
         u_0_fn,
         dir_bc_fn,
@@ -1209,7 +1209,7 @@ def setup_Robin(
         nonlinear_op_m,
         nonlinear_op_p
     )
-    print("Hello")
+    
 
     def init_fn(
             lvl_gstate: GridState = None,

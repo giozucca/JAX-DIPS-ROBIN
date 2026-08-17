@@ -18,9 +18,9 @@ solver:
   Nx_tr: 8  # grid for training
   Ny_tr: 8  # grid for training
   Nz_tr: 8  # grid for training
-  num_epochs: 1000 # number of epochs to train
+  num_epochs: 10000 # number of epochs to train
   batch_size: 262144
-  print_rate: 100 # frequency of printing epochs and loss during training
+  print_rate: 1000 # frequency of printing epochs and loss during training
   restart_from_checkpoint: false # whether to restart from an existing checkpoint
   restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
   algorithm: 0  # 0: regression normal derivatives, 1: neural network normal derivatives
