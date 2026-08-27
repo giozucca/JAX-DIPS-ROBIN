@@ -810,33 +810,33 @@ class Discretization:
                 # u_pt = self.solution_at_point_fn(params, point, phi_pt)
                 # lhs = u_pt * Vol_cell_nominal
                 # return jnp.array([lhs, Vol_cell_nominal])
-                return jnp.array([0.0, 1.0])
+                # return jnp.array([0.0, 1.0])
 
             def is_in_omega_plus(point):
                 # True if phi > 0 (outside the interface, in Omega+)
-                #return self.phi_interp_fn(point[jnp.newaxis]).squeeze() > 0.0
-                return V_m_ijk <= 0.0
+                return self.phi_interp_fn(point[jnp.newaxis]).squeeze() > 0.0
+               # return V_m_ijk <= 0.0
 
             # Three-way dispatch: box boundary → Omega+ interior → Omega- interior
             # OLD: 
-            # lhs_diagcoeff = jnp.where(
-            #     is_box_boundary_point(point),
-            #     get_lhs_on_box_boundary(point),
-            #     jnp.where(
-            #         is_in_omega_plus(point),
-            #         get_lhs_in_omega_plus(point),
-            #         get_lhs_at_interior_point(point),
-            #     ),
-            # )
             lhs_diagcoeff = jnp.where(
-                is_in_omega_plus(point),
-                get_lhs_in_omega_plus(point),
+                is_box_boundary_point(point),
+                get_lhs_on_box_boundary(point),
                 jnp.where(
-                    is_box_boundary_point(point),
-                    get_lhs_on_box_boundary(point),
+                    is_in_omega_plus(point),
+                    get_lhs_in_omega_plus(point),
                     get_lhs_at_interior_point(point),
                 ),
             )
+            # lhs_diagcoeff = jnp.where(
+            #     is_in_omega_plus(point),
+            #     get_lhs_in_omega_plus(point),
+            #     jnp.where(
+            #         is_box_boundary_point(point),
+            #         get_lhs_on_box_boundary(point),
+            #         get_lhs_at_interior_point(point),
+            #     ),
+            # )
             lhs, diagcoeff = jnp.split(lhs_diagcoeff, [1], 0)
 
             # --- RHS
@@ -849,8 +849,6 @@ class Discretization:
                     * V_m_ijk
                 )
                 rhs += self.g_integrate_over_interface_at_point(point, dx, dy, dz)
-
-                
 
                 # d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
 
