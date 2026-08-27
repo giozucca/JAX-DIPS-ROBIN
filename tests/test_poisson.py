@@ -583,24 +583,51 @@ def poisson_solve_Robin(
     #     'grad_up_n': sim_state.grad_normal_solution[1]
     # }
     # io.write_vtk_manual(gstate, log)
-
-    rms_err = jnp.square(sim_state.solution - exact_sol).mean() ** 0.5
-    L_inf_err = abs(sim_state.solution - exact_sol).max()
-    #OLD L2L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / ((Nx_eval-1)*(Ny_eval-1)*(Nz_eval-1))
+    
+    # TODO: REVIEW ERROR MASKING
+    # rms_err = jnp.square(sim_state.solution - exact_sol).mean() ** 0.5
+    # L_inf_err = abs(sim_state.solution - exact_sol).max()
+    # #OLD L2L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / ((Nx_eval-1)*(Ny_eval-1)*(Nz_eval-1))
 	
+    # dx = (xmax-xmin) / (Nx_eval-1)
+    # dy = (ymax-ymin) / (Ny_eval-1)
+    # dz = (zmax-zmin) / (Nz_eval-1)
+
+    # L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() *dx*dy*dz)
+
+    # L2_rel_loss = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (exact_sol**2).sum())
+
+    domain_mask = jnp.where(eval_phi <= 0.0, 1.0, 0.0)
+    raw_error = sim_state.solution - exact_sol
+    masked_error = raw_error * domain_mask
+
+    L_inf_err = jnp.abs(masked_error).max()
+    num_interior_points = jnp.sum(domain_mask)
+    rms_err = jnp.sqrt(jnp.square(masked_error).sum() / num_interior_points)
     dx = (xmax-xmin) / (Nx_eval-1)
     dy = (ymax-ymin) / (Ny_eval-1)
     dz = (zmax-zmin) / (Nz_eval-1)
 
-    L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() *dx*dy*dz)
+    L2_err = jnp.sqrt((masked_error ** 2).sum() * dx * dy * dz)
+    masked_exact_sol = exact_sol * domain_mask
+    L2_rel_loss = jnp.sqrt((masked_error ** 2).sum() / (masked_exact_sol ** 2).sum())
 
-    L2_rel_loss = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (exact_sol**2).sum())
+    # print(num_epochs)
+    # logger.info(f"Num_epochs: {num_epochs}")
 
+    # logger.info(
+    #     f"Accuracy: \n L_inf : {L_inf_err} \n \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSE Loss: {rms_err}"
+    # )
+    # logger.info(f"Experiment {test_name} completed! \n")
     print(num_epochs)
     logger.info(f"Num_epochs: {num_epochs}")
-
+    print("Exact Min/Max:", jnp.min(exact_sol), jnp.max(exact_sol))
+    print("Prediction Min/Max:", sim_state.solution.min(), sim_state.solution.max())
+    test_g = vmap(g_p_fn)(eval_gstate.R)
+    print("Does g_p_fn contain NaNs?", jnp.isnan(test_g).any())
+    print("-------------------\n")
     logger.info(
-        f"Accuracy: \n L_inf : {L_inf_err} \n \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSE Loss: {rms_err}"
+        f"Interior (Omega-) Accuracy: \n L_inf : {L_inf_err} \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSE Loss: {rms_err}"
     )
     logger.info(f"Experiment {test_name} completed! \n")
 

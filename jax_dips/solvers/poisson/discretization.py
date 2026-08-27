@@ -752,42 +752,26 @@ class Discretization:
                 # d_ijk = jnp.abs(self.phi_interp_fn(point[jnp.newaxis])).reshape()[0] / self.grad_phi_r(point, dx, dy, dz)
                 phi_val = self.phi_interp_fn(point[jnp.newaxis]).reshape(-1)[0]
                 grad_val = self.grad_phi_r(point, dx, dy, dz).squeeze()
+                
                 d_ijk = phi_val / grad_val
+            
                 n = self.normal_point_fn(point, dx, dy, dz).squeeze()
-                # print("[LHS] Shape pre-projection:", jnp.shape(point))
-                # print("[LHS] Shape d_ijk", jnp.shape(d_ijk))
-                # print("[LHS] Shape n", jnp.shape(n))
 
                 point_projected = point - d_ijk * n
-
-                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point_projected, dx, dy, dz)
-
-                # print("[LHS] Shape post-projection:", jnp.shape(point_projected))
                 
-                # mu_r = self.mu_m_interp_fn(point)
+                alpha_ell = self.alphaRobin_integrate_over_interface_at_point(point, dx, dy, dz)
                 mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
-                # alpha_r = self.alphaRobin_interp_fn(point)
                 alpha_r = self.alphaRobin_interp_fn(
                     point_projected[jnp.newaxis]
                 ).squeeze()
-                # g_r = self.g_interp_fn(point)
-                # g_r = self.g_interp_fn(point_projected[jnp.newaxis]).squeeze()
 
-                # print("[LHS] Shape mu_r", jnp.shape(mu_r))
-                # print("[LHS] Shape alpha_r", jnp.shape(alpha_r))
+               
 
                 # Bochkov, Gibou paper Equation 14
-                coeff_integral_au = (mu_r * alpha_ell) / (mu_r - (alpha_r * d_ijk))
+                coeff_integral_au = (mu_r * alpha_ell) / mu_r - (alpha_r * d_ijk) 
+                
                 lhs += coeff_integral_au * u_m_ijk
-                # print("Shape of LHS", jnp.shape(lhs))
-                # import time 
-                # time.sleep(2)
-                # #
-
-                # what it should be u_interface = (mu_r * alpha_ell) / (mu_r - alpha_r * d_ijk)
-                # lhs += alpha_ell * u_interface
-
-                # At this point, the matrix A is defined.
+                
                 # Compute the diagonal coefficient of the assembled matrix, which will serve as the (Jacobi) preconditioner.
 
                 # take out KpVp, add alpha L(interface and cell, rewrite coeffs 012345)
@@ -821,22 +805,35 @@ class Discretization:
 
             def get_lhs_in_omega_plus(point):
                 # In Omega+ we are not solving the PDE — enforce u = dirichlet_bc
-                phi_pt = self.phi_interp_fn(point[jnp.newaxis])
-                u_pt = self.solution_at_point_fn(params, point, phi_pt)
-                lhs = u_pt * Vol_cell_nominal
-                return jnp.array([lhs, Vol_cell_nominal])
+                #OLD: 
+                # phi_pt = self.phi_interp_fn(point[jnp.newaxis])
+                # u_pt = self.solution_at_point_fn(params, point, phi_pt)
+                # lhs = u_pt * Vol_cell_nominal
+                # return jnp.array([lhs, Vol_cell_nominal])
+                return jnp.array([0.0, 1.0])
 
             def is_in_omega_plus(point):
                 # True if phi > 0 (outside the interface, in Omega+)
-                return self.phi_interp_fn(point[jnp.newaxis]).squeeze() > 0.0
+                #return self.phi_interp_fn(point[jnp.newaxis]).squeeze() > 0.0
+                return V_m_ijk <= 0.0
 
             # Three-way dispatch: box boundary → Omega+ interior → Omega- interior
+            # OLD: 
+            # lhs_diagcoeff = jnp.where(
+            #     is_box_boundary_point(point),
+            #     get_lhs_on_box_boundary(point),
+            #     jnp.where(
+            #         is_in_omega_plus(point),
+            #         get_lhs_in_omega_plus(point),
+            #         get_lhs_at_interior_point(point),
+            #     ),
+            # )
             lhs_diagcoeff = jnp.where(
-                is_box_boundary_point(point),
-                get_lhs_on_box_boundary(point),
+                is_in_omega_plus(point),
+                get_lhs_in_omega_plus(point),
                 jnp.where(
-                    is_in_omega_plus(point),
-                    get_lhs_in_omega_plus(point),
+                    is_box_boundary_point(point),
+                    get_lhs_on_box_boundary(point),
                     get_lhs_at_interior_point(point),
                 ),
             )
@@ -859,16 +856,14 @@ class Discretization:
 
                 phi_val = self.phi_interp_fn(point[jnp.newaxis]).reshape(-1)[0]
                 grad_val = self.grad_phi_r(point, dx, dy, dz).squeeze()
+            
                 d_ijk = phi_val / grad_val
                 n = self.normal_point_fn(point, dx, dy, dz).squeeze()
-                 # print("[RHS] Shape pre-projection:", jnp.shape(point))
-                # print("[RHS] Shape d_ijk", jnp.shape(d_ijk))
-                # print("[RHS] Shape n", jnp.shape(n))
+            
                 point_projected = point - d_ijk * n
                 alpha_ell = self.alphaRobin_integrate_over_interface_at_point(
-                                    point_projected, dx, dy, dz
+                                    point, dx, dy, dz
                                 )
-                # print("[RHS] Shape post-projection:", jnp.shape(point_projected))
                 
 
                 # g_r = self.g_interp_fn(point)
@@ -877,14 +872,7 @@ class Discretization:
                 mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
                 alpha_r = self.alphaRobin_interp_fn(point_projected[jnp.newaxis]).squeeze()
-                # print("[RHS] Shape g_r", jnp.shape(g_r))
-                # print("[RHS] Shape mu_r", jnp.shape(mu_r))
-                # print("[RHS] Shape alpha_r", alpha_r)
-
-                rhs -= (g_r * d_ijk * alpha_ell) / (mu_r - (alpha_r * d_ijk))
-                # # print("Shape of the RHS", jnp.shape(rhs))
-                # import time
-                # time.sleep(2)
+                rhs -= (g_r * jnp.abs(d_ijk) * alpha_ell) / mu_r - (alpha_r * d_ijk)
                 return rhs.squeeze()
 
             def get_rhs_on_box_boundary(
@@ -895,6 +883,7 @@ class Discretization:
             def get_rhs_in_omega_plus(point):
                 # In Omega+ enforce u = dirichlet_bc
                 return self.dir_bc_fn(point[jnp.newaxis]).squeeze() * Vol_cell_nominal
+                #return jnp.array(0.0)
 
             # Three-way dispatch matching LHS
             rhs = jnp.where(

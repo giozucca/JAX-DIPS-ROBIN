@@ -14,7 +14,7 @@ def get_scheduler(
     scheduler_name: str = "exponential",
     learning_rate: float = 1e-2,
     decay_rate: float = 0.96,
-    transition_steps: int = 1000,
+    transition_steps: int = 100,
     **kwargs,
 ):
     if scheduler_name == "exponential":
@@ -86,11 +86,19 @@ def get_optimizer(
             learning_rate,
             **kwargs,
         )
+    
+    elif optimizer_name == "adamw":
+        logger.info("Using adamw optimizer")
+        return optax.adamw(
+            learning_rate=learning_rate,
+            weight_decay=1e-4
+        )
 
-    # elif optimizer_name == "lbfgs":
-    #     logger.info("Using jaxopt.LBFGS optimizer")
-    #     lbfgs = LBFGS_adapter(loss_fn)
-    #     return lbfgs
+     
+    #elif optimizer_name == "lbfgs":
+    #    logger.info("Using jaxopt.LBFGS optimizer#")
+        #lbfgs = LBFGS_adapter(loss_fn)
+        #return lbfgs
 
     else:
         logger.error("Unknown optimizer: {}".format(optimizer_name))
