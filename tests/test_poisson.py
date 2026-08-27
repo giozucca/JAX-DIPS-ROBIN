@@ -120,9 +120,18 @@ def poisson_solve(
     batch_size = cfg.solver.batch_size
 
     dim = i32(3)
-    if "star_Robin" in test_name or "star_Robin3" in test_name:
-        xmin = ymin = zmin = f32(-2.0)
-        xmax = ymax = zmax = f32(2.0)
+    if "star_Robin3" in test_name:
+        # Union of two stars, each of base radius 0.8 centered at +-(0.5,0.5,0.5):
+        # worst-case extent from the origin is ~0.5*sqrt(3) + (star's own max radius ~1.008) ~= 1.87.
+        # Keep a modest safety margin (previously exactly [-2,2], i.e. ~0.13 margin) without shrinking it.
+        xmin = ymin = zmin = f32(-2.1)
+        xmax = ymax = zmax = f32(2.1)
+    elif "star_Robin" in test_name:
+        # Single star, base radius 1.183, harmonics bounded by |beta1|+|beta2|+|beta3|=0.20:
+        # solving R = 1.183*(1+(R^2/10)^2) + 0.20 gives a worst-case extent R_max ~= 1.433.
+        # [-2,2] left ~40% of each axis empty; tighten to concentrate training points on the object.
+        xmin = ymin = zmin = f32(-1.8)
+        xmax = ymax = zmax = f32(1.8)
     else:
         xmin = ymin = zmin = f32(-1.0)
         xmax = ymax = zmax = f32(1.0)
@@ -379,9 +388,18 @@ def poisson_solve_Robin(
     batch_size = cfg.solver.batch_size
 
     dim = i32(3)
-    if "star_Robin" in test_name or "star_Robin3" in test_name:
-        xmin = ymin = zmin = f32(-2.0)
-        xmax = ymax = zmax = f32(2.0)
+    if "star_Robin3" in test_name:
+        # Union of two stars, each of base radius 0.8 centered at +-(0.5,0.5,0.5):
+        # worst-case extent from the origin is ~0.5*sqrt(3) + (star's own max radius ~1.008) ~= 1.87.
+        # Keep a modest safety margin (previously exactly [-2,2], i.e. ~0.13 margin) without shrinking it.
+        xmin = ymin = zmin = f32(-2.1)
+        xmax = ymax = zmax = f32(2.1)
+    elif "star_Robin" in test_name:
+        # Single star, base radius 1.183, harmonics bounded by |beta1|+|beta2|+|beta3|=0.20:
+        # solving R = 1.183*(1+(R^2/10)^2) + 0.20 gives a worst-case extent R_max ~= 1.433.
+        # [-2,2] left ~40% of each axis empty; tighten to concentrate training points on the object.
+        xmin = ymin = zmin = f32(-1.8)
+        xmax = ymax = zmax = f32(1.8)
     else:
         xmin = ymin = zmin = f32(-1.0)
         xmax = ymax = zmax = f32(1.0)

@@ -768,8 +768,8 @@ class Discretization:
                
 
                 # Bochkov, Gibou paper Equation 14
-                coeff_integral_au = (mu_r * alpha_ell) / mu_r - (alpha_r * d_ijk) 
-                
+                coeff_integral_au = (mu_r * alpha_ell) / (mu_r - (alpha_r * d_ijk))
+
                 lhs += coeff_integral_au * u_m_ijk
                 
                 # Compute the diagonal coefficient of the assembled matrix, which will serve as the (Jacobi) preconditioner.
@@ -805,12 +805,10 @@ class Discretization:
 
             def get_lhs_in_omega_plus(point):
                 # In Omega+ we are not solving the PDE — enforce u = dirichlet_bc
-                #OLD: 
-                # phi_pt = self.phi_interp_fn(point[jnp.newaxis])
-                # u_pt = self.solution_at_point_fn(params, point, phi_pt)
-                # lhs = u_pt * Vol_cell_nominal
-                # return jnp.array([lhs, Vol_cell_nominal])
-                # return jnp.array([0.0, 1.0])
+                phi_pt = self.phi_interp_fn(point[jnp.newaxis])
+                u_pt = self.solution_at_point_fn(params, point, phi_pt)
+                lhs = u_pt * Vol_cell_nominal
+                return jnp.array([lhs, Vol_cell_nominal])
 
             def is_in_omega_plus(point):
                 # True if phi > 0 (outside the interface, in Omega+)
@@ -870,7 +868,7 @@ class Discretization:
                 mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
                 alpha_r = self.alphaRobin_interp_fn(point_projected[jnp.newaxis]).squeeze()
-                rhs -= (g_r * jnp.abs(d_ijk) * alpha_ell) / mu_r - (alpha_r * d_ijk)
+                rhs -= (g_r * d_ijk * alpha_ell) / (mu_r - (alpha_r * d_ijk))
                 return rhs.squeeze()
 
             def get_rhs_on_box_boundary(
