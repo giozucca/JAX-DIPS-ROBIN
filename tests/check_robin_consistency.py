@@ -73,6 +73,27 @@ from jax_dips.solvers.simulation_states import PoissonSimStateFn  # noqa: E402
 from tests.confs import experiment_configs  # noqa: E402
 
 
+class _StandaloneDiscretization(Discretization):
+    """`Discretization` is effectively abstract: its __init__ binds four
+    post-processing hooks (`*_neural_network`) that only `Trainer` defines, so the
+    base class cannot be instantiated on its own. Those hooks compute solution
+    gradients for visualization and are never reached by `compute_Ax_and_b_*`,
+    so stubbing them is enough to build the operator standalone.
+    """
+
+    def compute_normal_gradient_solution_mp_on_interface_neural_network(self, *a, **kw):
+        raise NotImplementedError("not needed for the consistency check")
+
+    def compute_gradient_solution_mp_neural_network(self, *a, **kw):
+        raise NotImplementedError("not needed for the consistency check")
+
+    def compute_normal_gradient_solution_on_interface_neural_network(self, *a, **kw):
+        raise NotImplementedError("not needed for the consistency check")
+
+    def compute_gradient_solution_neural_network(self, *a, **kw):
+        raise NotImplementedError("not needed for the consistency check")
+
+
 def domain_for(exp_name):
     """Mirrors the domain selection in tests/test_poisson.py.
 
@@ -134,7 +155,7 @@ def build_discretization(exp_name, Nx, lo, hi):
         zero_op,
     )
 
-    disc = Discretization(
+    disc = _StandaloneDiscretization(
         lvl_gstate=gstate,
         sim_state=None,
         sim_state_fn=sim_state_fn,
