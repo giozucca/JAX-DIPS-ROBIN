@@ -41,7 +41,20 @@ parser.add_argument("--exp", default="sphere_Robin", choices=["sphere_Robin", "s
 parser.add_argument("--nx", type=int, nargs="+", default=[16, 32], help="training-grid resolutions to test")
 parser.add_argument("--zoom", type=int, nargs="+", default=[0, 3], help="stencil zoom levels (dx -> dx/2**zoom)")
 parser.add_argument("--x64", action="store_true", help="run in float64 instead of float32")
+parser.add_argument(
+    "--cpu",
+    action="store_true",
+    help="force the CPU backend; this check is small and does not need the GPU, "
+    "so use this if a training run is holding the card",
+)
 args = parser.parse_args()
+
+# Must be set BEFORE jax is imported. Without the platform allocator, jax
+# preallocates most of the VRAM on import and cuDNN can then fail to initialize
+# ("DNN library initialization failed"). Every other script in this repo does this.
+os.environ.setdefault("XLA_PYTHON_CLIENT_ALLOCATOR", "platform")
+if args.cpu:
+    os.environ["JAX_PLATFORMS"] = "cpu"
 
 try:
     from jax.config import config
@@ -53,7 +66,7 @@ config.update("jax_enable_x64", args.x64)
 from jax import numpy as jnp  # noqa: E402
 from jax import vmap  # noqa: E402
 
-from jax_dips._jaxmd_modules.util import f32, i32  # noqa: E402
+from jax_dips._jaxmd_modules.util import f32  # noqa: E402
 from jax_dips.domain import mesh  # noqa: E402
 from jax_dips.solvers.poisson.discretization import Discretization  # noqa: E402
 from jax_dips.solvers.simulation_states import PoissonSimStateFn  # noqa: E402
@@ -61,12 +74,16 @@ from tests.confs import experiment_configs  # noqa: E402
 
 
 def domain_for(exp_name):
-    """Mirrors the domain selection in tests/test_poisson.py."""
+    """Mirrors the domain selection in tests/test_poisson.py.
+
+    Plain Python floats on purpose: wrapping these in f32() makes them device
+    arrays, which forces GPU work before we actually need any.
+    """
     if exp_name == "star_Robin3":
-        return f32(-2.1), f32(2.1)
+        return -2.1, 2.1
     if exp_name == "star_Robin":
-        return f32(-1.8), f32(1.8)
-    return f32(-1.0), f32(1.0)
+        return -1.8, 1.8
+    return -1.0, 1.0
 
 
 def build_discretization(exp_name, Nx, lo, hi):
@@ -89,7 +106,9 @@ def build_discretization(exp_name, Nx, lo, hi):
         beta_fn,
     ) = getattr(experiment_configs, exp_name)()
 
-    init_mesh_fn, _ = mesh.construct(i32(3))
+    # Plain int, not i32(3): mesh.construct does `if dimension == 3`, and a device
+    # array there turns a Python branch into a GPU op.
+    init_mesh_fn, _ = mesh.construct(3)
     xc = jnp.linspace(lo, hi, Nx, dtype=f32)
     gstate = init_mesh_fn(xc, xc, xc)
 
