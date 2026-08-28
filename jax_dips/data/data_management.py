@@ -196,6 +196,7 @@ class TrainData:
         refine_normals=False,
         v_cycle_period: int = 4,
         rest_at_level: int = 10,
+        zoom_levels: int = 1,
     ) -> None:
         """Training GSTATE
 
@@ -224,6 +225,13 @@ class TrainData:
         #     self.gstate = init_mesh_fn(xc, yc, zc)
         self.v_cycle_period = v_cycle_period
         self.rest_at_level = rest_at_level
+        # Number of stencil-refinement stages in alternate_res_sequentially.
+        # 1 == disabled (stencil stays at the grid spacing). Was effectively 4,
+        # which shrank the finite-volume cell to dx/8 over the last quarter of
+        # training; at that size no grid point's cell is crossed by the interface
+        # for Nx >= 16, so alpha_ell and the g-integral are zero everywhere and the
+        # Robin boundary condition vanishes from the loss entirely.
+        self.zoom_levels = max(1, int(zoom_levels))
         self.gstate = gstate
         self.train_points = self.gstate.R
         self.lvl_set_fn = lvl_set_fn
@@ -319,7 +327,9 @@ class TrainData:
     @partial(jit, static_argnums=(0))
     def alternate_res_sequentially(self, num_epochs, epoch, train_dx, train_dy, train_dz):
         self.alt_res = False
-        zoom_lvl = epoch // (num_epochs // 4)
+        # zoom_levels == 1 makes this a no-op: epoch // num_epochs == 0 for every
+        # epoch in the run, so the stencil stays at the true grid spacing.
+        zoom_lvl = epoch // (num_epochs // self.zoom_levels)
         train_dx = self.gstate.dx * 0.5**zoom_lvl
         train_dy = self.gstate.dy * 0.5**zoom_lvl
         train_dz = self.gstate.dz * 0.5**zoom_lvl
