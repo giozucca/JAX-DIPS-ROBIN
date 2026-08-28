@@ -18,9 +18,9 @@ solver:
   Nx_tr: 8 # grid for training
   Ny_tr: 8 # grid for training
   Nz_tr: 8 # grid for training
-  num_epochs: 500 # number of epochs to train
-  batch_size: 262144
-  print_rate: 100 # frequency of printing epochs and loss during training
+  num_epochs: 20000 # number of epochs to train
+  batch_size: 512
+  print_rate: 1000 # frequency of printing epochs and loss during training
   restart_from_checkpoint: false # whether to restart from an existing checkpoint
   restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
   algorithm: 0  # 0: regression normal derivatives, 1: neural network normal derivatives
@@ -43,8 +43,8 @@ experiment:
   sphere: false # sphere interface with jump conditions
   star: false # star interface with jump conditions
   no_jump: false # no interface and no jump conditions (used to be true)
-  sphere_Robin: false # sphere with Robin B.C
-  star_Robin: true
+  sphere_Robin: true # sphere with Robin B.C
+  star_Robin: false
   star_Robin3: false
 
 
