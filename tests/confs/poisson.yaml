@@ -18,7 +18,7 @@ solver:
   Nx_tr: 8 # grid for training
   Ny_tr: 8 # grid for training
   Nz_tr: 8 # grid for training
-  num_epochs: 100000 # number of epochs to train
+  num_epochs: 10000 # number of epochs to train
   batch_size: 512
   print_rate: 1000 # frequency of printing epochs and loss during training
   restart_from_checkpoint: false # whether to restart from an existing checkpoint
@@ -68,7 +68,7 @@ model:
   name: null
   model_type: "mlp"
   mlp:
-    hidden_layers_m: 2
+    hidden_layers_m: 1
     hidden_dim_m: 100
     activation_m: "jnp.tanh"
     hidden_layers_p: 0
