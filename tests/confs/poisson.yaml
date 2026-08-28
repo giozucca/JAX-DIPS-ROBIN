@@ -39,6 +39,10 @@ solver:
     # sensitivity to the solution error carries dx^3), so Adam stalls at an error floor
     # that grows like dx^-3. Keep this far below the smallest gradient you expect.
     eps: 1.0e-16 # NB: written with the decimal point so plain YAML parses it as a float
+    # adamw's decoupled weight decay. Adam normalizes its gradient term to O(1), so the
+    # fixed point m_hat/sqrt(v_hat) = -wd*theta contains no grid spacing at all: this sets
+    # an error floor that is the SAME at every resolution. Set to 0.0 to remove it.
+    weight_decay: 0.0
   sched:
     scheduler_name: "cosine" # options are "exponential", "polynomial", "cosine", "constant"
     decay_rate: 0.985 # only used by "exponential"

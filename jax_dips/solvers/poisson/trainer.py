@@ -257,10 +257,14 @@ class Trainer(Discretization):
             # float() guards against YAML handing this back as the string "1e-16":
             # optax would take it without complaint and fail deep inside the update.
             _eps = 1e-16 if _eps is None else float(_eps)
+            # adamw only. Its decoupled decay sets a resolution-INDEPENDENT error floor
+            # (see the note in jax_dips/solvers/optimizers.py:get_optimizer).
+            _wd = optimizer_dict.get("weight_decay", None)
+            _wd = 1e-4 if _wd is None else float(_wd)
             logger.info(
                 f"LR schedule '{optimizer_dict['sched']['scheduler_name']}': "
                 f"{total_steps} total steps ({self.num_epochs} epochs x {_num_batches} batches), "
-                f"transition_steps={transition_steps}, adam_eps={_eps}"
+                f"transition_steps={transition_steps}, adam_eps={_eps}, weight_decay={_wd}"
             )
             self.optimizer = get_optimizer(
                 optimizer_name=optimizer_dict["optimizer_name"],
@@ -269,6 +273,7 @@ class Trainer(Discretization):
                 decay_rate=optimizer_dict["sched"]["decay_rate"],
                 transition_steps=transition_steps,
                 eps=_eps,
+                weight_decay=_wd,
                 loss_fn=self.loss,
             )
             self.solve = self.solve_optax

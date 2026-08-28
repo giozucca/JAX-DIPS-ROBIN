@@ -94,6 +94,13 @@ def get_optimizer(
     # count moved the answer by ~2% and why widening the network did not help at all.
     # Setting eps well below the smallest expected gradient restores Adam's scale
     # invariance, so the achievable error stops depending on the resolution.
+    #
+    # NOTE on `weight_decay`: adamw's decoupled decay adds -lr*wd*theta on top of the
+    # Adam step. Because Adam normalizes the gradient term to O(1) magnitude, the fixed
+    # point satisfies  m_hat/sqrt(v_hat) = -wd*theta,  in which NEITHER side depends on
+    # the grid spacing. Weight decay therefore imposes an error floor that is identical
+    # at every resolution -- so if a sweep plateaus at the same value for two different
+    # Nx, try wd=0 before spending epochs on it.
     if optimizer_name == "custom":
         logger.info("Using chained Adam optimizer")
         return chained_adam(
