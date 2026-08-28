@@ -48,6 +48,7 @@ def chained_adam(
     decay_rate: float = 0.96,
     transition_steps: int = 1000,
     max_norm: float = 1.0,
+    eps: float = 1e-16,
     **kwargs,
 ) -> GradientTransformation:
     scheduler = get_scheduler(
@@ -59,7 +60,7 @@ def chained_adam(
     )
     optimizer = optax.chain(
         optax.clip_by_global_norm(max_norm),
-        optax.scale_by_adam(),
+        optax.scale_by_adam(eps=eps),
         optax.scale_by_schedule(scheduler),
         optax.scale(-1.0),
     )
@@ -74,9 +75,25 @@ def get_optimizer(
     transition_steps: int = 1000,
     weight_decay: float = 1e-4,
     max_norm: float = 1.0,
+    eps: float = 1e-16,
     loss_fn: object = None,
     **kwargs,
 ) -> GradientTransformation:
+    # NOTE on `eps`: optax defaults to 1e-8, which is far too large here. The loss is a
+    # mean over Jacobi-preconditioned FV rows, and the residual's sensitivity to the
+    # solution error carries an explicit power of the grid spacing (dx^2 at interior
+    # cells, dx at interface cells). Interface cells dominate, so the gradient scales as
+    #     ||dL/dtheta|| ~ (pi/8) (alpha/6 mu)^2 * dx^3 * e
+    # for a solution error e. Adam's update is g / (sqrt(v) + eps) with sqrt(v) ~ |g|, so
+    # it stalls once |g| falls to eps -- i.e. at a solution-error floor
+    #     e_floor ~ eps / (C dx^3),   C = (pi/8)(alpha/6 mu)^2 ~ 0.011
+    # which GROWS like dx^-3 under refinement. With eps=1e-8 that floor is ~6e-5 at
+    # Nx=8 (harmless, truncation dominates) but ~3e-2 at Nx=64, which is exactly where
+    # sphere_Robin was plateauing. Below the floor progress freezes logarithmically
+    # (halving e halves g, which doubles the throttle), which is why doubling the epoch
+    # count moved the answer by ~2% and why widening the network did not help at all.
+    # Setting eps well below the smallest expected gradient restores Adam's scale
+    # invariance, so the achievable error stops depending on the resolution.
     if optimizer_name == "custom":
         logger.info("Using chained Adam optimizer")
         return chained_adam(
@@ -85,20 +102,23 @@ def get_optimizer(
             decay_rate=decay_rate,
             transition_steps=transition_steps,
             max_norm=max_norm,
+            eps=eps,
             **kwargs,
         )
 
     elif optimizer_name == "adam":
-        logger.info("Using Adam optimizer")
+        logger.info(f"Using Adam optimizer (eps={eps})")
         return optax.adam(
             learning_rate,
+            eps=eps,
             **kwargs,
         )
 
     elif optimizer_name == "rmsprop":
-        logger.info("Using RMSprop optimizer")
+        logger.info(f"Using RMSprop optimizer (eps={eps})")
         return optax.rmsprop(
             learning_rate,
+            eps=eps,
             **kwargs,
         )
     
@@ -107,7 +127,7 @@ def get_optimizer(
         # passed the raw scalar, so the sched: block in the config was silently ignored
         # and training ran at a constant LR for the whole run.
         # ("adam" and "rmsprop" above still use a constant LR.)
-        logger.info("Using adamw optimizer")
+        logger.info(f"Using adamw optimizer (eps={eps})")
         return optax.adamw(
             learning_rate=get_scheduler(
                 scheduler_name=scheduler_name,
@@ -116,6 +136,7 @@ def get_optimizer(
                 transition_steps=transition_steps,
             ),
             weight_decay=weight_decay,
+            eps=eps,
         )
 
      

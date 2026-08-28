@@ -34,6 +34,11 @@ solver:
   optim:
     optimizer_name: "adamw" # options are "custom", "adam", "rmsprop"
     learning_rate: 1e-3
+    # Adam's denominator epsilon. optax defaults to 1e-8, which is LARGER than the
+    # gradient norms this loss produces at fine resolution (the preconditioned residual's
+    # sensitivity to the solution error carries dx^3), so Adam stalls at an error floor
+    # that grows like dx^-3. Keep this far below the smallest gradient you expect.
+    eps: 1.0e-16 # NB: written with the decimal point so plain YAML parses it as a float
   sched:
     scheduler_name: "cosine" # options are "exponential", "polynomial", "cosine", "constant"
     decay_rate: 0.985 # only used by "exponential"

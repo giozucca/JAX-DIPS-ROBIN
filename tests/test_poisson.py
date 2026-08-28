@@ -456,6 +456,7 @@ def poisson_solve_Robin(
     optimizer_dict = {
         "optimizer_name": cfg.solver.optim.optimizer_name,
         "learning_rate": cfg.solver.optim.learning_rate,
+        "eps": cfg.solver.optim.get("eps", None),
         "sched": cfg.solver.sched,
     }
     # # import time

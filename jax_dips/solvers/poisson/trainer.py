@@ -250,10 +250,17 @@ class Trainer(Discretization):
                 # would mean almost no decay. Keep the historical default here so that
                 # existing experiments are unaffected; set it explicitly to anneal.
                 transition_steps = 1000
+            # Adam's eps sets a resolution-dependent error floor here (see the note in
+            # jax_dips/solvers/optimizers.py:get_optimizer). It must stay well below the
+            # smallest gradient norm the run will produce, which shrinks like dx^3.
+            _eps = optimizer_dict.get("eps", None)
+            # float() guards against YAML handing this back as the string "1e-16":
+            # optax would take it without complaint and fail deep inside the update.
+            _eps = 1e-16 if _eps is None else float(_eps)
             logger.info(
                 f"LR schedule '{optimizer_dict['sched']['scheduler_name']}': "
                 f"{total_steps} total steps ({self.num_epochs} epochs x {_num_batches} batches), "
-                f"transition_steps={transition_steps}"
+                f"transition_steps={transition_steps}, adam_eps={_eps}"
             )
             self.optimizer = get_optimizer(
                 optimizer_name=optimizer_dict["optimizer_name"],
@@ -261,6 +268,7 @@ class Trainer(Discretization):
                 learning_rate=optimizer_dict["learning_rate"],
                 decay_rate=optimizer_dict["sched"]["decay_rate"],
                 transition_steps=transition_steps,
+                eps=_eps,
                 loss_fn=self.loss,
             )
             self.solve = self.solve_optax
