@@ -200,8 +200,37 @@ def residual_stats(disc, gstate, dx):
     rms_minus, n_minus = rms(in_minus)
     rms_iface, n_iface = rms(in_minus & crossed)
     max_minus = jnp.max(jnp.where(in_minus, jnp.abs(res), 0.0))
+
+    # --- small-cell (sliver) test -------------------------------------------
+    # coeffs_[:12] are the mu*A/dx face coefficients, coeffs_[12] is V_m.
+    # If the worst residuals sit on cells whose volume/face-areas have collapsed,
+    # this is the classic cut-cell small-cell problem rather than plain truncation.
+    coeffs_ = vmap(disc.compute_face_centroids_values_plus_minus_at_point, (0, None, None, None))(
+        points, dx, dx, dx
+    )
+    V_m = coeffs_[:, 12]
+    sum_coeffs = sum(coeffs_[:, k] for k in (0, 2, 4, 6, 8, 10))
+    vol_frac = V_m / (dx**3)
+
+    order = jnp.argsort(jnp.where(in_minus, jnp.abs(res), -1.0))[::-1][:5]
+    worst = [
+        {
+            "res": float(jnp.abs(res)[i]),
+            "vol_frac": float(vol_frac[i]),
+            "sum_coeffs": float(sum_coeffs[i]),
+        }
+        for i in order
+    ]
+    # median volume fraction among interface cells, for scale
+    _ifc = in_minus & crossed
+    med_vol_frac_iface = float(jnp.median(jnp.where(_ifc, vol_frac, jnp.nan)[~jnp.isnan(jnp.where(_ifc, vol_frac, jnp.nan))])) if int(jnp.sum(_ifc)) else float("nan")
+    min_vol_frac_iface = float(jnp.min(jnp.where(_ifc, vol_frac, jnp.inf))) if int(jnp.sum(_ifc)) else float("nan")
+
     return {
         "dtype": str(res.dtype),
+        "worst": worst,
+        "med_vol_frac_iface": med_vol_frac_iface,
+        "min_vol_frac_iface": min_vol_frac_iface,
         "rms_minus": float(rms_minus),
         "max_minus": float(max_minus),
         "rms_iface": float(rms_iface),
@@ -243,6 +272,16 @@ def main():
                 raise RuntimeError(
                     f"--x64 requested but the residual came back as {s['dtype']}. "
                     "Something is still forcing single precision; the numbers below are NOT float64."
+                )
+            print(
+                f"        interface cell volume fraction V_m/dx^3:  "
+                f"median={s['med_vol_frac_iface']:.4f}  min={s['min_vol_frac_iface']:.2e}"
+            )
+            print(f"        5 worst Omega- cells (|res|, V_m/dx^3, sum of face coeffs):")
+            for w in s["worst"]:
+                print(
+                    f"            |res|={w['res']:.4e}   V_m/dx^3={w['vol_frac']:.4e}   "
+                    f"sum_coeffs={w['sum_coeffs']:.4e}"
                 )
         print()
 
