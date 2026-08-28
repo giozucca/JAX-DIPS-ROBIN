@@ -66,7 +66,19 @@ config.update("jax_enable_x64", args.x64)
 from jax import numpy as jnp  # noqa: E402
 from jax import vmap  # noqa: E402
 
-from jax_dips._jaxmd_modules.util import f32  # noqa: E402
+# jax_enable_x64 alone does NOT make this codebase run in float64: util.py hardcodes
+# `f32 = jnp.float32`, and mesh.py / geometric_integrations_per_point.py /
+# discretization.py all pass `dtype=f32` explicitly, so every array is cast straight
+# back down to single precision. Patch the shared alias BEFORE importing those
+# modules -- they all bind it at import time via `from ...util import f32` or
+# `f32 = util.f32`. (jax_dips/__init__.py is empty, so nothing binds it earlier.)
+from jax_dips._jaxmd_modules import util as _jaxdips_util  # noqa: E402
+
+if args.x64:
+    _jaxdips_util.f32 = jnp.float64
+
+f32 = _jaxdips_util.f32
+
 from jax_dips.domain import mesh  # noqa: E402
 from jax_dips.solvers.poisson.discretization import Discretization  # noqa: E402
 from jax_dips.solvers.simulation_states import PoissonSimStateFn  # noqa: E402
@@ -189,6 +201,7 @@ def residual_stats(disc, gstate, dx):
     rms_iface, n_iface = rms(in_minus & crossed)
     max_minus = jnp.max(jnp.where(in_minus, jnp.abs(res), 0.0))
     return {
+        "dtype": str(res.dtype),
         "rms_minus": float(rms_minus),
         "max_minus": float(max_minus),
         "rms_iface": float(rms_iface),
@@ -210,7 +223,7 @@ def main():
     header = (
         f"{'Nx':>5} {'zoom':>5} {'dx':>10} "
         f"{'RMS res (O-)':>14} {'max res (O-)':>14} {'RMS res (iface)':>16} "
-        f"{'#O-':>8} {'#iface':>8} {'BC share':>9}"
+        f"{'#O-':>8} {'#iface':>8} {'BC share':>9} {'dtype':>9}"
     )
     print(header)
     print("-" * len(header))
@@ -224,8 +237,13 @@ def main():
             print(
                 f"{Nx:>5} {zoom:>5} {float(dx):>10.5f} "
                 f"{s['rms_minus']:>14.4e} {s['max_minus']:>14.4e} {s['rms_iface']:>16.4e} "
-                f"{s['n_minus']:>8} {s['n_iface']:>8} {bc_share:>8.2f}%"
+                f"{s['n_minus']:>8} {s['n_iface']:>8} {bc_share:>8.2f}% {s['dtype']:>9}"
             )
+            if args.x64 and s["dtype"] != "float64":
+                raise RuntimeError(
+                    f"--x64 requested but the residual came back as {s['dtype']}. "
+                    "Something is still forcing single precision; the numbers below are NOT float64."
+                )
         print()
 
     print("How to read this:")

@@ -551,6 +551,21 @@ class Trainer(Discretization):
                 x_data=self.train_points,
             )
             batched_training_data = self.DD.get_batched_data()
+            _n_batches = batched_training_data.shape[0]
+            if _n_batches > 1:
+                # DatasetDict slices batches as CONTIGUOUS ranges of gstate.R, which
+                # is a lexicographically flattened meshgrid -- so each batch is a
+                # spatial slab, not a random sample. The cross-batch shuffle in
+                # learn_one_epoch is commented out, so the optimizer sweeps the same
+                # slabs in the same order every epoch. Set batch_size >= the number
+                # of training points to train full-batch.
+                logger.warning(
+                    f"batch_size={self.batch_size} < {len(self.train_points)} training points: "
+                    f"training on {_n_batches} CONTIGUOUS SPATIAL SLABS per epoch, unshuffled. "
+                    f"This is almost certainly not what you want for a resolution study."
+                )
+            else:
+                logger.info(f"Full-batch training: {len(self.train_points)} points, 1 update/epoch.")
             (
                 self.opt_state,
                 self.params,

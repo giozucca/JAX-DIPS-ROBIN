@@ -66,8 +66,8 @@ model:
     hidden_layers_m: 2
     hidden_dim_m: 100
     activation_m: "jnp.tanh"
-    hidden_layers_p: 2
-    hidden_dim_p: 100
+    hidden_layers_p: 0
+    hidden_dim_p: 0
     activation_p: "jnp.tanh"
   resnet:
     res_blocks_m: 3
