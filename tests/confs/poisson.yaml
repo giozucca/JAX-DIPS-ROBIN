@@ -24,6 +24,11 @@ solver:
   restart_from_checkpoint: false # whether to restart from an existing checkpoint
   restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
   algorithm: 0  # 0: regression normal derivatives, 1: neural network normal derivatives
+  # Robin only: drop training points with phi > 0. Those points form equations that
+  # only touch the Omega+ network, which cannot affect the Omega--masked error, so
+  # they add an irreducible constant to the loss and cost compute for nothing.
+  # Side effect: Omega+ is left untrained, so U outside the interface is meaningless.
+  train_omega_minus_only: false
   multi_gpu: false
   num_gpus_ddp: 2
   optim:

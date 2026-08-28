@@ -118,6 +118,7 @@ class Trainer(Discretization):
         restart: bool = False,
         restart_checkpoint_dir: str = "./checkpoints",
         print_rate: int = 1,
+        train_omega_minus_only: bool = False,
         model_dict: dict = {
             "name": None,
             "model_type": "mlp",
@@ -174,6 +175,32 @@ class Trainer(Discretization):
         self.train_dx = self.TD.gstate.dx
         self.train_dy = self.TD.gstate.dy
         self.train_dz = self.TD.gstate.dz
+
+        if train_omega_minus_only:
+            # For a Robin problem the PDE is solved only in Omega-. Points with
+            # phi > 0 (and the box boundary, which for an embedded interface lies
+            # in Omega+) dispatch to get_lhs_in_omega_plus / get_lhs_on_box_boundary,
+            # which evaluate the solution with the TRUE phi and therefore only ever
+            # touch the Omega+ network -- while the Robin equation reaches the
+            # Omega- network through u_m_at_point, which pins phi = -1. So those
+            # points cannot influence the reported (Omega--masked) solution; they
+            # only add an irreducible constant to the loss and cost compute.
+            # The Omega- network is still evaluated outside Omega- via the stencil
+            # neighbours of near-interface points, so nothing is lost.
+            _phi_tr = jnp.asarray(self.phi_interp_fn(self.train_points)).reshape(-1)
+            _keep = _phi_tr <= 0.0
+            _n_before = int(self.train_points.shape[0])
+            self.train_points = self.train_points[_keep]
+            _n_after = int(self.train_points.shape[0])
+            if _n_after == 0:
+                raise ValueError(
+                    "train_omega_minus_only=True left 0 training points: no grid point has phi <= 0."
+                )
+            logger.info(
+                f"train_omega_minus_only: keeping {_n_after} of {_n_before} training points "
+                f"({100.0 * _n_after / _n_before:.1f}%); Omega+ is no longer trained, so the "
+                f"solution there (and in any Omega+ visualization) is meaningless."
+            )
         # phis_at_points = vmap(lvl_set_fn)(self.train_points)
         # train_points_m, train_points_p = self.TD.split_train_points_by_region(phis_at_points, self.train_points)
         #########################################################################
@@ -1314,6 +1341,7 @@ def setup_Robin(
             restart: bool = False,
             restart_checkpoint_dir: str = "./checkpoints",
             print_rate: int = 1,
+            train_omega_minus_only: bool = False,
     ) -> Tuple[PoissonSimState, SolveFn]:
         R = eval_gstate.R
         PHI = phi_fn(R)
@@ -1354,6 +1382,7 @@ def setup_Robin(
                 restart=restart,
                 restart_checkpoint_dir=restart_checkpoint_dir,
                 print_rate=print_rate,
+                train_omega_minus_only=train_omega_minus_only,
                 model_dict=model_dict,
             )
             (

@@ -551,6 +551,7 @@ def poisson_solve_Robin(
             restart=cfg.solver.restart_from_checkpoint,
             restart_checkpoint_dir=cfg.solver.restart_checkpoint_dir,
             print_rate=cfg.solver.print_rate,
+            train_omega_minus_only=cfg.solver.get("train_omega_minus_only", False),
             model_dict=model_dict,
         )
         t1 = time.time()
