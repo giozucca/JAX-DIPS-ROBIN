@@ -30,8 +30,9 @@ solver:
     optimizer_name: "adamw" # options are "custom", "adam", "rmsprop"
     learning_rate: 1e-3
   sched:
-    scheduler_name: "exponential" # options are "exponential", "polynomial"
-    decay_rate: 0.985
+    scheduler_name: "cosine" # options are "exponential", "polynomial", "cosine", "constant"
+    decay_rate: 0.985 # only used by "exponential"
+    transition_steps: null # null => anneal over the full run (num_epochs * batches_per_epoch)
   data_manager:
     refine: false
     refine_normals: false # if true will add extra points by moving grid points iteratively along minus normal of level-set function

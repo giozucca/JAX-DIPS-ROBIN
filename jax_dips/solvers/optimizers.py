@@ -18,15 +18,27 @@ def get_scheduler(
     **kwargs,
 ):
     if scheduler_name == "exponential":
-        logger.info("Using Exponential Scheduler")
+        logger.info(f"Using Exponential Scheduler (transition_steps={transition_steps}, decay_rate={decay_rate})")
         scheduler = optax.exponential_decay(
             init_value=learning_rate, transition_steps=transition_steps, decay_rate=decay_rate, **kwargs
         )
     elif scheduler_name == "polynomial":
-        logger.info("Using Polynomial Scheduler")
+        logger.info(f"Using Polynomial Scheduler (transition_steps={transition_steps})")
         scheduler = optax.polynomial_schedule(
             init_value=learning_rate, end_value=0.0, power=1, transition_steps=transition_steps, **kwargs
         )
+    elif scheduler_name == "cosine":
+        # Anneals learning_rate -> 0 over transition_steps. Needs no decay_rate tuning,
+        # so it is the safest choice when transition_steps spans the whole run.
+        logger.info(f"Using Cosine Scheduler (decay_steps={transition_steps})")
+        scheduler = optax.cosine_decay_schedule(
+            init_value=learning_rate, decay_steps=transition_steps, **kwargs
+        )
+    elif scheduler_name == "constant":
+        logger.info(f"Using constant learning rate {learning_rate} (no annealing)")
+        scheduler = optax.constant_schedule(learning_rate)
+    else:
+        raise ValueError(f"Unknown scheduler: {scheduler_name}")
     return scheduler
 
 
@@ -59,6 +71,8 @@ def get_optimizer(
     scheduler_name: str = "exponential",
     learning_rate: float = 1e-2,
     decay_rate: float = 0.96,
+    transition_steps: int = 1000,
+    weight_decay: float = 1e-4,
     max_norm: float = 1.0,
     loss_fn: object = None,
     **kwargs,
@@ -69,6 +83,7 @@ def get_optimizer(
             scheduler_name=scheduler_name,
             learning_rate=learning_rate,
             decay_rate=decay_rate,
+            transition_steps=transition_steps,
             max_norm=max_norm,
             **kwargs,
         )
@@ -88,10 +103,19 @@ def get_optimizer(
         )
     
     elif optimizer_name == "adamw":
+        # NOTE: learning_rate is a *schedule* here, not a scalar. Previously this branch
+        # passed the raw scalar, so the sched: block in the config was silently ignored
+        # and training ran at a constant LR for the whole run.
+        # ("adam" and "rmsprop" above still use a constant LR.)
         logger.info("Using adamw optimizer")
         return optax.adamw(
-            learning_rate=learning_rate,
-            weight_decay=1e-4
+            learning_rate=get_scheduler(
+                scheduler_name=scheduler_name,
+                learning_rate=learning_rate,
+                decay_rate=decay_rate,
+                transition_steps=transition_steps,
+            ),
+            weight_decay=weight_decay,
         )
 
      

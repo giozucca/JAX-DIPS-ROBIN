@@ -203,11 +203,37 @@ class Trainer(Discretization):
         ###################################################################
 
         if optimizer_dict["optimizer_name"] != "lbfgs":
+            # The LR schedule is stepped once per optimizer update, i.e. once per batch
+            # per epoch -- not once per epoch. Derive the true step count so that a
+            # schedule configured with transition_steps=null anneals over the whole run.
+            _batch_size = min(self.batch_size, len(self.train_points))
+            _num_batches = max(1, -(-len(self.train_points) // _batch_size))
+            total_steps = max(1, self.num_epochs * _num_batches)
+
+            _sched_name = optimizer_dict["sched"]["scheduler_name"]
+            _cfg_transition_steps = optimizer_dict["sched"].get("transition_steps", None)
+            if _cfg_transition_steps:
+                transition_steps = _cfg_transition_steps
+            elif _sched_name in ("cosine", "polynomial"):
+                # These take the full horizon: the LR reaches 0 after transition_steps.
+                transition_steps = total_steps
+            else:
+                # "exponential" treats transition_steps as the decay *period*
+                # (lr * decay_rate ** (step / transition_steps)), so the full horizon
+                # would mean almost no decay. Keep the historical default here so that
+                # existing experiments are unaffected; set it explicitly to anneal.
+                transition_steps = 1000
+            logger.info(
+                f"LR schedule '{optimizer_dict['sched']['scheduler_name']}': "
+                f"{total_steps} total steps ({self.num_epochs} epochs x {_num_batches} batches), "
+                f"transition_steps={transition_steps}"
+            )
             self.optimizer = get_optimizer(
                 optimizer_name=optimizer_dict["optimizer_name"],
                 scheduler_name=optimizer_dict["sched"]["scheduler_name"],
                 learning_rate=optimizer_dict["learning_rate"],
                 decay_rate=optimizer_dict["sched"]["decay_rate"],
+                transition_steps=transition_steps,
                 loss_fn=self.loss,
             )
             self.solve = self.solve_optax
