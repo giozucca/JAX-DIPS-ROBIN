@@ -868,7 +868,10 @@ class Discretization:
                 mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
                 alpha_r = self.alphaRobin_interp_fn(point_projected[jnp.newaxis]).squeeze()
-                rhs -= (g_r * d_ijk * alpha_ell) / (mu_r - (alpha_r * d_ijk))
+                # d_ijk = phi/|grad phi| is NEGATIVE in Omega- (this branch), so the
+                # Taylor correction u_Gamma = (mu*u_ijk + |d|*g) / (mu + alpha*|d|)
+                # requires |d| here; dropping the abs() flips this term's sign.
+                rhs -= (g_r * jnp.abs(d_ijk) * alpha_ell) / (mu_r - (alpha_r * d_ijk))
                 return rhs.squeeze()
 
             def get_rhs_on_box_boundary(
