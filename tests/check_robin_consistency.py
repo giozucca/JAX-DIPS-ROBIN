@@ -49,10 +49,10 @@ parser.add_argument(
     "actually achieved. Compare it against the exact-solution run to see how much of the "
     "error is unconverged optimization vs the discretization floor.",
 )
-parser.add_argument("--hidden-layers-m", type=int, default=1, help="must match the trained model")
-parser.add_argument("--hidden-dim-m", type=int, default=200, help="must match the trained model")
-parser.add_argument("--hidden-layers-p", type=int, default=0, help="must match the trained model")
-parser.add_argument("--hidden-dim-p", type=int, default=0, help="must match the trained model")
+parser.add_argument("--hidden-layers-m", type=int, default=None, help="override; else read from the run's .hydra/config.yaml")
+parser.add_argument("--hidden-dim-m", type=int, default=None, help="override; else read from the run's .hydra/config.yaml")
+parser.add_argument("--hidden-layers-p", type=int, default=None, help="override; else read from the run's .hydra/config.yaml")
+parser.add_argument("--hidden-dim-p", type=int, default=None, help="override; else read from the run's .hydra/config.yaml")
 parser.add_argument(
     "--cpu",
     action="store_true",
@@ -201,12 +201,29 @@ def build_discretization(exp_name, Nx, lo, hi):
     return disc, gstate, evaluate_exact_solution_fn
 
 
+def _find_run_config(start):
+    """Walk up from the checkpoint looking for the Hydra config Hydra saved for that run."""
+    d = os.path.abspath(start if os.path.isdir(start) else os.path.dirname(start))
+    for _ in range(6):
+        cand = os.path.join(d, ".hydra", "config.yaml")
+        if os.path.exists(cand):
+            return cand
+        parent = os.path.dirname(d)
+        if parent == d:
+            break
+        d = parent
+    return None
+
+
 def _load_trained_solution_fn(path):
     """Rebuild the MLP from a checkpoint and return f(r, phi) -> scalar."""
     import pickle
 
+    import jax
+
     from jax_dips.nn.configure import get_model
 
+    ckpt_root = path
     if os.path.isdir(path):
         cands = [p for p in os.listdir(path) if "checkpoint_" in p]
         if not cands:
@@ -215,17 +232,55 @@ def _load_trained_solution_fn(path):
     print(f"  checkpoint : {path}")
     with open(path, "rb") as f:
         state = pickle.load(f)
+    print(f"  ckpt epoch : {state.get('epoch')}   ckpt resolution: {state.get('resolution')}")
     params = state["params"]
+
+    # The saved params carry a "preconditioner" entry that the bare model does not.
+    try:
+        import flax
+
+        params = flax.core.unfreeze(params)
+    except Exception:
+        pass
+    if isinstance(params, dict) and "preconditioner" in params:
+        params = {k: v for k, v in params.items() if k != "preconditioner"}
+
+    # Model dims must match the trained network exactly. Prefer the config Hydra
+    # saved next to the run over anything typed on the command line.
+    mlp_cfg = {"hidden_layers_m": 1, "hidden_dim_m": 200, "hidden_layers_p": 0, "hidden_dim_p": 0}
+    cfg_path = _find_run_config(ckpt_root)
+    if cfg_path is not None:
+        try:
+            from omegaconf import OmegaConf
+
+            _c = OmegaConf.load(cfg_path)
+            mlp_cfg = {k: int(_c.model.mlp[k]) for k in mlp_cfg}
+            print(f"  model dims : {mlp_cfg}  (read from {cfg_path})")
+        except Exception as e:  # noqa: BLE001
+            print(f"  model dims : could not read {cfg_path} ({e}); using defaults {mlp_cfg}")
+    else:
+        print(f"  model dims : no .hydra/config.yaml found near the checkpoint; using {mlp_cfg}")
+
+    _overrides = {
+        "hidden_layers_m": args.hidden_layers_m,
+        "hidden_dim_m": args.hidden_dim_m,
+        "hidden_layers_p": args.hidden_layers_p,
+        "hidden_dim_p": args.hidden_dim_p,
+    }
+    for k, v in _overrides.items():
+        if v is not None:
+            mlp_cfg[k] = v
+            print(f"  model dims : {k} overridden from the command line -> {v}")
 
     model_dict = {
         "name": None,
         "model_type": "mlp",
         "mlp": {
-            "hidden_layers_m": args.hidden_layers_m,
-            "hidden_dim_m": args.hidden_dim_m,
+            "hidden_layers_m": mlp_cfg["hidden_layers_m"],
+            "hidden_dim_m": mlp_cfg["hidden_dim_m"],
             "activation_m": "jnp.tanh",
-            "hidden_layers_p": args.hidden_layers_p,
-            "hidden_dim_p": args.hidden_dim_p,
+            "hidden_layers_p": mlp_cfg["hidden_layers_p"],
+            "hidden_dim_p": mlp_cfg["hidden_dim_p"],
             "activation_p": "jnp.tanh",
         },
         "resnet": {
@@ -238,6 +293,28 @@ def _load_trained_solution_fn(path):
         },
     }
     forward, _framework = get_model(model_dict, model_type="mlp")
+
+    # Fail loudly and specifically if the declared dims do not match the checkpoint.
+    probe = forward.init(jax.random.PRNGKey(0), x=jnp.zeros(3, dtype=f32), phi_x=f32(0.1))
+
+    def _shapes(tree):
+        return {
+            f"{mod}/{name}": tuple(arr.shape)
+            for mod, sub in dict(tree).items()
+            for name, arr in dict(sub).items()
+        }
+
+    want, got = _shapes(probe), _shapes(params)
+    if want != got:
+        only_want = {k: v for k, v in want.items() if got.get(k) != v}
+        only_got = {k: v for k, v in got.items() if want.get(k) != v}
+        raise ValueError(
+            "Checkpoint does not match the declared model dims.\n"
+            f"  model built from : {mlp_cfg}\n"
+            f"  expected shapes  : {only_want}\n"
+            f"  checkpoint has   : {only_got}\n"
+            "Pass the right --hidden-layers-m / --hidden-dim-m (etc.) for this run."
+        )
 
     def solution_fn(r_point, phi_point):
         return forward.apply(params, None, r_point, phi_point).reshape()
