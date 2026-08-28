@@ -42,6 +42,18 @@ parser.add_argument("--nx", type=int, nargs="+", default=[16, 32], help="trainin
 parser.add_argument("--zoom", type=int, nargs="+", default=[0, 3], help="stencil zoom levels (dx -> dx/2**zoom)")
 parser.add_argument("--x64", action="store_true", help="run in float64 instead of float32")
 parser.add_argument(
+    "--checkpoint",
+    default=None,
+    help="path to a checkpoint file or a checkpoints/ dir. If given, the TRAINED network is "
+    "substituted instead of the exact solution, so the printed residual is what training "
+    "actually achieved. Compare it against the exact-solution run to see how much of the "
+    "error is unconverged optimization vs the discretization floor.",
+)
+parser.add_argument("--hidden-layers-m", type=int, default=1, help="must match the trained model")
+parser.add_argument("--hidden-dim-m", type=int, default=200, help="must match the trained model")
+parser.add_argument("--hidden-layers-p", type=int, default=0, help="must match the trained model")
+parser.add_argument("--hidden-dim-p", type=int, default=0, help="must match the trained model")
+parser.add_argument(
     "--cpu",
     action="store_true",
     help="force the CPU backend; this check is small and does not need the GPU, "
@@ -175,12 +187,62 @@ def build_discretization(exp_name, Nx, lo, hi):
         algorithm=0,
     )
 
-    # Replace the neural network by the exact solution, and disable the learned
-    # preconditioner, so the residual measures the discretization and nothing else.
-    disc.solution_at_point_fn = lambda params, r_point, phi_point: evaluate_exact_solution_fn(r_point)
+    # Disable the learned preconditioner so the residual measures the
+    # discretization (and, with --checkpoint, the trained network) and nothing else.
     disc.precond_fn = lambda params, coeffs: 1.0
 
+    if args.checkpoint is None:
+        # Substitute the EXACT solution: this is the discretization floor.
+        disc.solution_at_point_fn = lambda params, r_point, phi_point: evaluate_exact_solution_fn(r_point)
+    else:
+        trained = _load_trained_solution_fn(args.checkpoint)
+        disc.solution_at_point_fn = lambda params, r_point, phi_point: trained(r_point, phi_point)
+
     return disc, gstate, evaluate_exact_solution_fn
+
+
+def _load_trained_solution_fn(path):
+    """Rebuild the MLP from a checkpoint and return f(r, phi) -> scalar."""
+    import pickle
+
+    from jax_dips.nn.configure import get_model
+
+    if os.path.isdir(path):
+        cands = [p for p in os.listdir(path) if "checkpoint_" in p]
+        if not cands:
+            raise FileNotFoundError(f"no checkpoint_* files in {path}")
+        path = os.path.join(path, max(cands, key=lambda p: int(p.rsplit("_", 1)[-1])))
+    print(f"  checkpoint : {path}")
+    with open(path, "rb") as f:
+        state = pickle.load(f)
+    params = state["params"]
+
+    model_dict = {
+        "name": None,
+        "model_type": "mlp",
+        "mlp": {
+            "hidden_layers_m": args.hidden_layers_m,
+            "hidden_dim_m": args.hidden_dim_m,
+            "activation_m": "jnp.tanh",
+            "hidden_layers_p": args.hidden_layers_p,
+            "hidden_dim_p": args.hidden_dim_p,
+            "activation_p": "jnp.tanh",
+        },
+        "resnet": {
+            "res_blocks_m": 3,
+            "res_dim_m": 40,
+            "activation_m": "jnp.tanh",
+            "res_blocks_p": 0,
+            "res_dim_p": 0,
+            "activation_p": "jnp.tanh",
+        },
+    }
+    forward, _framework = get_model(model_dict, model_type="mlp")
+
+    def solution_fn(r_point, phi_point):
+        return forward.apply(params, None, r_point, phi_point).reshape()
+
+    return solution_fn
 
 
 def residual_stats(disc, gstate, dx):
@@ -247,7 +309,11 @@ def main():
     print(f"  experiment : {args.exp}")
     print(f"  domain     : [{float(lo)}, {float(hi)}]^3")
     print(f"  precision  : {precision}")
-    print(f"  u          : EXACT solution substituted (no neural network)\n")
+    if args.checkpoint is None:
+        print(f"  u          : EXACT solution substituted (no neural network)\n")
+    else:
+        print(f"  u          : TRAINED network from checkpoint "
+              f"(mlp_m {args.hidden_layers_m}x{args.hidden_dim_m})\n")
 
     header = (
         f"{'Nx':>5} {'zoom':>5} {'dx':>10} "
