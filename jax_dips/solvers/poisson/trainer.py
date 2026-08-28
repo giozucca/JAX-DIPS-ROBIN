@@ -438,6 +438,22 @@ class Trainer(Discretization):
         )
         end_time = time.time()
         logger.info(f"solve took {end_time - start_time} (sec)")
+        # L-BFGS-B can stop long before maxiter (line-search failure on noisy
+        # float32 gradients, or scipy's maxfun=15000 default). Without this you
+        # cannot tell a converged run from one that bailed on iteration 40.
+        _st = solver_sol.state
+        logger.info(
+            f"L-BFGS termination: success={getattr(_st, 'success', '?')} "
+            f"status={getattr(_st, 'status', '?')} "
+            f"iters={getattr(_st, 'iter_num', '?')} (maxiter={self.num_epochs}) "
+            f"final_loss={getattr(_st, 'fun_val', '?')}"
+        )
+        if len(batched_training_data) > 1:
+            logger.warning(
+                f"L-BFGS is fitting ONLY batch 0 of {len(batched_training_data)}: "
+                f"{batched_training_data[0].shape[0]} of {len(self.train_points)} training points. "
+                f"Set batch_size >= Nx_tr**3 to use the full domain."
+            )
 
         # 3
         # solver = jaxopt.ScipyRootFinding(
