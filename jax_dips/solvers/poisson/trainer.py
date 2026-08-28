@@ -273,7 +273,22 @@ class Trainer(Discretization):
             )
             self.solve = self.solve_optax
         else:
-            self.optimizer = jaxopt.LBFGS(fun=self.loss, value_and_grad=True, maxiter=500, tol=1e-3)
+            # `tol` is jaxopt's threshold on the gradient infinity-norm. It was 1e-3,
+            # but this loss produces gradients of order 1e-8 (the preconditioned residual's
+            # sensitivity to the solution error carries dx^3 -- see the note in
+            # jax_dips/solvers/optimizers.py:get_optimizer). L-BFGS therefore passed its
+            # convergence test at iteration 0 and returned without taking a single step,
+            # which is why switching to it appeared to destroy the resolution ordering.
+            # Keep the tolerance far below the smallest gradient norm the run can produce.
+            _lbfgs_tol = float(optimizer_dict.get("lbfgs_tol", None) or 1e-14)
+            _lbfgs_maxiter = int(optimizer_dict.get("lbfgs_maxiter", None) or self.num_epochs)
+            logger.info(f"Using jaxopt.LBFGS (maxiter={_lbfgs_maxiter}, tol={_lbfgs_tol})")
+            self.optimizer = jaxopt.LBFGS(
+                fun=self.loss,
+                value_and_grad=True,
+                maxiter=_lbfgs_maxiter,
+                tol=_lbfgs_tol,
+            )
             self.solve = self.solve_jaxopt
 
         # --- Model + preconditioner are built on BOTH paths. Previously this whole
