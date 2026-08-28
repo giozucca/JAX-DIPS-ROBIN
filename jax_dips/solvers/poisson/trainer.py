@@ -241,53 +241,61 @@ class Trainer(Discretization):
             self.optimizer = jaxopt.LBFGS(fun=self.loss, value_and_grad=True, maxiter=500, tol=1e-3)
             self.solve = self.solve_jaxopt
 
+        # --- Model + preconditioner are built on BOTH paths. Previously this whole
+        # block lived in the `else` of `if restart:`, so a restarted run never set
+        # self.precond and died with AttributeError inside precond_fn.
+        rng = random.PRNGKey(42)
+        self.params = self.forward.init(rng, x=jnp.array([0.0, 0.0, 0.0]), phi_x=f32(0.1))
+        try:
+            logger.info(self.forward.tabulate(rng, x=jnp.array([0.0, 0.0, 0.0]), phi_x=f32(0.1)))
+        except (AttributeError, NotImplementedError):
+            print_architecture(self.params)
+
+        if "preconditioner" in model_dict and model_dict["preconditioner"].get("enable", False):
+            self.precond = Preconditioner(
+                Ds=model_dict["preconditioner"]["layer_widths"],
+                out_dim=1,
+                scaling_coeff=model_dict["preconditioner"]["scaling_coeff"],
+            )
+            self.precond_params = self.precond.init(
+                rng, jnp.array([0.0] * 26)
+            )  # 26 is number of coeffs_ in discretization
+            logger.info(self.precond.tabulate(rng, jnp.array([0.0] * 26)))
+            self.params = flax.core.unfreeze(self.params)
+            precond_params = flax.core.unfreeze(self.precond_params)
+            self.params["preconditioner"] = precond_params
+            self.params = flax.core.freeze(self.params)
+            precond_params = flax.core.freeze(precond_params)
+        else:
+
+            class dummy:
+                def apply(self, params, coeff):
+                    return 1.0
+
+            self.precond = dummy()
+            self.params = flax.core.unfreeze(self.params)
+            self.params["preconditioner"] = {}
+            self.params = flax.core.freeze(self.params)
+
         if restart:
             state = self.fetch_checkpoint(self.restart_checkpoint_dir)
-            self.opt_state = state["opt_state"]
+            if state is None:
+                raise FileNotFoundError(f"restart=True but no checkpoint found in {self.restart_checkpoint_dir}")
+            # Warm start takes the WEIGHTS ONLY. Optimizer state is deliberately
+            # NOT restored: it carries the LR-schedule step count, so a cosine
+            # schedule would resume fully annealed and the new run would train at
+            # ~zero learning rate. batch_size likewise stays at the configured
+            # value rather than the checkpoint's, which may come from a different
+            # resolution and would silently switch on mini-batching.
             self.params = state["params"]
-            self.epoch_start = state["epoch"]
-            self.batch_size = state["batch_size"]
-            self.resolution = state["resolution"]
             logger.info(
-                f"Resuming training from epoch {self.epoch_start} with \
-                batch_size {self.batch_size}, resolution {self.resolution}."
+                f"Warm-starting weights from {self.restart_checkpoint_dir} "
+                f"(checkpoint epoch {state.get('epoch')}, resolution {state.get('resolution')}). "
+                f"Optimizer state reinitialized; batch_size={self.batch_size} from config."
             )
-        else:
-            rng = random.PRNGKey(42)
-            self.params = self.forward.init(rng, x=jnp.array([0.0, 0.0, 0.0]), phi_x=f32(0.1))
-            try:
-                logger.info(self.forward.tabulate(rng, x=jnp.array([0.0, 0.0, 0.0]), phi_x=f32(0.1)))
-            except (AttributeError, NotImplementedError):
-                print_architecture(self.params)
 
-            if "preconditioner" in model_dict and model_dict["preconditioner"].get("enable", False):
-                self.precond = Preconditioner(
-                    Ds=model_dict["preconditioner"]["layer_widths"],
-                    out_dim=1,
-                    scaling_coeff=model_dict["preconditioner"]["scaling_coeff"],
-                )
-                self.precond_params = self.precond.init(
-                    rng, jnp.array([0.0] * 26)
-                )  # 26 is number of coeffs_ in discretization
-                logger.info(self.precond.tabulate(rng, jnp.array([0.0] * 26)))
-                self.params = flax.core.unfreeze(self.params)
-                precond_params = flax.core.unfreeze(self.precond_params)
-                self.params["preconditioner"] = precond_params
-                self.params = flax.core.freeze(self.params)
-                precond_params = flax.core.freeze(precond_params)
-            else:
-
-                class dummy:
-                    def apply(self, params, coeff):
-                        return 1.0
-
-                self.precond = dummy()
-                self.params = flax.core.unfreeze(self.params)
-                self.params["preconditioner"] = {}
-                self.params = flax.core.freeze(self.params)
-
-            if optimizer_dict["optimizer_name"] != "lbfgs":
-                self.opt_state = self.init_optax()
+        if optimizer_dict["optimizer_name"] != "lbfgs":
+            self.opt_state = self.init_optax()
 
         #########################################################################
         # self.mnet_keys, self.pnet_keys = self.split_mp_networks_keys(self.params)  # split keys for each domain
@@ -365,7 +373,16 @@ class Trainer(Discretization):
             checkpoints = [p for p in os.listdir(checkpoint_dir) if "checkpoint_" in p]
             if checkpoints == []:
                 return None
-            checkpoint = os.path.join(checkpoint_dir, max(checkpoints))
+            # Sort by epoch NUMBER. A plain max() is lexicographic, which ranks
+            # "checkpoint_9750" above "checkpoint_20000" and silently loads a
+            # mid-training checkpoint.
+            def _epoch_of(name):
+                try:
+                    return int(name.rsplit("_", 1)[-1])
+                except ValueError:
+                    return -1
+
+            checkpoint = os.path.join(checkpoint_dir, max(checkpoints, key=_epoch_of))
             logger.info(f"Loading checkpoint {checkpoint}")
             with open(checkpoint, "rb") as f:
                 state = pickle.load(f)
