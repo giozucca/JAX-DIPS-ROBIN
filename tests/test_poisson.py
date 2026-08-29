@@ -121,7 +121,8 @@ def poisson_solve(
 
     dim = i32(3)
     if "star_Robin3" in test_name:
-        # Union of two stars, each of base radius 0.8 centered at +-(0.5,0.5,0.5):
+        # Union (jnp.minimum) of two stars, each of base radius 0.8, centered at
+        # (-0.5, 0.5, -0.5) and (0.5, -0.5, 0.5) -- both at distance 0.5*sqrt(3) from the origin:
         # worst-case extent from the origin is ~0.5*sqrt(3) + (star's own max radius ~1.008) ~= 1.87.
         # Keep a modest safety margin (previously exactly [-2,2], i.e. ~0.13 margin) without shrinking it.
         xmin = ymin = zmin = f32(-2.1)
@@ -389,7 +390,8 @@ def poisson_solve_Robin(
 
     dim = i32(3)
     if "star_Robin3" in test_name:
-        # Union of two stars, each of base radius 0.8 centered at +-(0.5,0.5,0.5):
+        # Union (jnp.minimum) of two stars, each of base radius 0.8, centered at
+        # (-0.5, 0.5, -0.5) and (0.5, -0.5, 0.5) -- both at distance 0.5*sqrt(3) from the origin:
         # worst-case extent from the origin is ~0.5*sqrt(3) + (star's own max radius ~1.008) ~= 1.87.
         # Keep a modest safety margin (previously exactly [-2,2], i.e. ~0.13 margin) without shrinking it.
         xmin = ymin = zmin = f32(-2.1)
