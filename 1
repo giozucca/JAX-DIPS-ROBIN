@@ -18,35 +18,20 @@ solver:
   Nx_tr: 64 # grid for training
   Ny_tr: 64 # grid for training
   Nz_tr: 64 # grid for training
-  num_epochs: 10000 # number of epochs to train
+  num_epochs: 3000 # number of epochs to train
   batch_size: 262144
-  print_rate: 1000 # frequency of printing epochs and loss during training
+  print_rate: 100 # frequency of printing epochs and loss during training
   restart_from_checkpoint: false # whether to restart from an existing checkpoint
   restart_checkpoint_dir: /workspace/results/poisson-tests-app-2023-07-22-20-17-41/no_jump/checkpoints/
   algorithm: 0  # 0: regression normal derivatives, 1: neural network normal derivatives
-  # Robin only: drop training points with phi > 0. Those points form equations that
-  # only touch the Omega+ network, which cannot affect the Omega--masked error, so
-  # they add an irreducible constant to the loss and cost compute for nothing.
-  # Side effect: Omega+ is left untrained, so U outside the interface is meaningless.
-  train_omega_minus_only: true
   multi_gpu: false
   num_gpus_ddp: 2
   optim:
     optimizer_name: "adamw" # options are "custom", "adam", "rmsprop"
     learning_rate: 1e-3
-    # Adam's denominator epsilon. optax defaults to 1e-8, which is LARGER than the
-    # gradient norms this loss produces at fine resolution (the preconditioned residual's
-    # sensitivity to the solution error carries dx^3), so Adam stalls at an error floor
-    # that grows like dx^-3. Keep this far below the smallest gradient you expect.
-    eps: 1.0e-16 # NB: written with the decimal point so plain YAML parses it as a float
-    # adamw's decoupled weight decay. Adam normalizes its gradient term to O(1), so the
-    # fixed point m_hat/sqrt(v_hat) = -wd*theta contains no grid spacing at all: this sets
-    # an error floor that is the SAME at every resolution. Set to 0.0 to remove it.
-    weight_decay: 0.0
   sched:
-    scheduler_name: "cosine" # options are "exponential", "polynomial", "cosine", "constant"
-    decay_rate: 0.985 # only used by "exponential"
-    transition_steps: null # null => anneal over the full run (num_epochs * batches_per_epoch)
+    scheduler_name: "exponential" # options are "exponential", "polynomial"
+    decay_rate: 0.985
   data_manager:
     refine: false
     refine_normals: false # if true will add extra points by moving grid points iteratively along minus normal of level-set function
@@ -58,8 +43,8 @@ experiment:
   star: false # star interface with jump conditions
   no_jump: false # no interface and no jump conditions (used to be true)
   sphere_Robin: false # sphere with Robin B.C
-  star_Robin: false
-  star_Robin3: true
+  star_Robin: true
+  star_Robin3: false
 
 
   logging:
