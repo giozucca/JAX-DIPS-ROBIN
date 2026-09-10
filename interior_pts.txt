@@ -1,0 +1,61 @@
+Interior training-point counts, Robin geometries
+Generated 2026-09-09
+
+Domain: [-1,1]^3 for ALL THREE geometries (tests/test_poisson.py, both
+poisson_solve and poisson_solve_Robin). dx = 2/(Nx-1) is therefore identical
+across geometries at equal Nx, so absolute errors are directly comparable.
+
+Definitions
+-----------
+  interior : grid nodes with phi <= 0 (these are the rows the loss sees when
+             train_omega_minus_only = true; phi > 0 nodes are dropped).
+  cut      : interior nodes whose control volume [+-dx/2]^3 is crossed by the
+             interface. These rows carry the Robin term (alpha_ell != 0) and
+             have reduced face areas / partial volume V_m.
+  plain FV : interior nodes the interface misses entirely -- alpha_ell = 0, all
+             six face areas full, V_m = dx^3. These are the only rows that
+             enforce the bulk Poisson operator in unmodified 7-point form.
+             Test used: node and all 8 control-volume corners have phi <= 0.
+
+Counts (level sets evaluated in float64 on the training grid)
+------------------------------------------------------------
+
+  geometry          Nx        dx   interior    cut  plain FV  % plain
+  sphere_Robin       8   0.28571         32     24         8     25.0
+  sphere_Robin      16   0.13333        208     72       136     65.4
+  sphere_Robin      32   0.06452       1904    480      1424     74.8
+  sphere_Robin      64   0.03175      16368   2232     14136     86.4
+
+  star_Robin         8   0.28571         70     42        28     40.0
+  star_Robin        16   0.13333        698    254       444     63.6
+  star_Robin        32   0.06452       6136   1150      4986     81.3
+  star_Robin        64   0.03175      51520   4932     46588     90.4
+
+  star_Robin3        8   0.28571         32     32         0      0.0
+  star_Robin3       16   0.13333        348    196       152     43.7
+  star_Robin3       32   0.06452       3078    890      2188     71.1
+  star_Robin3       64   0.03175      25950   4046     21904     84.4
+
+Notes
+-----
+star_Robin3 at Nx=8 has 32 interior nodes and ZERO plain-FV rows: every row
+carries the Robin term. This is geometric, not a tuning problem. At Nx=8 there
+are 7 cells across the domain (dx = 0.2857), and a plain-FV row needs the node
+to clear the interface by the cell half-diagonal (sqrt(3)/2)*dx = 0.247. Each
+star3 lobe has radius 0.8*S = 0.46, so a node must land within 0.46 - 0.247 =
+0.21 of a lobe centre; the centres sit at 0.5*S = 0.288 per axis while the
+nearest grid nodes are at 0.1429 and 0.4286, giving a 3-D distance of 0.25.
+No admissible size fixes this -- growing star3 to the hard cap (half-extent
+0.857 = 1 - dx/2, beyond which the interface enters the wall nodes' control
+volumes) raises the interior count to 54 but yields only 2 plain-FV rows.
+Two separated lobes cannot be more than ~3 cells wide in a 7-cell domain.
+
+Consequence: star_Robin3 at Nx=8 is UNDER-RESOLVED by construction. Expect a
+near-zero training loss with a large solution error -- the discrete system is
+underdetermined there, not badly trained. Report it as such; the fitted
+convergence order should be taken from the finer points.
+
+Sizing is set by Nx=8 because the geometry is held fixed across the sweep.
+The sphere is left at r = 0.5 (its existing results remain valid); the stars
+are larger. Comparability comes from the shared domain and identical dx, not
+from equal object size.

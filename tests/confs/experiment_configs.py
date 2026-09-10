@@ -415,9 +415,22 @@ def star_Robin():
         """
         Level-set function for the interface
         """
-        x = r[0]
-        y = r[1]
-        z = r[2]
+        # --- Geometry scaling -------------------------------------------------
+        # Scaled to fit inside the same [-1,1]^3 domain as sphere_Robin, so all three
+        # Robin geometries share one domain and one dx at equal Nx. The transformation
+        #     phi(r) = S * phi_ref(r / S)
+        # scales the zero level set by exactly S while leaving |grad phi| unchanged,
+        # so the signed distance phi/|grad phi| -- which the Robin Taylor projection
+        # uses -- scales correctly with the geometry.
+        # Target half-extent 0.80. The binding constraint is that the interface stay
+        # inside the control volume of the outermost interior node, i.e. below
+        # 1 - dx/2 = 0.857 at the coarsest resolution Nx=8; 0.80 keeps 0.70 dx of margin.
+        # Sizing for Nx=8 is what matters because the geometry is fixed across the sweep.
+        # Reference half-extent before scaling was 1.3125; S = 0.80 / 1.3125.
+        S = 0.6095
+        x = r[0] / S
+        y = r[1] / S
+        z = r[2] / S
         beta1, beta2, beta3 = -0.05, 0.05, -0.10
         theta1, theta2, theta3 = 0.05, 0.05, 0.05
         n1, n2, n3 = 3, 4, 3
@@ -436,7 +449,7 @@ def star_Robin():
 
         # Final level-set / signed distance function
         phi = jnp.sqrt(r2) - 1.183 * (1.0 + (rho2 / 10.0)**2) + perturbation
-        return phi
+        return S * phi
         # beta1 = -0.05 
         # beta2 = 0.05 
         # beta3 = -.1
@@ -620,9 +633,23 @@ def star_Robin3():
         """
         Level-set function for the interface: union of two star domains (Form A)
         """
-        x = r[0]
-        y = r[1]
-        z = r[2]
+        # --- Geometry scaling -------------------------------------------------
+        # Scaled to fit inside the same [-1,1]^3 domain as sphere_Robin. The transformation
+        #     phi(r) = S * phi_ref(r / S)
+        # scales the zero level set by exactly S while leaving |grad phi| unchanged,
+        # so the signed distance phi/|grad phi| -- which the Robin Taylor projection
+        # uses -- scales correctly with the geometry. This also carries the two lobe
+        # centres, which sit at -+(0.5, 0.5, 0.5) in the reference frame.
+        # Target half-extent 0.80 (see star_Robin for the rationale).
+        # Reference half-extent before scaling was 1.3906; S = 0.80 / 1.3906.
+        # NOTE: at Nx=8 this object has 32 interior nodes but NO plain-FV row -- every
+        # row carries the Robin term. Two lobes of radius 0.8*S = 0.46 cannot clear the
+        # cell half-diagonal (sqrt(3)/2)*dx = 0.247 around any grid node, at any size the
+        # domain admits. Nx=8 is under-resolved for star3 by construction, not by tuning.
+        S = 0.5753
+        x = r[0] / S
+        y = r[1] / S
+        z = r[2] / S
         
         # Domain 1 parameters & coordinates
         # xc1, yc1, zc1 = -0.75, 0.75, -0.75
@@ -726,7 +753,7 @@ def star_Robin3():
         # -------------------------------------------------------------
         # Union of the two domains
         # -------------------------------------------------------------
-        return jnp.minimum(phi1, phi2)
+        return S * jnp.minimum(phi1, phi2)
 
     phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
 
