@@ -1,0 +1,57 @@
+% ---------------------------------------------------------------
+% Solution representation and training objective.
+% Replaces the two-network / SIREN passage.
+% ---------------------------------------------------------------
+
+Because the Robin problem~\eqref{eq:pde}--\eqref{eq:robin} is posed on $\Omega^{-}$
+alone, the solution and its gradient are continuous across $\Gamma$ and no jump
+conditions arise. A single network therefore suffices, in contrast to
+jump-condition formulations which require separate representations either side of the
+interface. We write
+\begin{equation}
+    u_{\theta} = \mathcal{N}(\mathbf{x};\, \theta) : \mathbb{R}^{3} \to \mathbb{R}.
+    \label{eq:network}
+\end{equation}
+
+$\mathcal{N}$ is a fully connected feedforward network with two hidden layers of $100$
+units, $\tanh$ activations, and a single linear output neuron, giving $10{,}601$
+parameters. It takes the raw coordinate $\mathbf{x}$ as input; no positional or
+spectral encoding is applied. Hidden weights are drawn from a truncated normal
+distribution with zero mean and standard deviation $0.1$, and biases are initialised
+to zero. A smooth nonlinearity is essential: piecewise-linear activations such as
+ReLU have vanishing curvature almost everywhere and are unsuitable for representing
+solutions of second-order differential equations, whose discrete operator differences
+the network across neighbouring points.
+
+Note that $\mathcal{N}$ is defined on all of $\mathbb{R}^{3}$, not on $\Omega^{-}$
+alone. The finite-volume stencil at a cell adjacent to $\Gamma$ samples the solution
+at $\mathbf{x} \pm \Delta x\, \mathbf{e}_{i}$, and for cells the interface crosses
+some of these neighbours lie outside $\Omega^{-}$. Evaluating $\mathcal{N}$ there
+supplies a smooth extension of the interior solution across $\Gamma$ at no additional
+cost and with no explicit extrapolation. Equations are posed only at points of
+$\Omega^{-}$; the representation is not restricted to it.
+
+The network is trained by minimising the residual of the discrete system over the
+interior grid points $I = \{\, (i,j,k) : \varphi(\mathbf{x}_{ijk}) \leq 0 \,\}$:
+\begin{equation}
+    \mathcal{L}(\theta)
+    = \frac{1}{|I|} \sum_{(i,j,k) \in I}
+      \frac{1}{2}
+      \left[
+        \frac{\bigl(A\, u_{\theta}\bigr)_{ijk} - b_{ijk}}{d_{ijk}}
+      \right]^{2},
+    \label{eq:loss}
+\end{equation}
+where $A$ and $b$ are the finite-volume operator and source assembled from
+\eqref{eq:pde}--\eqref{eq:robin}, and $d_{ijk}$ is the diagonal entry of row $ijk$.
+The division by $d_{ijk}$ is a Jacobi preconditioning of the residual. Its purpose is
+not to accelerate a linear solve -- none is performed -- but to equalise the
+contribution of cells of differing size: a cell that the interface cuts may retain a
+small fraction of its nominal volume, and without this scaling its equation would
+enter~\eqref{eq:loss} with a correspondingly reduced weight, precisely at the cells
+where the boundary condition is imposed.
+
+No exact solution enters~\eqref{eq:loss}. The only data are $f$, $g$, $\mu$, $k$,
+$\alpha$ and $\varphi$; the values of $u_{\theta}$ at stencil neighbours are supplied
+by the network itself, so the discrete system is satisfied in a least-squares sense
+over the parameters $\theta$ rather than solved for nodal unknowns.

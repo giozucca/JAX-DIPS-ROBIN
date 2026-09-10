@@ -1,0 +1,39 @@
+% ---------------------------------------------------------------
+% Problem statement (Robin, one-sided). Replaces the two-sided /
+% jump-condition formulation.
+% ---------------------------------------------------------------
+
+Consider a closed irregular interface $\Gamma$ embedded in a cubic computational
+domain $\Omega = [-L/2,\, L/2]^{3}$, partitioning it into an interior region
+$\Omega^{-}$ and an exterior region $\Omega^{+}$, so that
+$\Omega = \Omega^{-} \cup \Gamma \cup \Omega^{+}$. The interface is represented
+implicitly as the zero level set of a function $\varphi$, with
+$\Omega^{-} = \{\, \mathbf{x} : \varphi(\mathbf{x}) \leq 0 \,\}$.
+
+We seek the solution $u$ of the following linear elliptic problem, posed on the
+interior region alone:
+\begin{align}
+    k\,u - \nabla \cdot (\mu \nabla u) &= f, & \mathbf{x} &\in \Omega^{-}, \label{eq:pde}\\
+    \alpha\, u + \mu\, \partial_{n} u &= g, & \mathbf{x} &\in \Gamma. \label{eq:robin}
+\end{align}
+Here $f = f(\mathbf{x})$ is a spatially varying source term, $\mu = \mu(\mathbf{x}) > 0$
+is the diffusion coefficient, $k = k(\mathbf{x}) \geq 0$ is the reaction coefficient,
+and $\alpha = \alpha(\mathbf{x}) > 0$ together with $g = g(\mathbf{x})$ prescribe the
+Robin condition on $\Gamma$. The normal $\mathbf{n} = \nabla \varphi / |\nabla \varphi|$
+is taken outward from $\Omega^{-}$. With $\alpha > 0$ and $k \geq 0$ the problem is
+coercive and admits a unique solution on each connected component of $\Omega^{-}$.
+
+Equation~\eqref{eq:robin} is a genuine boundary condition on $\Gamma$ rather than an
+interface jump condition: no equation is posed in $\Omega^{+}$, and no continuity or
+flux relation couples the two sides. This distinguishes the present formulation from
+the jump-condition problems treated previously, in which $u^{-}$ and $u^{+}$ are
+solved simultaneously and coupled through prescribed jumps in the solution and its
+normal flux. The exterior region $\Omega^{+}$ enters only because the Cartesian grid
+spans the full box $\Omega$; it carries no physics, and the solution reported
+throughout is restricted to $\Omega^{-}$.
+
+The interface is not meshed. $\Gamma$ is captured through the cut-cell geometry
+induced by $\varphi$ on a uniform Cartesian grid of $N_{x,y,z}$ points per axis, and
+condition~\eqref{eq:robin} is imposed through surface integrals over
+$\Gamma \cap \Omega_{i,j,k}$ within the cells the interface crosses, rather than at
+dedicated boundary points.

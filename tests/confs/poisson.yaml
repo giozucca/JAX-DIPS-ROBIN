@@ -28,7 +28,7 @@ solver:
   # only touch the Omega+ network, which cannot affect the Omega--masked error, so
   # they add an irreducible constant to the loss and cost compute for nothing.
   # Side effect: Omega+ is left untrained, so U outside the interface is meaningless.
-  train_omega_minus_only: false
+  train_omega_minus_only: true
   multi_gpu: false
   num_gpus_ddp: 2
   optim:
@@ -72,7 +72,7 @@ model:
   name: null
   model_type: "mlp"
   mlp:
-    hidden_layers_m: 1
+    hidden_layers_m: 2
     hidden_dim_m: 100
     activation_m: "jnp.tanh"
     hidden_layers_p: 0

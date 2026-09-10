@@ -1,0 +1,45 @@
+% ---------------------------------------------------------------
+% Domain description. Requires \usepackage{booktabs}, \usepackage{float}.
+% ---------------------------------------------------------------
+
+% NOTE: the opening paragraph that restated the problem setup has been removed;
+% it duplicated Section 1.1. Begin directly with the geometries.
+
+The three test geometries are of intrinsically different size: a sphere of radius
+$0.5$, a star of base radius $1.183$, and the union of two stars of base radius $0.8$
+centred at $(\mp 0.5,\, \pm 0.5,\, \mp 0.5)$. The edge length $L$ is therefore not a
+free parameter but follows from the geometry. Two requirements fix it. First, the
+finite-volume stencil samples the solution one cell either side of each grid point,
+so $\Omega$ must enclose $\Omega^{-}$ with a clearance of at least one cell at the
+coarsest resolution considered. Second, grid points lying far outside $\Omega^{-}$
+generate equations that involve only the exterior network and cannot constrain the
+solution in $\Omega^{-}$; enlarging $\Omega$ beyond the required clearance therefore
+expends resolution without improving accuracy. Taking $L$ as the smallest cube
+satisfying the first requirement gives $L = 2.0$, $3.6$ and $4.2$ respectively, with
+a clearance of approximately $0.5$ in each case (Table~\ref{tab:domains}).
+
+A consequence is that the grid spacing
+\begin{equation}
+    \Delta x = \frac{L}{N_{x} - 1}
+    \label{eq:spacing}
+\end{equation}
+is not equal across geometries at fixed $N_{x}$. Convergence is therefore assessed
+independently for each geometry, and absolute errors are compared only within a
+geometry.
+
+\begin{table}[H]
+  \centering
+  \caption{Computational domains. The object half-extent is the largest $|x|$, $|y|$
+           or $|z|$ attained on $\Omega^{-}$; the clearance is the remaining distance
+           to the domain wall.}
+  \label{tab:domains}
+  \begin{tabular}{lccccc}
+    \toprule
+    Geometry & $\Omega$ & $L$ & Half-extent & Clearance & $\Delta x$ at $N_x{=}64$ \\
+    \midrule
+    Sphere   & $[-1.0,\,1.0]^{3}$ & $2.0$ & $0.500$ & $0.500$ & $0.0317$ \\
+    Star     & $[-1.8,\,1.8]^{3}$ & $3.6$ & $1.316$ & $0.484$ & $0.0571$ \\
+    Two-star & $[-2.1,\,2.1]^{3}$ & $4.2$ & $1.404$ & $0.696$ & $0.0667$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}

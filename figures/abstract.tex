@@ -1,0 +1,35 @@
+% ---------------------------------------------------------------
+% Abstract, reframed for the Robin extension.
+% ---------------------------------------------------------------
+\begin{abstract}
+We extend the neural bootstrapping method (NBM) to elliptic problems with Robin
+boundary conditions on irregular interfaces in three spatial dimensions. NBM trains a
+neural network surrogate for the solution of a PDE by minimising the residuals of a
+finite discretisation evaluated on implicit Cartesian cells centred at collocation
+points, thereby inheriting the accuracy and convergence properties of the underlying
+numerical method while restricting optimisation to first order automatic
+differentiation. In the Robin setting the equation is posed on the interior region
+alone: no jump conditions arise, a single network represents the solution, and the
+boundary condition is imposed through surface integrals over the interface within the
+cells it crosses, using a first-order Taylor projection onto the interface.
+
+We report convergence for three geometries -- a sphere, a star, and the union of two
+stars -- across four refinement levels, and observe first-order convergence in both
+the root-mean-squared and $L^{\infty}$ error norms, consistent with the order of the
+interface projection and with the rates reported for the original formulation.
+
+In the course of this work we identify a failure mode of practical significance for
+residual-minimisation solvers of this type. Because the finite-volume residual is
+Jacobi-preconditioned, its sensitivity to the solution error carries a power of the
+grid spacing; at fine resolutions the resulting loss gradients fall to the magnitude
+of the numerical-stability constant $\varepsilon$ in the Adam optimiser. The optimiser
+then loses its scale invariance and stalls at a solution-error floor that grows under
+refinement, so that error increases rather than decreases with resolution. Reducing
+$\varepsilon$ below the gradient scale removes the floor and restores monotone
+convergence, improving the solution error at the finest resolution by a factor of
+$18.7$ at no additional computational cost. We note that error growth at the finest
+resolution is visible in previously published results for this class of solver.
+
+The algorithms are implemented in JAX-DIPS
+(\url{https://github.com/JAX-DIPS/JAX-DIPS}).
+\end{abstract}
