@@ -234,7 +234,13 @@ def sphere_Robin():
         x = r[0]
         y = r[1]
         z = r[2]
-        return jnp.sqrt(x**2 + y**2 + z**2) - 0.5
+        # Radius 1.4, not 0.5: every Robin geometry now shares the [-2.1, 2.1] domain
+        # and is sized to a common half-extent of 1.40, so all three have the same dx
+        # AND the same number of cells across the object at equal Nx.
+        # For phi = |r| - R the scaling is just the radius -- S*phi_ref(r/S) reduces to
+        # |r| - S*0.5 -- so no scaling wrapper is needed here, and |grad phi| stays
+        # exactly 1 (this level set remains a true signed distance function).
+        return jnp.sqrt(x**2 + y**2 + z**2) - 1.4
 
     phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
 
@@ -415,9 +421,17 @@ def star_Robin():
         """
         Level-set function for the interface
         """
-        x = r[0]
-        y = r[1]
-        z = r[2]
+        # Scaled to the common half-extent of 1.40 shared by all three Robin
+        # geometries (see the domain comment in test_poisson.py). The reference shape
+        # measures 1.3100, so S = 1.40 / 1.3100. The transformation
+        #     phi(r) = S * phi_ref(r / S)
+        # moves the zero level set by exactly S while leaving |grad phi| unchanged,
+        # so the signed distance phi/|grad phi| that the Robin projection uses scales
+        # with the geometry. S is within 7% of 1 here, so the shape is barely altered.
+        S = 1.0687
+        x = r[0] / S
+        y = r[1] / S
+        z = r[2] / S
         beta1, beta2, beta3 = -0.05, 0.05, -0.10
         theta1, theta2, theta3 = 0.05, 0.05, 0.05
         n1, n2, n3 = 3, 4, 3
@@ -436,7 +450,7 @@ def star_Robin():
 
         # Final level-set / signed distance function
         phi = jnp.sqrt(r2) - 1.183 * (1.0 + (rho2 / 10.0)**2) + perturbation
-        return phi
+        return S * phi
         # beta1 = -0.05 
         # beta2 = 0.05 
         # beta3 = -.1

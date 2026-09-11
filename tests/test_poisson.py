@@ -120,22 +120,29 @@ def poisson_solve(
     batch_size = cfg.solver.batch_size
 
     dim = i32(3)
-    if "star_Robin3" in test_name:
-        # Union (jnp.minimum) of two stars, each of base radius 0.8, centered at
-        # (-0.5, 0.5, -0.5) and (0.5, -0.5, 0.5) -- both at distance 0.5*sqrt(3) from the origin:
-        # worst-case extent from the origin is ~0.5*sqrt(3) + (star's own max radius ~1.008) ~= 1.87.
-        # Keep a modest safety margin (previously exactly [-2,2], i.e. ~0.13 margin) without shrinking it.
-        xmin = ymin = zmin = f32(-2.1)
-        xmax = ymax = zmax = f32(2.1)
-    elif "star_Robin" in test_name:
-        # Single star, base radius 1.183, harmonics bounded by |beta1|+|beta2|+|beta3|=0.20:
-        # solving R = 1.183*(1+(R^2/10)^2) + 0.20 gives a worst-case extent R_max ~= 1.433.
-        # [-2,2] left ~40% of each axis empty; tighten to concentrate training points on the object.
-        xmin = ymin = zmin = f32(-1.8)
-        xmax = ymax = zmax = f32(1.8)
-    else:
-        xmin = ymin = zmin = f32(-1.0)
-        xmax = ymax = zmax = f32(1.0)
+    # ONE domain for every geometry, so the study varies only the interface shape.
+    # Since dx = L/(Nx-1) depends on L and Nx alone, a shared domain gives all three
+    # geometries an IDENTICAL grid spacing at equal Nx, which makes absolute errors
+    # comparable between them -- the same standard already applied to the 2x100
+    # network and the epoch budget across a sweep.
+    #
+    # [-2.1, 2.1] is star_Robin3's natural box, and the geometries are sized to a
+    # common half-extent of 1.40 in experiment_configs.py (sphere radius 1.4, star
+    # scaled by 1.0687, star3 unchanged at its natural 1.4000). That gives every
+    # geometry the same DIMENSIONLESS resolution too -- 4.7 / 10.0 / 20.7 / 42.0
+    # cells across the object at Nx = 8 / 16 / 32 / 64.
+    #
+    # Homogenising toward the LARGEST box is deliberate. Doing it the other way --
+    # shrinking all three into [-1,1] -- also equalises dx, but it makes dx smaller,
+    # which drops the truncation error onto a resolution-independent error floor and
+    # flattens the convergence (star fell to order 0.65, star3 to 0.24). A larger
+    # shared box keeps dx big and stays in the truncation-dominated regime.
+    #
+    # Clearance at the coarsest resolution: dx = 4.2/7 = 0.600, interface at 1.40,
+    # and the interface must stay inside the outermost interior node's control
+    # volume, i.e. below 2.1 - dx/2 = 1.80. Margin is 0.70 = 1.17 dx.
+    xmin = ymin = zmin = f32(-2.1)
+    xmax = ymax = zmax = f32(2.1)
     init_mesh_fn, coord_at = mesh.construct(dim)
 
     # --------- Grid nodes for training
@@ -389,22 +396,29 @@ def poisson_solve_Robin(
     batch_size = cfg.solver.batch_size
 
     dim = i32(3)
-    if "star_Robin3" in test_name:
-        # Union (jnp.minimum) of two stars, each of base radius 0.8, centered at
-        # (-0.5, 0.5, -0.5) and (0.5, -0.5, 0.5) -- both at distance 0.5*sqrt(3) from the origin:
-        # worst-case extent from the origin is ~0.5*sqrt(3) + (star's own max radius ~1.008) ~= 1.87.
-        # Keep a modest safety margin (previously exactly [-2,2], i.e. ~0.13 margin) without shrinking it.
-        xmin = ymin = zmin = f32(-2.1)
-        xmax = ymax = zmax = f32(2.1)
-    elif "star_Robin" in test_name:
-        # Single star, base radius 1.183, harmonics bounded by |beta1|+|beta2|+|beta3|=0.20:
-        # solving R = 1.183*(1+(R^2/10)^2) + 0.20 gives a worst-case extent R_max ~= 1.433.
-        # [-2,2] left ~40% of each axis empty; tighten to concentrate training points on the object.
-        xmin = ymin = zmin = f32(-1.8)
-        xmax = ymax = zmax = f32(1.8)
-    else:
-        xmin = ymin = zmin = f32(-1.0)
-        xmax = ymax = zmax = f32(1.0)
+    # ONE domain for every geometry, so the study varies only the interface shape.
+    # Since dx = L/(Nx-1) depends on L and Nx alone, a shared domain gives all three
+    # geometries an IDENTICAL grid spacing at equal Nx, which makes absolute errors
+    # comparable between them -- the same standard already applied to the 2x100
+    # network and the epoch budget across a sweep.
+    #
+    # [-2.1, 2.1] is star_Robin3's natural box, and the geometries are sized to a
+    # common half-extent of 1.40 in experiment_configs.py (sphere radius 1.4, star
+    # scaled by 1.0687, star3 unchanged at its natural 1.4000). That gives every
+    # geometry the same DIMENSIONLESS resolution too -- 4.7 / 10.0 / 20.7 / 42.0
+    # cells across the object at Nx = 8 / 16 / 32 / 64.
+    #
+    # Homogenising toward the LARGEST box is deliberate. Doing it the other way --
+    # shrinking all three into [-1,1] -- also equalises dx, but it makes dx smaller,
+    # which drops the truncation error onto a resolution-independent error floor and
+    # flattens the convergence (star fell to order 0.65, star3 to 0.24). A larger
+    # shared box keeps dx big and stays in the truncation-dominated regime.
+    #
+    # Clearance at the coarsest resolution: dx = 4.2/7 = 0.600, interface at 1.40,
+    # and the interface must stay inside the outermost interior node's control
+    # volume, i.e. below 2.1 - dx/2 = 1.80. Margin is 0.70 = 1.17 dx.
+    xmin = ymin = zmin = f32(-2.1)
+    xmax = ymax = zmax = f32(2.1)
     init_mesh_fn, coord_at = mesh.construct(dim)
 
     # --------- Grid nodes for training
