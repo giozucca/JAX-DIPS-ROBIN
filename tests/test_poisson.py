@@ -120,15 +120,22 @@ def poisson_solve(
     batch_size = cfg.solver.batch_size
 
     dim = i32(3)
-    # All Robin geometries share one domain. star_Robin and star_Robin3 are scaled
-    # in experiment_configs.py (S = 0.6095 and 0.5753) to a half-extent of 0.80, which
-    # keeps the interface inside the outermost interior node's control volume even at
-    # Nx=8 (bound 1 - dx/2 = 0.857). Consequently dx = L/(Nx-1) is IDENTICAL across
-    # geometries at equal Nx, and absolute errors are directly comparable between them,
-    # which was
-    # not true when each geometry had its own domain.
-    xmin = ymin = zmin = f32(-1.0)
-    xmax = ymax = zmax = f32(1.0)
+    if "star_Robin3" in test_name:
+        # Union (jnp.minimum) of two stars, each of base radius 0.8, centered at
+        # (-0.5, 0.5, -0.5) and (0.5, -0.5, 0.5) -- both at distance 0.5*sqrt(3) from the origin:
+        # worst-case extent from the origin is ~0.5*sqrt(3) + (star's own max radius ~1.008) ~= 1.87.
+        # Keep a modest safety margin (previously exactly [-2,2], i.e. ~0.13 margin) without shrinking it.
+        xmin = ymin = zmin = f32(-2.1)
+        xmax = ymax = zmax = f32(2.1)
+    elif "star_Robin" in test_name:
+        # Single star, base radius 1.183, harmonics bounded by |beta1|+|beta2|+|beta3|=0.20:
+        # solving R = 1.183*(1+(R^2/10)^2) + 0.20 gives a worst-case extent R_max ~= 1.433.
+        # [-2,2] left ~40% of each axis empty; tighten to concentrate training points on the object.
+        xmin = ymin = zmin = f32(-1.8)
+        xmax = ymax = zmax = f32(1.8)
+    else:
+        xmin = ymin = zmin = f32(-1.0)
+        xmax = ymax = zmax = f32(1.0)
     init_mesh_fn, coord_at = mesh.construct(dim)
 
     # --------- Grid nodes for training
@@ -382,15 +389,22 @@ def poisson_solve_Robin(
     batch_size = cfg.solver.batch_size
 
     dim = i32(3)
-    # All Robin geometries share one domain. star_Robin and star_Robin3 are scaled
-    # in experiment_configs.py (S = 0.6095 and 0.5753) to a half-extent of 0.80, which
-    # keeps the interface inside the outermost interior node's control volume even at
-    # Nx=8 (bound 1 - dx/2 = 0.857). Consequently dx = L/(Nx-1) is IDENTICAL across
-    # geometries at equal Nx, and absolute errors are directly comparable between them,
-    # which was
-    # not true when each geometry had its own domain.
-    xmin = ymin = zmin = f32(-1.0)
-    xmax = ymax = zmax = f32(1.0)
+    if "star_Robin3" in test_name:
+        # Union (jnp.minimum) of two stars, each of base radius 0.8, centered at
+        # (-0.5, 0.5, -0.5) and (0.5, -0.5, 0.5) -- both at distance 0.5*sqrt(3) from the origin:
+        # worst-case extent from the origin is ~0.5*sqrt(3) + (star's own max radius ~1.008) ~= 1.87.
+        # Keep a modest safety margin (previously exactly [-2,2], i.e. ~0.13 margin) without shrinking it.
+        xmin = ymin = zmin = f32(-2.1)
+        xmax = ymax = zmax = f32(2.1)
+    elif "star_Robin" in test_name:
+        # Single star, base radius 1.183, harmonics bounded by |beta1|+|beta2|+|beta3|=0.20:
+        # solving R = 1.183*(1+(R^2/10)^2) + 0.20 gives a worst-case extent R_max ~= 1.433.
+        # [-2,2] left ~40% of each axis empty; tighten to concentrate training points on the object.
+        xmin = ymin = zmin = f32(-1.8)
+        xmax = ymax = zmax = f32(1.8)
+    else:
+        xmin = ymin = zmin = f32(-1.0)
+        xmax = ymax = zmax = f32(1.0)
     init_mesh_fn, coord_at = mesh.construct(dim)
 
     # --------- Grid nodes for training

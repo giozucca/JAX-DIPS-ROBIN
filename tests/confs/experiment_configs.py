@@ -266,56 +266,18 @@ def sphere_Robin():
         x=r[0]
         y=r[1]
         z=r[2]
-
-        # ===== DIAGNOSTIC TEST 1: forward stencil, h unchanged at 2e-3 ============
-        # sphere_Robin regressed to u ~ 0 (RMSE 0.208 vs rms|u_exact| 0.212, i.e. the
-        # network sat at its initialization) after the switch to central differences.
-        # Two variables moved when that switch was made: the STENCIL (forward ->
-        # central) and, for this geometry only, the STEP (h: 3e-4 -> 2e-3). This test
-        # reverts ONLY the stencil and deliberately keeps h=2e-3, so that a later
-        # test can revert only h. Changing both at once would confound the two.
-        #
-        # Prior expectation, recorded before the run so it can be judged honestly:
-        # this is not expected to recover the good numbers. Central vs forward moves
-        # the Robin data g by rms 4.0e-4 against a typical |g| of 0.84 -- 0.05% -- and
-        # in the more accurate direction (error vs the analytic normal falls from
-        # 4.0e-4 to 1.3e-6). On the Nx=8/64/128 grids central shows min|grad phi| =
-        # 0.998-0.999 with no NaN and no zero-gradient point, since linspace(-1,1,N)
-        # contains no zero for even N. A 0.05% perturbation of g should not move RMSE
-        # by 190x. If this test DOES recover the good numbers, that expectation is
-        # wrong and the stencil is implicated after all.
-        h=2e-3
-
+        h=3e-4
+        
         r1=jnp.array([x+h,y,z])
         r2=jnp.array([x,y+h,z])
         r3=jnp.array([x,y,z+h])
 
+        
         n1 = (phi(r1)-phi(r))/h
         n2 = (phi(r2)-phi(r))/h
         n3 = (phi(r3)-phi(r))/h
-
-        # --- CENTRAL DIFFERENCE (restore after the diagnostic) --------------------
-        # Error O(h^2 * phi_xxx) instead of the forward stencil's O(h * phi_xx). This
-        # normal builds the exact Robin data g, so its error is a fixed error in the
-        # boundary condition: it does NOT shrink with dx and therefore sets a floor
-        # that grid refinement cannot remove. It also scales as 1/S, which is why
-        # shrinking the star geometries to fit [-1,1]^3 made this term ~2x worse.
-        # Measured on the star interface in float32: forward at h=1e-3 gives 8.3e-4,
-        # forward at its own best step h=3e-4 still gives 3.5e-4, central gives
-        # 1.8e-5. The optimum is flat for h in [1e-3, 5e-3].
-        #
-        # n1 = (phi(jnp.array([x+h,y,z])) - phi(jnp.array([x-h,y,z])))/(2*h)
-        # n2 = (phi(jnp.array([x,y+h,z])) - phi(jnp.array([x,y-h,z])))/(2*h)
-        # n3 = (phi(jnp.array([x,y,z+h])) - phi(jnp.array([x,y,z-h])))/(2*h)
-        # --------------------------------------------------------------------------
-        #
-        # ORIGINAL step for this geometry, before any of this: h=3e-4
-        # (star_Robin and star_Robin3 were both at h=1e-3 -- they were never uniform.)
-        # Restoring that value is DIAGNOSTIC TEST 2.
-        # ==========================================================================
-
         norm = jnp.sqrt(n1**2 + n2**2 + n3**2)
-
+        
         n1 = n1/norm
         n2 = n2/norm
         n3 = n3/norm
@@ -453,22 +415,9 @@ def star_Robin():
         """
         Level-set function for the interface
         """
-        # --- Geometry scaling -------------------------------------------------
-        # Scaled to fit inside the same [-1,1]^3 domain as sphere_Robin, so all three
-        # Robin geometries share one domain and one dx at equal Nx. The transformation
-        #     phi(r) = S * phi_ref(r / S)
-        # scales the zero level set by exactly S while leaving |grad phi| unchanged,
-        # so the signed distance phi/|grad phi| -- which the Robin Taylor projection
-        # uses -- scales correctly with the geometry.
-        # Target half-extent 0.80. The binding constraint is that the interface stay
-        # inside the control volume of the outermost interior node, i.e. below
-        # 1 - dx/2 = 0.857 at the coarsest resolution Nx=8; 0.80 keeps 0.70 dx of margin.
-        # Sizing for Nx=8 is what matters because the geometry is fixed across the sweep.
-        # Reference half-extent before scaling was 1.3125; S = 0.80 / 1.3125.
-        S = 0.6095
-        x = r[0] / S
-        y = r[1] / S
-        z = r[2] / S
+        x = r[0]
+        y = r[1]
+        z = r[2]
         beta1, beta2, beta3 = -0.05, 0.05, -0.10
         theta1, theta2, theta3 = 0.05, 0.05, 0.05
         n1, n2, n3 = 3, 4, 3
@@ -487,7 +436,7 @@ def star_Robin():
 
         # Final level-set / signed distance function
         phi = jnp.sqrt(r2) - 1.183 * (1.0 + (rho2 / 10.0)**2) + perturbation
-        return S * phi
+        return phi
         # beta1 = -0.05 
         # beta2 = 0.05 
         # beta3 = -.1
@@ -534,46 +483,18 @@ def star_Robin():
         x=r[0]
         y=r[1]
         z=r[2]
+        h=1e-3  
+        
+        r1=jnp.array([x+h,y,z])
+        r2=jnp.array([x,y+h,z])
+        r3=jnp.array([x,y,z+h])
 
-        # --- PREVIOUS (first-order forward difference), kept for reference --------
-        # h=1e-3
-        #
-        # r1=jnp.array([x+h,y,z])
-        # r2=jnp.array([x,y+h,z])
-        # r3=jnp.array([x,y,z+h])
-        #
-        # n1 = (phi(r1)-phi(r))/h
-        # n2 = (phi(r2)-phi(r))/h
-        # n3 = (phi(r3)-phi(r))/h
-        # --------------------------------------------------------------------------
-        #
-        # NEW: central difference. The forward stencil above has error O(h * phi_xx);
-        # central has error O(h^2 * phi_xxx). This normal builds the exact Robin data
-        # g, so its error is a fixed error in the boundary condition: it does NOT
-        # shrink with dx, and therefore sets an error floor that grid refinement
-        # cannot remove. It also scales as 1/S, because scaling a level set by S
-        # leaves |grad phi| unchanged but multiplies its curvature by 1/S -- which is
-        # why shrinking the star geometries to fit [-1,1]^3 made this term ~2x worse.
-        #
-        # Measured on the star interface with phi evaluated in float32 (rms error in
-        # the unit normal): forward at h=1e-3 gives 8.3e-4, and forward at its own
-        # best step h=3e-4 still gives 3.5e-4 -- a first-order scheme cannot be
-        # rescued by tuning h. Central reaches 1.8e-5, about 46x better than the
-        # forward h=1e-3 baseline. The optimum is flat for h in [1e-3, 5e-3]:
-        # truncation ~ h^2 * phi_xxx / 6 balanced against roundoff ~ eps/h, with
-        # eps ~ 1.2e-7 the absolute error in phi (phi is a cancelling difference of
-        # O(1) terms near the interface, so its error is eps*O(1), not eps*|phi|).
-        # h therefore does not need retuning per geometry.
-        #
-        # Central also matches the discretization, which already uses a central
-        # difference for its own normal (discretization.py, normal_point_fn).
-        h=2e-3
-
-        n1 = (phi(jnp.array([x+h,y,z])) - phi(jnp.array([x-h,y,z])))/(2*h)
-        n2 = (phi(jnp.array([x,y+h,z])) - phi(jnp.array([x,y-h,z])))/(2*h)
-        n3 = (phi(jnp.array([x,y,z+h])) - phi(jnp.array([x,y,z-h])))/(2*h)
+        
+        n1 = (phi(r1)-phi(r))/h
+        n2 = (phi(r2)-phi(r))/h
+        n3 = (phi(r3)-phi(r))/h
         norm = jnp.sqrt(n1**2 + n2**2 + n3**2)
-
+        
         n1 = n1/norm
         n2 = n2/norm
         n3 = n3/norm
@@ -699,23 +620,9 @@ def star_Robin3():
         """
         Level-set function for the interface: union of two star domains (Form A)
         """
-        # --- Geometry scaling -------------------------------------------------
-        # Scaled to fit inside the same [-1,1]^3 domain as sphere_Robin. The transformation
-        #     phi(r) = S * phi_ref(r / S)
-        # scales the zero level set by exactly S while leaving |grad phi| unchanged,
-        # so the signed distance phi/|grad phi| -- which the Robin Taylor projection
-        # uses -- scales correctly with the geometry. This also carries the two lobe
-        # centres, which sit at -+(0.5, 0.5, 0.5) in the reference frame.
-        # Target half-extent 0.80 (see star_Robin for the rationale).
-        # Reference half-extent before scaling was 1.3906; S = 0.80 / 1.3906.
-        # NOTE: at Nx=8 this object has 32 interior nodes but NO plain-FV row -- every
-        # row carries the Robin term. Two lobes of radius 0.8*S = 0.46 cannot clear the
-        # cell half-diagonal (sqrt(3)/2)*dx = 0.247 around any grid node, at any size the
-        # domain admits. Nx=8 is under-resolved for star3 by construction, not by tuning.
-        S = 0.5753
-        x = r[0] / S
-        y = r[1] / S
-        z = r[2] / S
+        x = r[0]
+        y = r[1]
+        z = r[2]
         
         # Domain 1 parameters & coordinates
         # xc1, yc1, zc1 = -0.75, 0.75, -0.75
@@ -819,7 +726,7 @@ def star_Robin3():
         # -------------------------------------------------------------
         # Union of the two domains
         # -------------------------------------------------------------
-        return S * jnp.minimum(phi1, phi2)
+        return jnp.minimum(phi1, phi2)
 
     phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
 
@@ -839,46 +746,17 @@ def star_Robin3():
         x=r[0]
         y=r[1]
         z=r[2]
+        h=1e-3
+        
+        r1=jnp.array([x+h,y,z])
+        r2=jnp.array([x,y+h,z])
+        r3=jnp.array([x,y,z+h])
 
-        # --- PREVIOUS (first-order forward difference), kept for reference --------
-        # h=1e-3
-        #
-        # r1=jnp.array([x+h,y,z])
-        # r2=jnp.array([x,y+h,z])
-        # r3=jnp.array([x,y,z+h])
-        #
-        # n1 = (phi(r1)-phi(r))/h
-        # n2 = (phi(r2)-phi(r))/h
-        # n3 = (phi(r3)-phi(r))/h
-        # --------------------------------------------------------------------------
-        #
-        # NEW: central difference. The forward stencil above has error O(h * phi_xx);
-        # central has error O(h^2 * phi_xxx). This normal builds the exact Robin data
-        # g, so its error is a fixed error in the boundary condition: it does NOT
-        # shrink with dx, and therefore sets an error floor that grid refinement
-        # cannot remove. It also scales as 1/S, because scaling a level set by S
-        # leaves |grad phi| unchanged but multiplies its curvature by 1/S -- which is
-        # why shrinking the star geometries to fit [-1,1]^3 made this term ~2x worse.
-        #
-        # Measured on the star interface with phi evaluated in float32 (rms error in
-        # the unit normal): forward at h=1e-3 gives 8.3e-4, and forward at its own
-        # best step h=3e-4 still gives 3.5e-4 -- a first-order scheme cannot be
-        # rescued by tuning h. Central reaches 1.8e-5, about 46x better than the
-        # forward h=1e-3 baseline. The optimum is flat for h in [1e-3, 5e-3]:
-        # truncation ~ h^2 * phi_xxx / 6 balanced against roundoff ~ eps/h, with
-        # eps ~ 1.2e-7 the absolute error in phi (phi is a cancelling difference of
-        # O(1) terms near the interface, so its error is eps*O(1), not eps*|phi|).
-        # h therefore does not need retuning per geometry.
-        #
-        # Central also matches the discretization, which already uses a central
-        # difference for its own normal (discretization.py, normal_point_fn).
-        h=2e-3
-
-        n1 = (phi(jnp.array([x+h,y,z])) - phi(jnp.array([x-h,y,z])))/(2*h)
-        n2 = (phi(jnp.array([x,y+h,z])) - phi(jnp.array([x,y-h,z])))/(2*h)
-        n3 = (phi(jnp.array([x,y,z+h])) - phi(jnp.array([x,y,z-h])))/(2*h)
+        n1 = (phi(r1)-phi(r))/h
+        n2 = (phi(r2)-phi(r))/h
+        n3 = (phi(r3)-phi(r))/h
         norm = jnp.sqrt(n1**2 + n2**2 + n3**2)
-
+        
         n1 = n1/norm
         n2 = n2/norm
         n3 = n3/norm
