@@ -51,7 +51,7 @@ def sphere():
         x = r[0]
         y = r[1]
         z = r[2]
-        return jnp.sqrt(x**2 + y**2 + z**2) - 0.5
+        return jnp.sqrt(x**2 + y**2 + z**2) - 0.2380952  # 0.5/2.1, normalised box
 
     phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
 
@@ -234,13 +234,13 @@ def sphere_Robin():
         x = r[0]
         y = r[1]
         z = r[2]
-        # Radius 1.4, not 0.5: every Robin geometry now shares the [-2.1, 2.1] domain
-        # and is sized to a common half-extent of 1.40, so all three have the same dx
-        # AND the same number of cells across the object at equal Nx.
-        # For phi = |r| - R the scaling is just the radius -- S*phi_ref(r/S) reduces to
-        # |r| - S*0.5 -- so no scaling wrapper is needed here, and |grad phi| stays
-        # exactly 1 (this level set remains a true signed distance function).
-        return jnp.sqrt(x**2 + y**2 + z**2) - 1.4
+        # Radius 0.6666667 = 1.4/2.1: every Robin geometry shares the NORMALISED
+        # [-1, 1] domain and is sized to a common half-extent of 0.666667, so all
+        # three have the same dx AND the same number of cells across the object at
+        # equal Nx. For phi = |r| - R the scaling is just the radius -- S*phi_ref(r/S)
+        # reduces to |r| - S*R -- so no scaling wrapper is needed here, and
+        # |grad phi| stays exactly 1 (a true signed distance function).
+        return jnp.sqrt(x**2 + y**2 + z**2) - 0.6666667
 
     phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
 
@@ -421,14 +421,17 @@ def star_Robin():
         """
         Level-set function for the interface
         """
-        # Scaled to the common half-extent of 1.40 shared by all three Robin
-        # geometries (see the domain comment in test_poisson.py). The reference shape
-        # measures 1.3100, so S = 1.40 / 1.3100. The transformation
+        # Scaled to the common half-extent of 0.666667 shared by all three Robin
+        # geometries on the normalised [-1, 1] box (see the domain comment in
+        # test_poisson.py). The reference shape measures 1.3100, so the factor is
+        # (1.40 / 1.3100) / 2.1 = 1.0687 / 2.1. The transformation
         #     phi(r) = S * phi_ref(r / S)
         # moves the zero level set by exactly S while leaving |grad phi| unchanged,
         # so the signed distance phi/|grad phi| that the Robin projection uses scales
-        # with the geometry. S is within 7% of 1 here, so the shape is barely altered.
-        S = 1.0687
+        # with the geometry. Folding the domain factor into the SAME wrapper is what
+        # keeps the shape identical: rewriting the internal constants (the 1e-8 taper
+        # guard, the rho^2/10 length) would not, since those are not scale-free.
+        S = 0.5089048
         x = r[0] / S
         y = r[1] / S
         z = r[2] / S
@@ -633,10 +636,19 @@ def star_Robin3():
     def unperturbed_phi_fn(r):
         """
         Level-set function for the interface: union of two star domains (Form A)
+
+        Wrapped as phi(r) = S * phi_ref(r / S) with S = 1/2.1 to place the natural
+        half-extent of 1.4000 at 0.666667 on the normalised [-1, 1] box. Evaluating
+        the UNCHANGED reference shape at r/S is what makes this exact: the lobe
+        centres, the 1e-8 taper guard and the rho^2/10 length all scale with it
+        automatically, which rewriting them in place would not achieve. min() is
+        positively homogeneous, so the wrapper passes through the union unharmed and
+        |grad phi| is unchanged.
         """
-        x = r[0]
-        y = r[1]
-        z = r[2]
+        S = 0.4761905
+        x = r[0] / S
+        y = r[1] / S
+        z = r[2] / S
         
         # Domain 1 parameters & coordinates
         # xc1, yc1, zc1 = -0.75, 0.75, -0.75
@@ -740,7 +752,7 @@ def star_Robin3():
         # -------------------------------------------------------------
         # Union of the two domains
         # -------------------------------------------------------------
-        return jnp.minimum(phi1, phi2)
+        return S * jnp.minimum(phi1, phi2)
 
     phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
 

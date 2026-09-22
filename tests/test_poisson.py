@@ -126,23 +126,34 @@ def poisson_solve(
     # comparable between them -- the same standard already applied to the 2x100
     # network and the epoch budget across a sweep.
     #
-    # [-2.1, 2.1] is star_Robin3's natural box, and the geometries are sized to a
-    # common half-extent of 1.40 in experiment_configs.py (sphere radius 1.4, star
-    # scaled by 1.0687, star3 unchanged at its natural 1.4000). That gives every
-    # geometry the same DIMENSIONLESS resolution too -- 4.7 / 10.0 / 20.7 / 42.0
-    # cells across the object at Nx = 8 / 16 / 32 / 64.
+    # [-1, 1] is the NORMALISED box. Every geometry is scaled by exactly 1/2.1 from
+    # the earlier [-2.1, 2.1] setup, so the common half-extent becomes 0.666667
+    # (sphere radius 0.6666667, star scaled by 0.5089048, star3 wrapped with
+    # S = 0.4761905). Because the box and the geometries shrink by the SAME factor,
+    # every dimensionless quantity is preserved exactly: still 4.7 / 10.0 / 20.7 /
+    # 42.0 cells across the object at Nx = 8 / 16 / 32 / 64, and the same clearance
+    # measured in cells.
     #
-    # Homogenising toward the LARGEST box is deliberate. Doing it the other way --
-    # shrinking all three into [-1,1] -- also equalises dx, but it makes dx smaller,
-    # which drops the truncation error onto a resolution-independent error floor and
-    # flattens the convergence (star fell to order 0.65, star3 to 0.24). A larger
-    # shared box keeps dx big and stays in the truncation-dominated regime.
+    # WHAT IS NOT PRESERVED: the manufactured solution u = cos(x) sin(y) cos(z) was
+    # deliberately NOT rescaled (no change to u, f or g). The object therefore spans
+    # 1.333 of the trigonometric argument instead of 2.800, so the solution varies
+    # about half as much across the geometry. This is a DIFFERENT, easier test
+    # problem, and its errors are NOT comparable with the archived [-2.1, 2.1]
+    # results. Making it the same problem would additionally require
+    # u -> cos(2.1x) sin(2.1y) cos(2.1z), the mu term of f scaled by 2.1^2, and the
+    # normal-derivative term of g scaled by 2.1.
     #
-    # Clearance at the coarsest resolution: dx = 4.2/7 = 0.600, interface at 1.40,
+    # An earlier attempt at [-1,1] was rejected because convergence flattened (star
+    # fell to order 0.65, star3 to 0.24), attributed to a resolution-INDEPENDENT
+    # error floor. That is the weight-decay signature: weight_decay was 1e-4 then and
+    # is 0.0 now, and Adam's eps was 1e-8 then and is 1e-16 now. Both floors have
+    # since been removed, so that diagnosis is worth RETESTING rather than assumed.
+    #
+    # Clearance at the coarsest resolution: dx = 2/7 = 0.2857, interface at 0.6667,
     # and the interface must stay inside the outermost interior node's control
-    # volume, i.e. below 2.1 - dx/2 = 1.80. Margin is 0.70 = 1.17 dx.
-    xmin = ymin = zmin = f32(-2.1)
-    xmax = ymax = zmax = f32(2.1)
+    # volume, i.e. below 1 - dx/2 = 0.857. Margin is 0.3333 = 1.17 dx (unchanged).
+    xmin = ymin = zmin = f32(-1.0)
+    xmax = ymax = zmax = f32(1.0)
     init_mesh_fn, coord_at = mesh.construct(dim)
 
     # --------- Grid nodes for training
@@ -402,23 +413,34 @@ def poisson_solve_Robin(
     # comparable between them -- the same standard already applied to the 2x100
     # network and the epoch budget across a sweep.
     #
-    # [-2.1, 2.1] is star_Robin3's natural box, and the geometries are sized to a
-    # common half-extent of 1.40 in experiment_configs.py (sphere radius 1.4, star
-    # scaled by 1.0687, star3 unchanged at its natural 1.4000). That gives every
-    # geometry the same DIMENSIONLESS resolution too -- 4.7 / 10.0 / 20.7 / 42.0
-    # cells across the object at Nx = 8 / 16 / 32 / 64.
+    # [-1, 1] is the NORMALISED box. Every geometry is scaled by exactly 1/2.1 from
+    # the earlier [-2.1, 2.1] setup, so the common half-extent becomes 0.666667
+    # (sphere radius 0.6666667, star scaled by 0.5089048, star3 wrapped with
+    # S = 0.4761905). Because the box and the geometries shrink by the SAME factor,
+    # every dimensionless quantity is preserved exactly: still 4.7 / 10.0 / 20.7 /
+    # 42.0 cells across the object at Nx = 8 / 16 / 32 / 64, and the same clearance
+    # measured in cells.
     #
-    # Homogenising toward the LARGEST box is deliberate. Doing it the other way --
-    # shrinking all three into [-1,1] -- also equalises dx, but it makes dx smaller,
-    # which drops the truncation error onto a resolution-independent error floor and
-    # flattens the convergence (star fell to order 0.65, star3 to 0.24). A larger
-    # shared box keeps dx big and stays in the truncation-dominated regime.
+    # WHAT IS NOT PRESERVED: the manufactured solution u = cos(x) sin(y) cos(z) was
+    # deliberately NOT rescaled (no change to u, f or g). The object therefore spans
+    # 1.333 of the trigonometric argument instead of 2.800, so the solution varies
+    # about half as much across the geometry. This is a DIFFERENT, easier test
+    # problem, and its errors are NOT comparable with the archived [-2.1, 2.1]
+    # results. Making it the same problem would additionally require
+    # u -> cos(2.1x) sin(2.1y) cos(2.1z), the mu term of f scaled by 2.1^2, and the
+    # normal-derivative term of g scaled by 2.1.
     #
-    # Clearance at the coarsest resolution: dx = 4.2/7 = 0.600, interface at 1.40,
+    # An earlier attempt at [-1,1] was rejected because convergence flattened (star
+    # fell to order 0.65, star3 to 0.24), attributed to a resolution-INDEPENDENT
+    # error floor. That is the weight-decay signature: weight_decay was 1e-4 then and
+    # is 0.0 now, and Adam's eps was 1e-8 then and is 1e-16 now. Both floors have
+    # since been removed, so that diagnosis is worth RETESTING rather than assumed.
+    #
+    # Clearance at the coarsest resolution: dx = 2/7 = 0.2857, interface at 0.6667,
     # and the interface must stay inside the outermost interior node's control
-    # volume, i.e. below 2.1 - dx/2 = 1.80. Margin is 0.70 = 1.17 dx.
-    xmin = ymin = zmin = f32(-2.1)
-    xmax = ymax = zmax = f32(2.1)
+    # volume, i.e. below 1 - dx/2 = 0.857. Margin is 0.3333 = 1.17 dx (unchanged).
+    xmin = ymin = zmin = f32(-1.0)
+    xmax = ymax = zmax = f32(1.0)
     init_mesh_fn, coord_at = mesh.construct(dim)
 
     # --------- Grid nodes for training

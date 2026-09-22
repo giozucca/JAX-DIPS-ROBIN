@@ -125,7 +125,7 @@ def domain_for(exp_name):
     arrays, which forces GPU work before we actually need any.
     """
     if exp_name == "star_Robin3":
-        return -2.1, 2.1
+        return -1.0, 1.0
     if exp_name == "star_Robin":
         return -1.8, 1.8
     return -1.0, 1.0
