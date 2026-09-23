@@ -294,7 +294,7 @@ def sphere_Robin():
         x=r[0]
         y=r[1]
         z=r[2]
-        h=1e-3
+        h=3e-4
 
         rxp=jnp.array([x+h,y,z]); rxm=jnp.array([x-h,y,z])
         ryp=jnp.array([x,y+h,z]); rym=jnp.array([x,y-h,z])
