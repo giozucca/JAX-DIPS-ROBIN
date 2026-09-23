@@ -231,6 +231,14 @@ def poisson_solve(
     yc = jnp.linspace(ymin, ymax, cfg.solver.Ny_tr, dtype=f32)
     zc = jnp.linspace(zmin, zmax, cfg.solver.Nz_tr, dtype=f32)
     gstate_tr = init_mesh_fn(xc, yc, zc)
+    # GROUND TRUTH for the precision switch. A static reading of the code can miss a
+    # hardcoded dtype=jnp.float32 somewhere in the chain, so echo the dtype of a real
+    # solver array rather than trusting the flag. If this says float32 while
+    # use_float64 is true, something downcast and the run is NOT in double precision.
+    logger.info(
+        f"Precision check: grid dtype={gstate_tr.R.dtype}, dx dtype={jnp.asarray(gstate_tr.dx).dtype}, "
+        f"f32 alias={f32.__name__}, x64={jax.config.jax_enable_x64}  (dx={float(gstate_tr.dx):.6f})"
+    )
 
     # --------- Grid nodes for level set
     Nx_lvl = cfg.gridstates.Nx_lvl
@@ -518,6 +526,14 @@ def poisson_solve_Robin(
     yc = jnp.linspace(ymin, ymax, cfg.solver.Ny_tr, dtype=f32)
     zc = jnp.linspace(zmin, zmax, cfg.solver.Nz_tr, dtype=f32)
     gstate_tr = init_mesh_fn(xc, yc, zc)
+    # GROUND TRUTH for the precision switch. A static reading of the code can miss a
+    # hardcoded dtype=jnp.float32 somewhere in the chain, so echo the dtype of a real
+    # solver array rather than trusting the flag. If this says float32 while
+    # use_float64 is true, something downcast and the run is NOT in double precision.
+    logger.info(
+        f"Precision check: grid dtype={gstate_tr.R.dtype}, dx dtype={jnp.asarray(gstate_tr.dx).dtype}, "
+        f"f32 alias={f32.__name__}, x64={jax.config.jax_enable_x64}  (dx={float(gstate_tr.dx):.6f})"
+    )
 
     # --------- Grid nodes for level set
     Nx_lvl = cfg.gridstates.Nx_lvl
