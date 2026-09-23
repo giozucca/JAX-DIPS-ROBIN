@@ -17,7 +17,6 @@
   Primary Author: mistani
 
 """
-from tests.confs.experiment_configs import star_Robin, star_Robin3
 import logging
 import os
 import sys
@@ -29,6 +28,41 @@ from omegaconf import DictConfig, OmegaConf
 
 logger = logging.getLogger(__name__)
 
+# =========================== PRECISION SWITCH ===========================
+# `solver.use_float64` in confs/poisson.yaml selects float32 or float64 for the whole
+# solver. It has to be resolved HERE, above every other import, for two reasons:
+#
+#   1. jax_enable_x64 must be set before JAX allocates anything.
+#   2. `jax_enable_x64` ALONE does not put this codebase in float64. util.py hardcodes
+#      `f32 = jnp.float32`, and 19 modules -- mesh, discretization, level_set,
+#      geometric_integrations_per_point, trainer, and tests/confs/experiment_configs
+#      among them -- bind that alias with `from ...util import f32` at IMPORT time and
+#      pass `dtype=f32` explicitly, casting every array straight back down to single
+#      precision. The alias must therefore be rebound BEFORE those modules load.
+#      (jax_dips/__init__.py is empty, so nothing binds it earlier.) Same approach as
+#      tests/check_robin_consistency.py, which documents it at the --x64 flag.
+#
+# Hydra cannot supply the flag: it composes the config inside the decorated function,
+# long after import. So read the yaml directly, and let a hydra-style CLI override
+# (`solver.use_float64=false`) win so a run can be switched without editing the file.
+def _resolve_float64_flag():
+    flag = False
+    conf = os.path.join(os.path.dirname(os.path.realpath(__file__)), "confs", "poisson.yaml")
+    try:
+        import yaml
+
+        with open(conf) as fh:
+            flag = bool((yaml.safe_load(fh) or {}).get("solver", {}).get("use_float64", False))
+    except Exception as exc:  # missing file, unparsable yaml, no PyYAML
+        print(f"[precision] could not read {conf} ({exc}); defaulting to float32")
+    for arg in sys.argv[1:]:
+        if arg.startswith("solver.use_float64="):
+            flag = arg.split("=", 1)[1].strip().lower() in ("true", "1", "yes", "on")
+    return flag
+
+
+USE_FLOAT64 = _resolve_float64_flag()
+
 import jax
 import jax.profiler
 from jax import grad, jit, lax
@@ -39,6 +73,22 @@ try:
 except ImportError:
     from jax import config
 
+config.update("jax_enable_x64", USE_FLOAT64)
+
+if USE_FLOAT64:
+    # Rebind the shared alias before anything imports it. Only f32 is rebound; indices
+    # stay int32, which is what check_robin_consistency.py does and is ample for the
+    # grid sizes here.
+    from jax_dips._jaxmd_modules import util as _jaxdips_util
+
+    _jaxdips_util.f32 = jnp.float64
+
+# Printed, not logged: hydra has not configured logging yet at import time. The run
+# also logs this again inside test_poisson() so it lands in the hydra log file.
+print(f"[precision] use_float64={USE_FLOAT64} -> solver dtype is "
+      f"{'float64' if USE_FLOAT64 else 'float32'}")
+# ======================== END PRECISION SWITCH ==========================
+
 from jax_dips._jaxmd_modules.util import f32, i32
 from jax_dips.domain import mesh
 from jax_dips.geometry import level_set
@@ -46,20 +96,39 @@ from jax_dips.solvers.optimizers import get_optimizer
 from jax_dips.solvers.poisson import trainer
 from jax_dips.solvers.poisson.deprecated import poisson_solver_scalable
 from jax_dips.utils import io
-from tests.confs.experiment_configs import no_jump, sphere, sphere_Robin, star
+from tests.confs.experiment_configs import (
+    no_jump,
+    sphere,
+    sphere_Robin,
+    star,
+    star_Robin,
+    star_Robin3,
+)
 
 currDir = os.path.dirname(os.path.realpath(__file__))
 rootDir = os.path.abspath(os.path.join(currDir, ".."))
 if rootDir not in sys.path:  # add parent dir to paths
     sys.path.append(rootDir)
 
-config.update("jax_enable_x64", False)
 os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
 
 
 @hydra.main(config_path="confs", config_name="poisson", version_base="1.1")
 def test_poisson(cfg: DictConfig):
     logger.info(f"Starting {__file__}")
+    # Repeat the precision banner here so it reaches the hydra log file; the import-time
+    # print happens before hydra has configured logging. Warn on a mismatch, which can
+    # only mean the yaml was edited after this module was imported.
+    _yaml_flag = bool(cfg.solver.get("use_float64", False))
+    logger.info(
+        f"Precision: use_float64={USE_FLOAT64}, dtype={f32.__name__ if hasattr(f32, '__name__') else f32}, "
+        f"jax_enable_x64={jax.config.jax_enable_x64}"
+    )
+    if _yaml_flag != USE_FLOAT64:
+        logger.warning(
+            f"use_float64 mismatch: config says {_yaml_flag}, but the import-time switch "
+            f"resolved {USE_FLOAT64}. The import-time value is the one in effect."
+        )
     logger.info(OmegaConf.to_yaml(cfg))
 
     if cfg.experiment.sphere:

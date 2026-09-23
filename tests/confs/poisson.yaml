@@ -29,6 +29,25 @@ solver:
   # they add an irreducible constant to the loss and cost compute for nothing.
   # Side effect: Omega+ is left untrained, so U outside the interface is meaningless.
   train_omega_minus_only: true
+  # Run the entire solver in float64 rather than float32. Read at import time by the
+  # precision block at the top of tests/test_poisson.py; override per run without
+  # editing this file via `solver.use_float64=false` on the command line.
+  #
+  # WHY: the FV stencils divide by dx^2, so their float roundoff grows as 4*eps/dx^2
+  # while truncation error falls as dx. In float32 (eps = 5.96e-08) the two cross at
+  # dx ~ 0.04. The [-2.1,2.1] box at Nx=64 gives dx = 0.0667, safely above it; the
+  # normalised [-1,1] box at Nx=64 gives dx = 0.0317, inside the band -- and that is
+  # exactly where Star's error turned UPWARD (2.28e-03 at Nx=32 to 2.69e-03 at Nx=64)
+  # while the sphere, whose error is smaller, kept falling. float64 moves the crossover
+  # to dx ~ 2.7e-04, out of reach of any grid used here, so it isolates roundoff from
+  # the other floors: it does NOT touch FV truncation, the O(dx^2) error in the finite
+  # difference normals, the non-SDF error in d = phi/|grad phi|, or the network's own
+  # approximation error. If the Star turnover survives float64, roundoff is not the
+  # cause.
+  #
+  # COST: float64 runs at about half of float32 throughput on datacenter GPUs and
+  # 1/32 to 1/64 on consumer cards, so expect 2x to 60x slower, and 2x the memory.
+  use_float64: true
   multi_gpu: false
   num_gpus_ddp: 2
   optim:
