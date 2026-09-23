@@ -269,21 +269,35 @@ def sphere_Robin():
         return 2
 
     def computeNormal(phi, r):
+        """Normal used to build the exact Robin data g. CENTRAL differences.
+
+        Stencil only: h stays at 3e-4, matching this geometry's previous value, so the
+        forward -> central switch is the single variable changed. Kept at 3e-4 rather than aligned with the stars: for CENTRAL differences in float32 the
+        sphere's normal error is flat across 3e-4..5e-3 (median 0.000 deg, max 0.025 vs 0.022),
+        so there is nothing to gain, and a6042a0 moved this geometry's h from 3e-4 to 2e-3 at
+        the same time as the stencil and it collapsed to u ~ 0. One variable.
+
+        A one-sided difference has error (h/2)*phi'', which is independent of the grid
+        and so never converges. On star_Robin this produced a level offset that was
+        93.5% of the mean-square error at Nx=64; switching to central removed it
+        entirely at Nx=32 (+2.52e-03 -> -1.34e-04) and cut it 3.7x at Nx=64, while
+        leaving the shape error untouched (order 1.03 before and after). This applies
+        the same fix here.
+        """
         x=r[0]
         y=r[1]
         z=r[2]
         h=3e-4
-        
-        r1=jnp.array([x+h,y,z])
-        r2=jnp.array([x,y+h,z])
-        r3=jnp.array([x,y,z+h])
 
-        
-        n1 = (phi(r1)-phi(r))/h
-        n2 = (phi(r2)-phi(r))/h
-        n3 = (phi(r3)-phi(r))/h
+        rxp=jnp.array([x+h,y,z]); rxm=jnp.array([x-h,y,z])
+        ryp=jnp.array([x,y+h,z]); rym=jnp.array([x,y-h,z])
+        rzp=jnp.array([x,y,z+h]); rzm=jnp.array([x,y,z-h])
+
+        n1 = (phi(rxp)-phi(rxm))/(2*h)
+        n2 = (phi(ryp)-phi(rym))/(2*h)
+        n3 = (phi(rzp)-phi(rzm))/(2*h)
         norm = jnp.sqrt(n1**2 + n2**2 + n3**2)
-        
+
         n1 = n1/norm
         n2 = n2/norm
         n3 = n3/norm
@@ -792,20 +806,32 @@ def star_Robin3():
         return 2.0
 
     def computeNormal(phi, r):
+        """Normal used to build the exact Robin data g. CENTRAL differences.
+
+        Stencil only: h stays at 1e-3, matching this geometry's previous value, so the
+        forward -> central switch is the single variable changed. h matches star_Robin, where this change was validated.
+
+        A one-sided difference has error (h/2)*phi'', which is independent of the grid
+        and so never converges. On star_Robin this produced a level offset that was
+        93.5% of the mean-square error at Nx=64; switching to central removed it
+        entirely at Nx=32 (+2.52e-03 -> -1.34e-04) and cut it 3.7x at Nx=64, while
+        leaving the shape error untouched (order 1.03 before and after). This applies
+        the same fix here.
+        """
         x=r[0]
         y=r[1]
         z=r[2]
         h=1e-3
-        
-        r1=jnp.array([x+h,y,z])
-        r2=jnp.array([x,y+h,z])
-        r3=jnp.array([x,y,z+h])
 
-        n1 = (phi(r1)-phi(r))/h
-        n2 = (phi(r2)-phi(r))/h
-        n3 = (phi(r3)-phi(r))/h
+        rxp=jnp.array([x+h,y,z]); rxm=jnp.array([x-h,y,z])
+        ryp=jnp.array([x,y+h,z]); rym=jnp.array([x,y-h,z])
+        rzp=jnp.array([x,y,z+h]); rzm=jnp.array([x,y,z-h])
+
+        n1 = (phi(rxp)-phi(rxm))/(2*h)
+        n2 = (phi(ryp)-phi(rym))/(2*h)
+        n3 = (phi(rzp)-phi(rzm))/(2*h)
         norm = jnp.sqrt(n1**2 + n2**2 + n3**2)
-        
+
         n1 = n1/norm
         n2 = n2/norm
         n3 = n3/norm
