@@ -271,11 +271,18 @@ def sphere_Robin():
     def computeNormal(phi, r):
         """Normal used to build the exact Robin data g. CENTRAL differences.
 
-        Stencil only: h stays at 3e-4, matching this geometry's previous value, so the
-        forward -> central switch is the single variable changed. Kept at 3e-4 rather than aligned with the stars: for CENTRAL differences in float32 the
-        sphere's normal error is flat across 3e-4..5e-3 (median 0.000 deg, max 0.025 vs 0.022),
-        so there is nothing to gain, and a6042a0 moved this geometry's h from 3e-4 to 2e-3 at
-        the same time as the stencil and it collapsed to u ~ 0. One variable.
+        h is 1e-3 here, the same value all three geometries now use. The previous
+        3e-4 was arbitrary and slightly WORSE for a central stencil in float32: the
+        sphere's normal error at 3e-4 is max 0.02524 deg against 0.02309 at 1e-3,
+        because 3e-4 is small enough to be roundoff-limited. Unifying removes a
+        constant that would otherwise need explaining in the paper.
+
+        Caveat, recorded honestly: a6042a0 moved this geometry's stencil AND its h
+        (3e-4 -> 2e-3) together, after which it collapsed to u ~ 0, and that collapse
+        was never explained. Two variables move here too, so a collapse would again be
+        ambiguous between them. Accepted because the stencil change is already
+        validated on star_Robin and because the remedy either way is to revert this
+        geometry to forward differences.
 
         A one-sided difference has error (h/2)*phi'', which is independent of the grid
         and so never converges. On star_Robin this produced a level offset that was
@@ -287,7 +294,7 @@ def sphere_Robin():
         x=r[0]
         y=r[1]
         z=r[2]
-        h=3e-4
+        h=1e-3
 
         rxp=jnp.array([x+h,y,z]); rxm=jnp.array([x-h,y,z])
         ryp=jnp.array([x,y+h,z]); rym=jnp.array([x,y-h,z])
