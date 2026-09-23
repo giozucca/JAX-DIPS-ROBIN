@@ -497,21 +497,44 @@ def star_Robin():
         return 2
 
     def computeNormal(phi, r):
+        """Normal used to build the exact Robin data g. CENTRAL differences.
+
+        ONE VARIABLE CHANGED vs the previous version: the stencil, forward -> central.
+        The step h stays at 1e-3 and no other geometry is touched, deliberately.
+        d8fcb85 ("stencil in normals") changed the stencil AND, for sphere_Robin only,
+        h from 3e-4 to 2e-3 at the same time; sphere_Robin then collapsed to u ~ 0
+        (RMSE 0.208 against rms|u_exact| 0.212 -- the network sat at its
+        initialisation) and 501c234 reverted the lot. Because those two moved
+        together, that result does not tell us which one did the damage. Keeping h
+        fixed here, and leaving sphere_Robin and star_Robin3 on forward differences,
+        isolates the stencil for the one geometry we have measurements for.
+
+        WHY IT MIGHT MATTER: a forward difference has error (h/2)*phi'', which does
+        NOT shrink with the grid and grows with curvature. The Star error on [-1,1] at
+        Nx=64 is 93.5% a constant offset of +2.71e-03 whose shape component converges
+        cleanly at order 1.03, so the offset is not a discretisation or capacity
+        limit. It also grew 1.72x when the domain shrank 2.1x, against 2.10x predicted
+        from curvature scaling alone.
+
+        WHAT WOULD FALSIFY IT: d8fcb85 measured that central-vs-forward shifts g by
+        only ~0.05%, while the offset is ~1% of |u|. That needs roughly 20x
+        amplification, which is NOT established. If the offset does not move, this
+        candidate is dead and the offset lives elsewhere in the Robin data.
+        """
         x=r[0]
         y=r[1]
         z=r[2]
-        h=1e-3  
-        
-        r1=jnp.array([x+h,y,z])
-        r2=jnp.array([x,y+h,z])
-        r3=jnp.array([x,y,z+h])
+        h=1e-3
 
-        
-        n1 = (phi(r1)-phi(r))/h
-        n2 = (phi(r2)-phi(r))/h
-        n3 = (phi(r3)-phi(r))/h
+        rxp=jnp.array([x+h,y,z]); rxm=jnp.array([x-h,y,z])
+        ryp=jnp.array([x,y+h,z]); rym=jnp.array([x,y-h,z])
+        rzp=jnp.array([x,y,z+h]); rzm=jnp.array([x,y,z-h])
+
+        n1 = (phi(rxp)-phi(rxm))/(2*h)
+        n2 = (phi(ryp)-phi(rym))/(2*h)
+        n3 = (phi(rzp)-phi(rzm))/(2*h)
         norm = jnp.sqrt(n1**2 + n2**2 + n3**2)
-        
+
         n1 = n1/norm
         n2 = n2/norm
         n3 = n3/norm

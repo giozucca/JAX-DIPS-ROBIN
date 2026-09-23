@@ -47,7 +47,7 @@ solver:
   #
   # COST: float64 runs at about half of float32 throughput on datacenter GPUs and
   # 1/32 to 1/64 on consumer cards, so expect 2x to 60x slower, and 2x the memory.
-  use_float64: true
+  use_float64: false
   multi_gpu: false
   num_gpus_ddp: 2
   optim:
