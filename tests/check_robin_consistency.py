@@ -121,13 +121,17 @@ class _StandaloneDiscretization(Discretization):
 def domain_for(exp_name):
     """Mirrors the domain selection in tests/test_poisson.py.
 
+    ONE domain for every experiment, matching test_poisson.py, which defines the box
+    once and uses it for all three geometries. The per-geometry values that used to
+    live here (star_Robin on [-1.8, 1.8], i.e. L=3.6) are a leftover from before the
+    domains were homogenised, and they silently made this check disagree with the
+    runs it is supposed to diagnose: star_Robin was being checked at dx = 3.6/(Nx-1)
+    while training at dx = 2.0/(Nx-1), a factor of 1.8.
+
     Plain Python floats on purpose: wrapping these in f32() makes them device
     arrays, which forces GPU work before we actually need any.
     """
-    if exp_name == "star_Robin3":
-        return -1.0, 1.0
-    if exp_name == "star_Robin":
-        return -1.8, 1.8
+    del exp_name  # same box for all geometries, by design
     return -1.0, 1.0
 
 
