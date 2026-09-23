@@ -269,40 +269,38 @@ def sphere_Robin():
         return 2
 
     def computeNormal(phi, r):
-        """Normal used to build the exact Robin data g. CENTRAL differences.
+        """Normal used to build the exact Robin data g. FORWARD differences, h=3e-4.
 
-        h is 1e-3 here, the same value all three geometries now use. The previous
-        3e-4 was arbitrary and slightly WORSE for a central stencil in float32: the
-        sphere's normal error at 3e-4 is max 0.02524 deg against 0.02309 at 1e-3,
-        because 3e-4 is small enough to be roundoff-limited. Unifying removes a
-        constant that would otherwise need explaining in the paper.
+        DO NOT switch this geometry to central differences. Tested twice, at h=1e-3
+        and again at the original h=3e-4, and sphere_Robin collapses to u ~ 0 both
+        times: Nx=16 on [-1,1] returned RMSE 0.2335 and relative L_2 0.8616, against
+        3.27e-03 with the forward stencil. Holding h fixed makes this unambiguous,
+        which a6042a0 could not: it is the stencil, for this geometry only.
 
-        Caveat, recorded honestly: a6042a0 moved this geometry's stencil AND its h
-        (3e-4 -> 2e-3) together, after which it collapsed to u ~ 0, and that collapse
-        was never explained. Two variables move here too, so a collapse would again be
-        ambiguous between them. Accepted because the stencil change is already
-        validated on star_Robin and because the remedy either way is to revert this
-        geometry to forward differences.
+        The collapse is NOT an accuracy effect and the mechanism is unknown. Central
+        changes g by 0.27% of its typical magnitude here (max 1.15e-03 against a
+        typical |g| of 0.431), with |grad phi| = 0.999998 and no NaNs, yet the
+        solution degrades 79x. A 0.27% perturbation of the boundary data should move
+        the answer by about 0.27%, so something in this configuration is unstable to
+        a tiny change in g. That is worth investigating separately; it is not a
+        reason to avoid central differences elsewhere.
 
-        A one-sided difference has error (h/2)*phi'', which is independent of the grid
-        and so never converges. On star_Robin this produced a level offset that was
-        93.5% of the mean-square error at Nx=64; switching to central removed it
-        entirely at Nx=32 (+2.52e-03 -> -1.34e-04) and cut it 3.7x at Nx=64, while
-        leaving the shape error untouched (order 1.03 before and after). This applies
-        the same fix here.
+        The star geometries DO benefit and are on central: star_Robin's level offset
+        fell from 93.5% of the mean-square error to 0.8% at Nx=32, and its Nx=64
+        total improved 2.6x with the shape error untouched at order 1.03.
         """
         x=r[0]
         y=r[1]
         z=r[2]
         h=3e-4
 
-        rxp=jnp.array([x+h,y,z]); rxm=jnp.array([x-h,y,z])
-        ryp=jnp.array([x,y+h,z]); rym=jnp.array([x,y-h,z])
-        rzp=jnp.array([x,y,z+h]); rzm=jnp.array([x,y,z-h])
+        r1=jnp.array([x+h,y,z])
+        r2=jnp.array([x,y+h,z])
+        r3=jnp.array([x,y,z+h])
 
-        n1 = (phi(rxp)-phi(rxm))/(2*h)
-        n2 = (phi(ryp)-phi(rym))/(2*h)
-        n3 = (phi(rzp)-phi(rzm))/(2*h)
+        n1 = (phi(r1)-phi(r))/h
+        n2 = (phi(r2)-phi(r))/h
+        n3 = (phi(r3)-phi(r))/h
         norm = jnp.sqrt(n1**2 + n2**2 + n3**2)
 
         n1 = n1/norm
