@@ -269,41 +269,7 @@ def sphere_Robin():
         return 2
 
     def computeNormal(phi, r):
-        """Normal used to build the exact Robin data g. SECOND-ORDER ONE-SIDED.
-
-            f'(x) ~ (-3 f(x) + 4 f(x+h) - f(x+2h)) / (2h)
-
-        One variable changed from the first-order version: the stencil. h stays at
-        3e-4, and all three geometries get the same change.
-
-        WHY. A first-order one-sided difference has error (h/2) * d2phi. On a convex
-        surface the second derivative has a consistent sign, so EVERY normal
-        component is pushed the same way: the error is coherent, not scatter, and it
-        survives averaging. Measured on star_Robin at [-1,1] Nx=64, the mean normal
-        error was [+4.0e-04 +3.9e-04 +4.6e-04], as large as the typical error, giving
-        a mean bias in g of +6.7e-04 that is 65 percent of its own rms.
-
-        That coherent bias lands in the LEVEL of u, the softest mode in the problem
-        because the Robin condition is Neumann-dominated (alpha/mu = 0.125).
-        Integrating the PDE over Omega- gives a gain of 2.88 from a bias in g to a
-        shift in u, predicting +1.93e-03 against a measured offset of +2.71e-03. At
-        Nx=64 that offset was 93.5 percent of the mean-square error, while the shape
-        error converged cleanly at first order.
-
-        The second-order stencil leaves an error of order (h^2/3) * d3phi, and third
-        derivatives change sign around the surface, so it largely cancels under
-        averaging. The measured coherent fraction of the g error falls from 65
-        percent to 3 percent, and the mean normal error from 7.0e-04 to about 7e-06.
-
-        WHY NOT CENTRAL. Central differences achieve the same thing and were tried:
-        they removed the offset entirely at Nx=32 (+2.52e-03 -> -1.34e-04, total
-        2.92e-03 -> 1.52e-03) and cut the Nx=64 total by 2.6x. But they collapse
-        sphere_Robin to u ~ 0, at h=1e-3 and again at h=3e-4, so it is the stencil
-        and not the step. Central reaches to x-h; this stencil never does, which is
-        the one structural difference between them.
-
-        UNVERIFIED as of this commit: nothing has been run with it.
-        """
+        
         x=r[0]
         y=r[1]
         z=r[2]
@@ -528,41 +494,7 @@ def star_Robin():
         return 2
 
     def computeNormal(phi, r):
-        """Normal used to build the exact Robin data g. SECOND-ORDER ONE-SIDED.
-
-            f'(x) ~ (-3 f(x) + 4 f(x+h) - f(x+2h)) / (2h)
-
-        One variable changed from the first-order version: the stencil. h stays at
-        1e-3, and all three geometries get the same change.
-
-        WHY. A first-order one-sided difference has error (h/2) * d2phi. On a convex
-        surface the second derivative has a consistent sign, so EVERY normal
-        component is pushed the same way: the error is coherent, not scatter, and it
-        survives averaging. Measured on star_Robin at [-1,1] Nx=64, the mean normal
-        error was [+4.0e-04 +3.9e-04 +4.6e-04], as large as the typical error, giving
-        a mean bias in g of +6.7e-04 that is 65 percent of its own rms.
-
-        That coherent bias lands in the LEVEL of u, the softest mode in the problem
-        because the Robin condition is Neumann-dominated (alpha/mu = 0.125).
-        Integrating the PDE over Omega- gives a gain of 2.88 from a bias in g to a
-        shift in u, predicting +1.93e-03 against a measured offset of +2.71e-03. At
-        Nx=64 that offset was 93.5 percent of the mean-square error, while the shape
-        error converged cleanly at first order.
-
-        The second-order stencil leaves an error of order (h^2/3) * d3phi, and third
-        derivatives change sign around the surface, so it largely cancels under
-        averaging. The measured coherent fraction of the g error falls from 65
-        percent to 3 percent, and the mean normal error from 7.0e-04 to about 7e-06.
-
-        WHY NOT CENTRAL. Central differences achieve the same thing and were tried:
-        they removed the offset entirely at Nx=32 (+2.52e-03 -> -1.34e-04, total
-        2.92e-03 -> 1.52e-03) and cut the Nx=64 total by 2.6x. But they collapse
-        sphere_Robin to u ~ 0, at h=1e-3 and again at h=3e-4, so it is the stencil
-        and not the step. Central reaches to x-h; this stencil never does, which is
-        the one structural difference between them.
-
-        UNVERIFIED as of this commit: nothing has been run with it.
-        """
+        
         x=r[0]
         y=r[1]
         z=r[2]
@@ -831,41 +763,7 @@ def star_Robin3():
         return 2.0
 
     def computeNormal(phi, r):
-        """Normal used to build the exact Robin data g. SECOND-ORDER ONE-SIDED.
-
-            f'(x) ~ (-3 f(x) + 4 f(x+h) - f(x+2h)) / (2h)
-
-        One variable changed from the first-order version: the stencil. h stays at
-        1e-3, and all three geometries get the same change.
-
-        WHY. A first-order one-sided difference has error (h/2) * d2phi. On a convex
-        surface the second derivative has a consistent sign, so EVERY normal
-        component is pushed the same way: the error is coherent, not scatter, and it
-        survives averaging. Measured on star_Robin at [-1,1] Nx=64, the mean normal
-        error was [+4.0e-04 +3.9e-04 +4.6e-04], as large as the typical error, giving
-        a mean bias in g of +6.7e-04 that is 65 percent of its own rms.
-
-        That coherent bias lands in the LEVEL of u, the softest mode in the problem
-        because the Robin condition is Neumann-dominated (alpha/mu = 0.125).
-        Integrating the PDE over Omega- gives a gain of 2.88 from a bias in g to a
-        shift in u, predicting +1.93e-03 against a measured offset of +2.71e-03. At
-        Nx=64 that offset was 93.5 percent of the mean-square error, while the shape
-        error converged cleanly at first order.
-
-        The second-order stencil leaves an error of order (h^2/3) * d3phi, and third
-        derivatives change sign around the surface, so it largely cancels under
-        averaging. The measured coherent fraction of the g error falls from 65
-        percent to 3 percent, and the mean normal error from 7.0e-04 to about 7e-06.
-
-        WHY NOT CENTRAL. Central differences achieve the same thing and were tried:
-        they removed the offset entirely at Nx=32 (+2.52e-03 -> -1.34e-04, total
-        2.92e-03 -> 1.52e-03) and cut the Nx=64 total by 2.6x. But they collapse
-        sphere_Robin to u ~ 0, at h=1e-3 and again at h=3e-4, so it is the stencil
-        and not the step. Central reaches to x-h; this stencil never does, which is
-        the one structural difference between them.
-
-        UNVERIFIED as of this commit: nothing has been run with it.
-        """
+        
         x=r[0]
         y=r[1]
         z=r[2]
