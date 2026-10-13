@@ -136,6 +136,15 @@ class Discretization:
                 self.is_cell_crossed_by_interface,
                 self.alphaRobin_interp_fn,
             )
+            # Integrating 1 over the interface gives its area inside the cell.
+            (
+                self.area_integrate_over_interface_at_point,
+                _,
+            ) = geometric_integrations_per_point.integrate_over_gamma_and_omega_m(
+                self.get_vertices_of_cell_intersection_with_interface_at_point,
+                self.is_cell_crossed_by_interface,
+                lambda r: jnp.ones(r.shape[0]),
+            )
         self.compute_face_centroids_values_plus_minus_at_point = (
             geometric_integrations_per_point.compute_cell_faces_areas_values(
                 self.get_vertices_of_cell_intersection_with_interface_at_point,
@@ -796,7 +805,11 @@ class Discretization:
                     )
                     + coeff_integral_au
                 )
-                return jnp.array([lhs.squeeze(), diag_coeff.squeeze()])
+                # Row scale sqrt(V_m + interface area) instead of diag_coeff: the squared loss then
+                # sums the PDE residual over the volume and the Robin residual over the interface.
+                gamma_ell = self.area_integrate_over_interface_at_point(point, dx, dy, dz)
+                row_scale = jnp.sqrt(V_m_ijk + gamma_ell)
+                return jnp.array([lhs.squeeze(), row_scale.squeeze()])
 
             def get_lhs_on_box_boundary(
                 point,
