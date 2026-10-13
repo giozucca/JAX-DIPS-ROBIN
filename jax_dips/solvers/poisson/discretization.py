@@ -811,9 +811,8 @@ class Discretization:
                 return jnp.array([lhs, Vol_cell_nominal])
 
             def is_in_omega_plus(point):
-                # True if phi > 0 (outside the interface, in Omega+)
-                return self.phi_interp_fn(point[jnp.newaxis]).squeeze() > 0.0
-               # return V_m_ijk <= 0.0
+                # True if no part of the cell lies in Omega-
+                return V_m_ijk <= 0.0
 
             # Three-way dispatch: box boundary → Omega+ interior → Omega- interior
             # OLD: 
@@ -868,10 +867,8 @@ class Discretization:
                 mu_r = self.mu_m_interp_fn(point_projected[jnp.newaxis]).squeeze()
                 # alpha_r = self.alphaRobin_interp_fn(point)
                 alpha_r = self.alphaRobin_interp_fn(point_projected[jnp.newaxis]).squeeze()
-                # d_ijk = phi/|grad phi| is NEGATIVE in Omega- (this branch), so the
-                # Taylor correction u_Gamma = (mu*u_ijk + |d|*g) / (mu + alpha*|d|)
-                # requires |d| here; dropping the abs() flips this term's sign.
-                rhs -= (g_r * jnp.abs(d_ijk) * alpha_ell) / (mu_r - (alpha_r * d_ijk))
+                # Signed d (Bochkov-Gibou eq. 14): holds for cell centres on either side of Gamma.
+                rhs += (g_r * d_ijk * alpha_ell) / (mu_r - (alpha_r * d_ijk))
                 return rhs.squeeze()
 
             def get_rhs_on_box_boundary(

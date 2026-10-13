@@ -177,24 +177,19 @@ class Trainer(Discretization):
         self.train_dz = self.TD.gstate.dz
 
         if train_omega_minus_only:
-            # For a Robin problem the PDE is solved only in Omega-. Points with
-            # phi > 0 (and the box boundary, which for an embedded interface lies
-            # in Omega+) dispatch to get_lhs_in_omega_plus / get_lhs_on_box_boundary,
-            # which evaluate the solution with the TRUE phi and therefore only ever
-            # touch the Omega+ network -- while the Robin equation reaches the
-            # Omega- network through u_m_at_point, which pins phi = -1. So those
-            # points cannot influence the reported (Omega--masked) solution; they
-            # only add an irreducible constant to the loss and cost compute.
-            # The Omega- network is still evaluated outside Omega- via the stencil
-            # neighbours of near-interface points, so nothing is lost.
-            _phi_tr = jnp.asarray(self.phi_interp_fn(self.train_points)).reshape(-1)
-            _keep = _phi_tr <= 0.0
+            # For a Robin problem the PDE is solved only in Omega-. Keep every cell
+            # that overlaps Omega- (V_m > 0), including cut cells centred outside;
+            # cells entirely in Omega+ only touch the Omega+ network.
+            _V_m = vmap(self.compute_face_centroids_values_plus_minus_at_point, (0, None, None, None))(
+                self.train_points, self.train_dx, self.train_dy, self.train_dz
+            )[:, 12]
+            _keep = _V_m > 0.0
             _n_before = int(self.train_points.shape[0])
             self.train_points = self.train_points[_keep]
             _n_after = int(self.train_points.shape[0])
             if _n_after == 0:
                 raise ValueError(
-                    "train_omega_minus_only=True left 0 training points: no grid point has phi <= 0."
+                    "train_omega_minus_only=True left 0 training points: no cell overlaps Omega-."
                 )
             logger.info(
                 f"train_omega_minus_only: keeping {_n_after} of {_n_before} training points "
