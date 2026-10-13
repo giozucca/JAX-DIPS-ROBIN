@@ -38,6 +38,9 @@ class Discretization:
     This is a completely local point-based Poisson solver.
     """
 
+    # Robin: cells with a smaller Omega- volume fraction count as outside (rounding slivers).
+    min_vol_frac = 1e-6
+
     def __init__(
         self,
         lvl_gstate: GridState,
@@ -812,7 +815,7 @@ class Discretization:
 
             def is_in_omega_plus(point):
                 # True if no part of the cell lies in Omega-
-                return V_m_ijk <= 0.0
+                return V_m_ijk <= self.min_vol_frac * Vol_cell_nominal
 
             # Three-way dispatch: box boundary → Omega+ interior → Omega- interior
             # OLD: 

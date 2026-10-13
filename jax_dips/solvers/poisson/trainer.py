@@ -178,12 +178,12 @@ class Trainer(Discretization):
 
         if train_omega_minus_only:
             # For a Robin problem the PDE is solved only in Omega-. Keep every cell
-            # that overlaps Omega- (V_m > 0), including cut cells centred outside;
+            # that overlaps Omega- (V_m above min_vol_frac), including cut cells centred outside;
             # cells entirely in Omega+ only touch the Omega+ network.
             _V_m = vmap(self.compute_face_centroids_values_plus_minus_at_point, (0, None, None, None))(
                 self.train_points, self.train_dx, self.train_dy, self.train_dz
             )[:, 12]
-            _keep = _V_m > 0.0
+            _keep = _V_m > self.min_vol_frac * self.train_dx * self.train_dy * self.train_dz
             _n_before = int(self.train_points.shape[0])
             self.train_points = self.train_points[_keep]
             _n_after = int(self.train_points.shape[0])
