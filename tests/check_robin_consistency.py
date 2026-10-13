@@ -332,8 +332,12 @@ def residual_stats(disc, gstate, dx):
     lhs_rhs = lhs_rhs.reshape(points.shape[0], 2)
     res = lhs_rhs[:, 0] - lhs_rhs[:, 1]
 
-    phi = disc.phi_interp_fn(points).reshape(-1)
-    in_minus = phi <= 0.0
+    coeffs_ = vmap(disc.compute_face_centroids_values_plus_minus_at_point, (0, None, None, None))(
+        points, dx, dx, dx
+    )
+    V_m = coeffs_[:, 12]
+    # Same rows the trainer keeps: every cell that overlaps Omega-.
+    in_minus = V_m > disc.min_vol_frac * dx**3
     crossed = vmap(disc.is_cell_crossed_by_interface, (0, None, None, None))(points, dx, dx, dx).reshape(-1) == 0
 
     def rms(mask):
@@ -348,10 +352,6 @@ def residual_stats(disc, gstate, dx):
     # coeffs_[:12] are the mu*A/dx face coefficients, coeffs_[12] is V_m.
     # If the worst residuals sit on cells whose volume/face-areas have collapsed,
     # this is the classic cut-cell small-cell problem rather than plain truncation.
-    coeffs_ = vmap(disc.compute_face_centroids_values_plus_minus_at_point, (0, None, None, None))(
-        points, dx, dx, dx
-    )
-    V_m = coeffs_[:, 12]
     sum_coeffs = sum(coeffs_[:, k] for k in (0, 2, 4, 6, 8, 10))
     vol_frac = V_m / (dx**3)
 
@@ -415,6 +415,7 @@ def main():
                 f"{s['rms_minus']:>14.4e} {s['max_minus']:>14.4e} {s['rms_iface']:>16.4e} "
                 f"{s['n_minus']:>8} {s['n_iface']:>8} {bc_share:>8.2f}% {s['dtype']:>9}"
             )
+            print(f"        loss on these rows (compare with the training log): {0.5 * s['rms_minus'] ** 2:.4e}")
             if args.x64 and s["dtype"] != "float64":
                 raise RuntimeError(
                     f"--x64 requested but the residual came back as {s['dtype']}. "

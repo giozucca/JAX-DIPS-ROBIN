@@ -630,63 +630,14 @@ def star_Robin3():
     def unperturbed_phi_fn(r):
         """
         Level-set function for the interface: union of two star domains (Form A)
-
-        Wrapped as phi(r) = S * phi_ref(r / S) with S = 1/2.1 to place the natural
-        half-extent of 1.4000 at 0.666667 on the normalised [-1, 1] box. Evaluating
-        the UNCHANGED reference shape at r/S is what makes this exact: the lobe
-        centres, the 1e-8 taper guard and the rho^2/10 length all scale with it
-        automatically, which rewriting them in place would not achieve. min() is
-        positively homogeneous, so the wrapper passes through the union unharmed and
-        |grad phi| is unchanged.
         """
+        
         S = 0.4761905
         x = r[0] / S
         y = r[1] / S
         z = r[2] / S
         
-        # Domain 1 parameters & coordinates
-        # xc1, yc1, zc1 = -0.75, 0.75, -0.75
-        # X1 = x - xc1
-        # Y1 = y - yc1
-        # Z1 = z - zc1
-        # beta1_1 = -0.05
-        # beta2_1 = 0.05
-        # beta3_1 = -0.1
-        # n1_1 = 5
-        # n2_1 = 5
-        # n3_1 = 5
-        # theta1_1 = 0.5
-        # theta2_1 = 0.5
-        # theta3_1 = 0.5
-        
-        # phi1 = (jnp.sqrt(X1**2 + Y1**2 + Z1**2) - 
-        #         0.783 * (1.0 + ((X1**2 + Y1**2)/10.0)**2) + 
-        #         beta1_1 * jnp.cos(n1_1 * (jnp.arctan2(Y1, X1) - theta1_1)) + 
-        #         beta2_1 * jnp.cos(n2_1 * (jnp.arctan2(Y1, X1) - theta2_1)) + 
-        #         beta3_1 * jnp.cos(n3_1 * (jnp.arctan2(Y1, X1) - theta3_1)))
-                
-        # # Domain 2 parameters & coordinates
-        # xc2, yc2, zc2 = 0.75, -0.75, 0.75
-        # X2 = x - xc2
-        # Y2 = y - yc2
-        # Z2 = z - zc2
-        # beta1_2 = 0.15
-        # beta2_2 = -0.01
-        # beta3_2 = 0.07
-        # n1_2 = 5
-        # n2_2 = 5
-        # n3_2 = 5
-        # theta1_2 = 0.5
-        # theta2_2 = 1.8
-        # theta3_2 = 0.0
-        
-        # phi2 = (jnp.sqrt(X2**2 + Y2**2 + Z2**2) - 
-        #         0.783 * (1.0 + ((X2**2 + Y2**2)/10.0)**2) + 
-        #         beta1_2 * jnp.cos(n1_2 * (jnp.arctan2(Y2, X2) - theta1_2)) + 
-        #         beta2_2 * jnp.cos(n2_2 * (jnp.arctan2(Y2, X2) - theta2_2)) + 
-        #         beta3_2 * jnp.cos(n3_2 * (jnp.arctan2(Y2, X2) - theta3_2)))
 
-        # return jnp.minimum(phi1, phi2)
         # -------------------------------------------------------------
         # Domain 1
         # -------------------------------------------------------------
