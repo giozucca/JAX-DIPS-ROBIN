@@ -109,7 +109,7 @@ class Discretization:
             self.get_vertices_of_cell_intersection_with_interface_at_point,
             self.is_cell_crossed_by_interface,
         ) = geometric_integrations_per_point.get_vertices_of_cell_intersection_with_interface(
-            self.phi_interp_fn
+            self.phi_interp_fn, origin=jnp.array([self.xmin, self.ymin, self.zmin])
         )
         (
             self.beta_integrate_over_interface_at_point,

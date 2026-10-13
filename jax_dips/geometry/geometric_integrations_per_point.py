@@ -198,7 +198,7 @@ def get_vertices_S_intersect_Omega_m(S, phi_S, eta_S: int):
     return shared_vertices
 
 
-def get_vertices_of_cell_intersection_with_interface(phi_interp_fn):
+def get_vertices_of_cell_intersection_with_interface(phi_interp_fn, origin=None):
     @jit
     def is_point_cell_crossed_by_interface(point, dx, dy, dz):
         """
@@ -286,6 +286,11 @@ def get_vertices_of_cell_intersection_with_interface(phi_interp_fn):
             ],
             dtype=f32,
         )
+        if origin is not None:
+            # Mirror the split in x on every other cell (checkerboard), so that two
+            # neighbouring cells cut their shared face along the same diagonal.
+            ijk = jnp.rint((jnp.array([x, y, z]) - origin) / jnp.array([dx, dy, dz]))
+            dXcorners = dXcorners * jnp.array([1.0 - 2.0 * jnp.mod(ijk.sum(), 2.0), 1.0, 1.0], dtype=f32)
 
         R_cell_corners = dXcorners + jnp.array([x, y, z])
         phi_cell_corners = phi_interp_fn(R_cell_corners)
@@ -838,8 +843,14 @@ def compute_cell_faces_areas_values(
                 s_omega_m_partition_2,
             )
 
-        area_imh_m = extract_area_minus_x_face(S1_Omega_m, S4_Omega_m, x_m_face)
-        area_iph_m = extract_area_minus_x_face(S2_Omega_m, S3_Omega_m, x_p_face)
+        # Which tet pair lies on an x face depends on whether the cell's split is mirrored;
+        # the pair that does not lie on it contributes zero.
+        area_imh_m = extract_area_minus_x_face(S1_Omega_m, S4_Omega_m, x_m_face) + extract_area_minus_x_face(
+            S2_Omega_m, S3_Omega_m, x_m_face
+        )
+        area_iph_m = extract_area_minus_x_face(S2_Omega_m, S3_Omega_m, x_p_face) + extract_area_minus_x_face(
+            S1_Omega_m, S4_Omega_m, x_p_face
+        )
         area_imh_p = positive_or_zero(area_x - area_imh_m)
         area_iph_p = positive_or_zero(area_x - area_iph_m)
 
