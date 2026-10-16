@@ -44,7 +44,7 @@ from jax_dips._jaxmd_modules import dataclasses, util
 from jax_dips.data import data_management
 from jax_dips.domain.mesh import GridState
 from jax_dips.solvers.simulation_states import PoissonSimState, PoissonSimStateFn
-from jax_dips.utils.inspect import print_architecture, progress_bar
+from jax_dips.utils.inspect import epoch_timing_summary, print_architecture, progress_bar, reset_epoch_timing
 from jax_dips.utils.visualization import plot_loss_epochs
 from jax_dips.solvers.optimizers import get_optimizer
 from jax_dips.nn.configure import get_model
@@ -557,6 +557,7 @@ class Trainer(Discretization):
 
     # -----------------------
     def solve_optax(self):
+        reset_epoch_timing()
         start_time = time.time()
         if self.multi_gpu:
             n_devices = jax.local_device_count()
@@ -601,6 +602,8 @@ class Trainer(Discretization):
 
         end_time = time.time()
         logger.info(f"solve took {end_time - start_time} (sec)")
+        if epoch_timing_summary():
+            logger.info(epoch_timing_summary())
 
         state = {
             "opt_state": self.opt_state,

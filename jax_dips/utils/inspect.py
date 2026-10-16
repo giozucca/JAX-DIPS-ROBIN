@@ -19,6 +19,7 @@
 """
 
 import logging
+import time
 
 import jax
 
@@ -57,9 +58,31 @@ def print_architecture(params):
 # ----------------------------------------------------------------
 
 
+# (epoch, wall-clock time) at each progress print, for the per-epoch timing below.
+_epoch_times = []
+
+
 def _print_callback(arg, transforms):
     i, n_iter, message = arg
+    _epoch_times.append((int(i), time.perf_counter()))
     logger.info(f"iteration {i}/{n_iter} - loss: {message}")
+
+
+def reset_epoch_timing():
+    _epoch_times.clear()
+
+
+def epoch_timing_summary():
+    """Seconds per epoch between consecutive progress prints. The first print happens after
+    compilation, so compilation is excluded."""
+    pts = sorted(_epoch_times)
+    per = [(t1 - t0) / (e1 - e0) for (e0, t0), (e1, t1) in zip(pts, pts[1:]) if e1 > e0]
+    if not per:
+        return None
+    mean = sum(per) / len(per)
+    std = (sum((p - mean) ** 2 for p in per) / len(per)) ** 0.5
+    return (f"time per epoch: {mean:.4f} +- {std:.4f} s "
+            f"(over {len(per)} intervals of {pts[1][0] - pts[0][0]} epochs, compilation excluded)")
 
 
 @jax.jit
