@@ -37,7 +37,7 @@ if rootDir not in sys.path:
     sys.path.append(rootDir)
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-parser.add_argument("--exp", default="sphere_Robin", choices=["sphere_Robin", "star_Robin", "star_Robin3"])
+parser.add_argument("--exp", default="sphere_Robin", choices=["sphere_Robin", "star_Robin", "star_Robin2", "star_Robin3"])
 parser.add_argument("--nx", type=int, nargs="+", default=[16, 32], help="training-grid resolutions to test")
 parser.add_argument("--zoom", type=int, nargs="+", default=[0, 3], help="stencil zoom levels (dx -> dx/2**zoom)")
 parser.add_argument("--x64", action="store_true", help="run in float64 instead of float32")

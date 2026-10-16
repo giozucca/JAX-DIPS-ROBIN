@@ -40,6 +40,8 @@ class Discretization:
 
     # Robin: cells with a smaller Omega- volume fraction count as outside (rounding slivers).
     min_vol_frac = 1e-6
+    # Robin: length l in the row weight sqrt(V + l*A); "h" uses the cell size instead of a fixed length.
+    robin_weight_length = 1.0
 
     def __init__(
         self,
@@ -805,10 +807,11 @@ class Discretization:
                     )
                     + coeff_integral_au
                 )
-                # Row scale sqrt(V_m + interface area) instead of diag_coeff: the squared loss then
+                # Row scale sqrt(V_m + l * interface area) instead of diag_coeff: the squared loss then
                 # sums the PDE residual over the volume and the Robin residual over the interface.
                 gamma_ell = self.area_integrate_over_interface_at_point(point, dx, dy, dz)
-                row_scale = jnp.sqrt(V_m_ijk + gamma_ell)
+                ell = dx if self.robin_weight_length == "h" else self.robin_weight_length
+                row_scale = jnp.sqrt(V_m_ijk + ell * gamma_ell)
                 return jnp.array([lhs.squeeze(), row_scale.squeeze()])
 
             def get_lhs_on_box_boundary(

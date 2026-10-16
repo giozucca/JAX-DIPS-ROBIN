@@ -119,6 +119,7 @@ class Trainer(Discretization):
         restart_checkpoint_dir: str = "./checkpoints",
         print_rate: int = 1,
         train_omega_minus_only: bool = False,
+        robin_weight_length=1.0,
         model_dict: dict = {
             "name": None,
             "model_type": "mlp",
@@ -147,6 +148,8 @@ class Trainer(Discretization):
             precondition=1,
             algorithm=algorithm,
         )
+        self.robin_weight_length = robin_weight_length
+        logger.info(f"Robin row weight: sqrt(V + l * A) with l = {robin_weight_length}")
         #########################################################################
         global stop_training
         self.key = random.PRNGKey(758493)
@@ -1380,6 +1383,7 @@ def setup_Robin(
             restart_checkpoint_dir: str = "./checkpoints",
             print_rate: int = 1,
             train_omega_minus_only: bool = False,
+            robin_weight_length=1.0,
     ) -> Tuple[PoissonSimState, SolveFn]:
         R = eval_gstate.R
         PHI = phi_fn(R)
@@ -1421,6 +1425,7 @@ def setup_Robin(
                 restart_checkpoint_dir=restart_checkpoint_dir,
                 print_rate=print_rate,
                 train_omega_minus_only=train_omega_minus_only,
+                robin_weight_length=robin_weight_length,
                 model_dict=model_dict,
             )
             (

@@ -102,6 +102,7 @@ from tests.confs.experiment_configs import (
     sphere_Robin,
     star,
     star_Robin,
+    star_Robin2,
     star_Robin3,
 )
 
@@ -163,6 +164,10 @@ def test_poisson(cfg: DictConfig):
     if cfg.experiment.star_Robin3:
         logger.info("Performing star robin 3 B.C experiment...\n")
         poisson_solve_Robin(cfg, test_name=f"star_Robin3_{cfg.solver.Nx_tr}", exp_fn=star_Robin3)
+
+    if cfg.experiment.get("star_Robin2", False):
+        logger.info("Performing JAX-DIPS star robin B.C experiment...\n")
+        poisson_solve_Robin(cfg, test_name=f"star_Robin2_{cfg.solver.Nx_tr}", exp_fn=star_Robin2)
 
 
 def create_dirs(
@@ -677,6 +682,7 @@ def poisson_solve_Robin(
             restart_checkpoint_dir=cfg.solver.restart_checkpoint_dir,
             print_rate=cfg.solver.print_rate,
             train_omega_minus_only=cfg.solver.get("train_omega_minus_only", False),
+            robin_weight_length=cfg.solver.get("robin_weight_length", 1.0),
             model_dict=model_dict,
         )
         t1 = time.time()

@@ -29,6 +29,9 @@ solver:
   # they add an irreducible constant to the loss and cost compute for nothing.
   # Side effect: Omega+ is left untrained, so U outside the interface is meaningless.
   train_omega_minus_only: true
+  # Robin only: length l in the row weight sqrt(V + l*A). 1.0 is the box half-width;
+  # "h" uses the cell size instead (in tests this lowered the convergence rate).
+  robin_weight_length: 1.0
   # Run the entire solver in float64 rather than float32. Read at import time by the
   # precision block at the top of tests/test_poisson.py; override per run without
   # editing this file via `solver.use_float64=false` on the command line.
@@ -79,6 +82,7 @@ experiment:
   sphere_Robin: true # sphere with Robin B.C
   star_Robin: true
   star_Robin3: true
+  star_Robin2: false # the star of the JAX-DIPS paper (section 4.3), sphere_Robin's problem otherwise
 
 
   logging:
