@@ -61,3 +61,4 @@ outputs/
 *.npy
 .lesshst
 .nix-profile
+visualization_env

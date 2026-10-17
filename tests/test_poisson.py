@@ -367,6 +367,7 @@ def poisson_solve(
             restart=cfg.solver.restart_from_checkpoint,
             restart_checkpoint_dir=cfg.solver.restart_checkpoint_dir,
             print_rate=cfg.solver.print_rate,
+            alternate_tets=cfg.solver.get("alternate_tets", True),
             model_dict=model_dict,
         )
         t1 = time.time()
@@ -413,13 +414,18 @@ def poisson_solve(
     # }
     # io.write_vtk_manual(gstate, log)
 
-    rms_err = jnp.square(sim_state.solution - exact_sol).mean() ** 0.5
-    L_inf_err = abs(sim_state.solution - exact_sol).max()
-    L2_err = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum())
-    L2_rel_loss = jnp.sqrt(((sim_state.solution - exact_sol) ** 2).sum() / (exact_sol**2).sum())
+    # Whole box, no mask: a jump problem is solved on both sides of the interface.
+    # L_2 is volume weighted, as in the Robin path.
+    dx = (xmax - xmin) / (Nx_eval - 1)
+    dy = (ymax - ymin) / (Ny_eval - 1)
+    dz = (zmax - zmin) / (Nz_eval - 1)
+    rms_err = jnp.sqrt(jnp.square(error).mean())
+    L_inf_err = jnp.abs(error).max()
+    L2_err = jnp.sqrt((error ** 2).sum() * dx * dy * dz)
+    L2_rel_loss = jnp.sqrt((error ** 2).sum() / (exact_sol ** 2).sum())
 
     logger.info(
-        f"Accuracy: \n L_inf : {L_inf_err} \n \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSE Loss: {rms_err}"
+        f"Whole-box accuracy: \n L_inf : {L_inf_err} \n L_2 : {L2_err} \n Rel. L_2 : {L2_rel_loss} \n RMSE Loss: {rms_err}"
     )
     logger.info(f"Experiment {test_name} completed! \n")
 
@@ -683,6 +689,7 @@ def poisson_solve_Robin(
             print_rate=cfg.solver.print_rate,
             train_omega_minus_only=cfg.solver.get("train_omega_minus_only", False),
             robin_weight_length=cfg.solver.get("robin_weight_length", 1.0),
+            alternate_tets=cfg.solver.get("alternate_tets", True),
             model_dict=model_dict,
         )
         t1 = time.time()

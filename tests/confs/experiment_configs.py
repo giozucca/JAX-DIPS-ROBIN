@@ -51,7 +51,7 @@ def sphere():
         x = r[0]
         y = r[1]
         z = r[2]
-        return jnp.sqrt(x**2 + y**2 + z**2) - 0.2380952  # 0.5/2.1, normalised box
+        return jnp.sqrt(x**2 + y**2 + z**2) - 0.5  # the original JAX-DIPS sphere
 
     phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
 

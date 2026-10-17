@@ -120,6 +120,7 @@ class Trainer(Discretization):
         print_rate: int = 1,
         train_omega_minus_only: bool = False,
         robin_weight_length=1.0,
+        alternate_tets: bool = True,
         model_dict: dict = {
             "name": None,
             "model_type": "mlp",
@@ -141,6 +142,7 @@ class Trainer(Discretization):
             },
         },
     ) -> None:
+        self.alternate_tets = alternate_tets  # read while the parent builds the cell geometry
         super().__init__(
             lvl_gstate,
             sim_state,
@@ -148,6 +150,7 @@ class Trainer(Discretization):
             precondition=1,
             algorithm=algorithm,
         )
+        logger.info(f"Alternating tetrahedral split: {alternate_tets}")
         self.robin_weight_length = robin_weight_length
         logger.info(f"Robin row weight: sqrt(V + l * A) with l = {robin_weight_length}")
         #########################################################################
@@ -599,6 +602,8 @@ class Trainer(Discretization):
                 self.epoch_store,
                 self.loss_epochs,
             ) = self.single_GPU_train(self.opt_state, self.params, batched_training_data)
+            # JAX returns before the GPU finishes; wait, so "solve took" covers every epoch.
+            self.loss_epochs.block_until_ready()
 
         end_time = time.time()
         logger.info(f"solve took {end_time - start_time} (sec)")
@@ -1214,6 +1219,7 @@ def setup(
             restart: bool = False,
             restart_checkpoint_dir: str = "./checkpoints",
             print_rate: int = 1,
+            alternate_tets: bool = True,
     ) -> Tuple[PoissonSimState, SolveFn]:
         R = eval_gstate.R
         PHI = phi_fn(R)
@@ -1249,6 +1255,7 @@ def setup(
                 restart=restart,
                 restart_checkpoint_dir=restart_checkpoint_dir,
                 print_rate=print_rate,
+                alternate_tets=alternate_tets,
                 model_dict=model_dict,
             )
             (
@@ -1387,6 +1394,7 @@ def setup_Robin(
             print_rate: int = 1,
             train_omega_minus_only: bool = False,
             robin_weight_length=1.0,
+            alternate_tets: bool = True,
     ) -> Tuple[PoissonSimState, SolveFn]:
         R = eval_gstate.R
         PHI = phi_fn(R)
@@ -1429,6 +1437,7 @@ def setup_Robin(
                 print_rate=print_rate,
                 train_omega_minus_only=train_omega_minus_only,
                 robin_weight_length=robin_weight_length,
+                alternate_tets=alternate_tets,
                 model_dict=model_dict,
             )
             (

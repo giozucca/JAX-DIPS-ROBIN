@@ -42,6 +42,8 @@ class Discretization:
     min_vol_frac = 1e-6
     # Robin: length l in the row weight sqrt(V + l*A); "h" uses the cell size instead of a fixed length.
     robin_weight_length = 1.0
+    # Mirror the 5-tet split on odd i+j+k cells so neighbours share face diagonals; False is the original split.
+    alternate_tets = True
 
     def __init__(
         self,
@@ -111,7 +113,7 @@ class Discretization:
             self.get_vertices_of_cell_intersection_with_interface_at_point,
             self.is_cell_crossed_by_interface,
         ) = geometric_integrations_per_point.get_vertices_of_cell_intersection_with_interface(
-            self.phi_interp_fn, origin=jnp.array([self.xmin, self.ymin, self.zmin])
+            self.phi_interp_fn, origin=jnp.array([self.xmin, self.ymin, self.zmin]) if self.alternate_tets else None
         )
         (
             self.beta_integrate_over_interface_at_point,
