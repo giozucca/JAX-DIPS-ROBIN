@@ -1114,7 +1114,9 @@ class Trainer(Discretization):
         t0 = time.time()
         keys = self._last_layer_keys(params)
         c0 = jnp.concatenate([jnp.concatenate([params[k]["w"].reshape(-1), params[k]["b"].reshape(-1)]) for k in keys])
-        dx, dy, dz = self.train_dx, self.train_dy, self.train_dz
+        # The grid's spacing, not self.train_dx: single_GPU_train assigns its loop carry back to
+        # self.train_dx/dy/dz inside jit, which leaves tracers there after training.
+        dx, dy, dz = self.TD.gstate.dx, self.TD.gstate.dy, self.TD.gstate.dz
 
         def residual(p, c, points):
             return self.residual_vector_params(self._with_last_layer(p, keys, c), points, dx, dy, dz).reshape(-1)
