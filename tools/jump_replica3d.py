@@ -283,7 +283,8 @@ def build(N, pb, fixed, alternate=True, bias="code"):
     u_exact = np.where(side < 0, pb["um"](X), pb["up"](X)).ravel()
     return dict(A_raw=A.tocsr(), b_raw=b, diag=diag.ravel(), AG=AG.ravel(), A_ghost=A_ghost.ravel(),
                 wall=wall.ravel(), u_wall=pb["up"](X).ravel(), X=X, h=h, side=side.ravel(), u_exact=u_exact,
-                ncut=int(cut.sum()))
+                ncut=int(cut.sum()), cut=cut.ravel(), Vm=Vm.ravel(), cm=cm.reshape(6, -1), cp=cp.reshape(6, -1),
+                BI=BI.ravel())
 
 
 def scaled(sysm, weight="diag", ell=1.0, wall_w=1.0, cut_floor=0.0):

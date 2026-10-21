@@ -37,6 +37,8 @@ parser.add_argument("--problems", nargs="+", default=["sphere_jaxrobin", "star_j
 parser.add_argument("--ell", type=float, default=1.0e4)
 parser.add_argument("--cut-floor", type=float, default=0.05)
 parser.add_argument("--cpu", action="store_true", help="force the CPU backend")
+parser.add_argument("--diag", action="store_true",
+                    help="at the worst row (exact solution), print JAX and replica geometry and extrapolation side by side")
 args = parser.parse_args()
 
 os.environ.setdefault("XLA_PYTHON_CLIENT_ALLOCATOR", "platform")
@@ -80,6 +82,39 @@ def replica_problem(name):
     if name == "sphere_jaxrobin":
         return replica.make_problem("paper", radius=2 / 3)
     return replica.make_star("jaxrobin")
+
+
+def diagnose(disc, sysm, pb, N, row, h):
+    """JAX and replica, side by side, at a row and its 6 neighbours (cut cells only for the extrapolation)."""
+    X = sysm["X"].reshape(-1, 3)
+    i, j, k = np.unravel_index(row, (N, N, N))
+    print(f"   --- diagnosis at row {row} = node ({i},{j},{k}), x = {X[row].round(4)}")
+    for off in [(0, 0, 0), (-1, 0, 0), (1, 0, 0), (0, -1, 0), (0, 1, 0), (0, 0, -1), (0, 0, 1)]:
+        a, b, c = i + off[0], j + off[1], k + off[2]
+        n = np.ravel_multi_index((a, b, c), (N, N, N))
+        p = jnp.asarray(X[n], dtype=f32)
+        co = np.asarray(disc.compute_face_centroids_values_plus_minus_at_point(p, h, h, h))
+        bint = float(np.asarray(disc.beta_integrate_over_interface_at_point(p, h, h, h)).reshape(()))
+        area = float(np.asarray(disc.interface_area_at_point(p, h, h, h)).reshape(()))
+        cut_jax = int(np.asarray(disc.is_cell_crossed_by_interface(p, h, h, h)).reshape(())) == 0
+        line = (f"   node {off}: cut JAX {cut_jax} replica {bool(sysm['cut'][n])} | V- {co[12]:.5e} vs {sysm['Vm'][n]:.5e}"
+                f" | face coeffs max diff {np.abs(co[0:12:2] - sysm['cm'][:, n]).max():.1e} (minus), "
+                f"{np.abs(co[1:12:2] - sysm['cp'][:, n]).max():.1e} (plus)"
+                f" | int beta: JAX stored {bint:+.5e}, replica -int beta {-sysm['BI'][n]:+.5e} | area {area:.4e} vs {sysm['AG'][n]:.4e}")
+        print(line)
+        if sysm["cut"][n]:
+            node_plus, coef, const = disc._jump_fixed_extrapolation(p, h, h, h)
+            side, rcoef, rconst = replica.extrapolation(pb, X[n], h, True, "slow")
+            x0 = X[n]
+            E = np.eye(3) * h
+            g = np.array([pb["phi"](x0 + E[d]) - pb["phi"](x0 - E[d]) for d in range(3)]) / (2 * h)
+            nrm = g / np.linalg.norm(g); dd = pb["phi"](x0) / np.linalg.norm(g); rp = x0 - dd * nrm
+            rpj = jnp.asarray(rp[None], dtype=f32)
+            print(f"      extrapolation: JAX node in Omega+ {bool(node_plus)}, replica extrapolates {'u-' if side == 'm' else 'u+'}"
+                  f" | max coef diff {np.abs(np.asarray(coef) - rcoef).max():.2e} | const JAX {float(const):+.5e} replica {rconst:+.5e}")
+            print(f"      at the projection {rp.round(5)}: alpha JAX {float(disc.alpha_interp_fn(rpj)[0]):+.5e} replica {pb['alpha'](rp):+.5e}"
+                  f" | beta (JAX = -stored) {-float(disc.beta_interp_fn(rpj)[0]):+.5e} replica {pb['beta'](rp):+.5e}"
+                  f" | mu- {float(disc.mu_m_interp_fn(rpj)[0]):.5e} vs {pb['mum'](rp):.5e} | mu+ {float(disc.mu_p_interp_fn(rpj)[0]):.5e} vs {pb['mup'](rp):.5e}")
 
 
 def main():
@@ -130,6 +165,8 @@ def main():
                 worst = int(np.argmax(diff))
                 print(f"   node-values path vs replica:        max |difference| {diff.max():.2e} "
                       f"({diff.max() / scale:.1e} of the largest row), worst at a {kind[worst]} row")
+                if label == "exact solution" and args.diag:
+                    diagnose(disc, sysm, replica_problem(name), N, worst, float(dx))
                 if label == "exact solution":
                     h3 = float(dx) ** 3
                     parts = []
