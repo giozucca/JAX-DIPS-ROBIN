@@ -290,13 +290,15 @@ def poisson_solve(
     ) = exp_fn()
 
     # ----------- Set up optimizer
-    optimizer = get_optimizer(
-        optimizer_name=cfg.solver.optim.optimizer_name,
-        scheduler_name=cfg.solver.sched.scheduler_name,
-        learning_rate=cfg.solver.optim.learning_rate,
-        decay_rate=cfg.solver.sched.decay_rate,
-        max_norm=1.0,
-    )
+    # Only the old solver below (if False) uses this; get_optimizer has no "lbfgs", the trainer does.
+    if cfg.solver.optim.optimizer_name != "lbfgs":
+        optimizer = get_optimizer(
+            optimizer_name=cfg.solver.optim.optimizer_name,
+            scheduler_name=cfg.solver.sched.scheduler_name,
+            learning_rate=cfg.solver.optim.learning_rate,
+            decay_rate=cfg.solver.sched.decay_rate,
+            max_norm=1.0,
+        )
 
     optimizer_dict = {
         "optimizer_name": cfg.solver.optim.optimizer_name,
