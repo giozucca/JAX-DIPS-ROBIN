@@ -301,6 +301,8 @@ def poisson_solve(
     optimizer_dict = {
         "optimizer_name": cfg.solver.optim.optimizer_name,
         "learning_rate": cfg.solver.optim.learning_rate,
+        "eps": cfg.solver.optim.get("eps", None),
+        "weight_decay": cfg.solver.optim.get("weight_decay", None),
         "sched": cfg.solver.sched,
     }
 
