@@ -384,6 +384,8 @@ def poisson_solve(
             jump_ell=float(cfg.solver.get("jump_ell", 1.0e4)),
             jump_cut_floor=float(cfg.solver.get("jump_cut_floor", 0.05)),
             jump_eval_once=bool(cfg.solver.get("jump_eval_once", False)),
+            last_layer_ls=bool(cfg.solver.get("last_layer_ls", False)),
+            last_layer_ls_rcond=float(cfg.solver.get("last_layer_ls_rcond", 1.0e-6)),
             model_dict=model_dict,
         )
         t1 = time.time()

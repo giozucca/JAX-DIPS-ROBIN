@@ -125,6 +125,8 @@ class Trainer(Discretization):
         jump_ell: float = 1.0e4,
         jump_cut_floor: float = 0.05,
         jump_eval_once: bool = False,
+        last_layer_ls: bool = False,
+        last_layer_ls_rcond: float = 1.0e-6,
         model_dict: dict = {
             "name": None,
             "model_type": "mlp",
@@ -168,6 +170,13 @@ class Trainer(Discretization):
             )
         self.robin_weight_length = robin_weight_length
         logger.info(f"Robin row weight: sqrt(V + l * A) with l = {robin_weight_length}")
+        self.last_layer_ls = bool(last_layer_ls)
+        self.last_layer_ls_rcond = float(last_layer_ls_rcond)
+        if self.last_layer_ls:
+            if multi_gpu:
+                raise NotImplementedError("last_layer_ls is single-GPU only.")
+            logger.info(f"Hybrid training: after the optimizer, the output layers are solved by least squares "
+                        f"(singular values kept above {self.last_layer_ls_rcond:g} x the largest)")
         #########################################################################
         global stop_training
         self.key = random.PRNGKey(758493)
@@ -556,6 +565,8 @@ class Trainer(Discretization):
 
         self.params = solver_sol.params
         self.opt_state = solver_sol.state
+        if self.last_layer_ls:
+            self.params = self.solve_last_layer(self.params)
         state = {
             "opt_state": self.opt_state,
             "params": self.params,
@@ -638,6 +649,8 @@ class Trainer(Discretization):
         logger.info(f"solve took {end_time - start_time} (sec)")
         if epoch_timing_summary():
             logger.info(epoch_timing_summary())
+        if self.last_layer_ls:
+            self.params = self.solve_last_layer(self.params)
 
         state = {
             "opt_state": self.opt_state,
@@ -1062,6 +1075,79 @@ class Trainer(Discretization):
         lhs, rhs = jnp.split(lhs_rhs, [1], axis=1)
         return lhs - rhs
 
+    # ------------- Hybrid training: the output layers by least squares
+    @staticmethod
+    def _last_layer_keys(params):
+        """Haiku names of the output Linear of the u- and u+ MLPs (the highest-numbered linear)."""
+        keys = []
+        for side in ("m", "p"):
+            prefix = f"double_mlp/~mlp_{side}_fn/linear"
+            found = [k for k in params if k == prefix or k.startswith(prefix + "_")]
+            if not found:
+                raise ValueError(f"last_layer_ls needs model_type 'mlp' (DoubleMLP): no '{prefix}' layers in the params")
+            keys.append(max(found, key=lambda k: 0 if k == prefix else int(k[len(prefix) + 1:])))
+        return keys
+
+    @staticmethod
+    def _with_last_layer(params, keys, c):
+        """params with the output layers (w then b, u- then u+) replaced by the flat vector c."""
+        new = flax.core.unfreeze(params)
+        i = 0
+        for k in keys:
+            w, b = params[k]["w"], params[k]["b"]
+            new[k] = {"w": c[i:i + w.size].reshape(w.shape).astype(w.dtype),
+                      "b": c[i + w.size:i + w.size + b.size].reshape(b.shape).astype(b.dtype)}
+            i += w.size + b.size
+        return flax.core.freeze(new) if isinstance(params, flax.core.FrozenDict) else new
+
+    def solve_last_layer(self, params):
+        """Hybrid least-squares / gradient-descent training (Cyr et al., arXiv:1912.04862; variable
+        projection, Golub & Pereyra 1973). With the hidden layers fixed, each node value is linear in
+        the output layers' weights c (w and b of u- and of u+), and each row is affine in the node
+        values, so the residual is exactly r(c) = r(c0) + G (c - c0) and the loss 0.5 mean(r^2) is a
+        quadratic in c. One step minimises it: c = c0 - pinv(G) r(c0). Adam and L-BFGS cannot finish
+        this part: the directions it needs have singular values 1e-5..1e-8 of the largest
+        (tools/jump_last_layer_ls.py). pinv keeps the singular values above last_layer_ls_rcond times
+        the largest, which float32 resolves (G's entries carry ~1e-7 relative rounding) and which keeps
+        the weights moderate; the solve is the correction to the trained weights, not the weights
+        themselves, so no large numbers are subtracted."""
+        t0 = time.time()
+        keys = self._last_layer_keys(params)
+        c0 = jnp.concatenate([jnp.concatenate([params[k]["w"].reshape(-1), params[k]["b"].reshape(-1)]) for k in keys])
+        dx, dy, dz = self.train_dx, self.train_dy, self.train_dz
+
+        def residual(p, c, points):
+            return self.residual_vector_params(self._with_last_layer(p, keys, c), points, dx, dy, dz).reshape(-1)
+
+        @jit
+        def build(p, c0, points):
+            # Column j of G is the derivative of the rows along the j-th output weight, by forward-mode
+            # differentiation, one column at a time (the memory of one row evaluation).
+            G = jax.lax.map(lambda e: jax.jvp(lambda c: residual(p, c, points), (c0,), (e,))[1],
+                            jnp.eye(c0.size, dtype=c0.dtype)).T
+            return residual(p, c0, points), G
+
+        @jit
+        def correction(G, r0):
+            Q, R = jnp.linalg.qr(G)                         # reduced QR, then the SVD of the small R
+            Ur, s, Vt = jnp.linalg.svd(R)
+            keep = s > self.last_layer_ls_rcond * s[0]
+            inv = jnp.where(keep, 1.0 / s, 0.0)
+            return -Vt.T @ (inv * (Ur.T @ (Q.T @ r0))), s, keep.sum()
+
+        r0, G = build(params, c0, self.train_points)
+        dc, s, kept = correction(G, r0)
+        c = c0 + dc
+        new_params = self._with_last_layer(params, keys, c)
+        r1 = residual(new_params, c, self.train_points)
+        r1.block_until_ready()
+        logger.info(
+            f"Last-layer least squares: loss {0.5 * float(jnp.mean(r0 ** 2)):.4e} -> {0.5 * float(jnp.mean(r1 ** 2)):.4e}; "
+            f"{int(kept)} of {c0.size} directions kept (singular values {float(s[0]):.3e} .. {float(s[-1]):.3e}); "
+            f"|c| {float(jnp.linalg.norm(c0)):.3e} -> {float(jnp.linalg.norm(c)):.3e}; {time.time() - t0:.1f} s"
+        )
+        return new_params
+
     @partial(jit, static_argnums=(0))
     def residual_vector(self, u_vec):
         """u_vec, points and eval_gstate and outputs have same shapes on grids"""
@@ -1263,6 +1349,8 @@ def setup(
             jump_ell: float = 1.0e4,
             jump_cut_floor: float = 0.05,
             jump_eval_once: bool = False,
+            last_layer_ls: bool = False,
+            last_layer_ls_rcond: float = 1.0e-6,
     ) -> Tuple[PoissonSimState, SolveFn]:
         R = eval_gstate.R
         PHI = phi_fn(R)
@@ -1303,6 +1391,8 @@ def setup(
                 jump_ell=jump_ell,
                 jump_cut_floor=jump_cut_floor,
                 jump_eval_once=jump_eval_once,
+                last_layer_ls=last_layer_ls,
+                last_layer_ls_rcond=last_layer_ls_rcond,
                 model_dict=model_dict,
             )
             (

@@ -36,6 +36,10 @@ solver:
   jump_ell: 1.0e4        # fixed scheme: row weight sqrt(h^3 + jump_ell * (max(A_Gamma, jump_cut_floor h^2) + A_ghost))
   jump_cut_floor: 0.05
   jump_eval_once: false  # true: evaluate the network once per grid node (same rows, ~200x less memory)
+  # Hybrid training: after the optimizer, solve the output layers (w, b of u- and u+) exactly by least
+  # squares on the same rows, hidden layers fixed (Trainer.solve_last_layer, tools/jump_last_layer_ls.py).
+  last_layer_ls: false
+  last_layer_ls_rcond: 1.0e-6  # keep singular values above this times the largest (float32 resolves ~1e-7)
 
   use_float64: false
   multi_gpu: false
