@@ -62,12 +62,13 @@ class DoubleMLP(hk.Module):
             self.num_hidden_layers_m = mlp["hidden_layers_m"]  # for mlp only
             self.hidden_dim_m = mlp["hidden_dim_m"]  # number of neurons per layer
             self.activation_m_fn = eval(mlp["activation_m"])  # nn.celu, jnp.sin, jnp.tanh, nn.swish, ...
-            self.tr_normal_init_m = hk.initializers.TruncatedNormal(stddev=0.1, mean=0.0)
+            # standard deviation of the hidden layers' initial weights (0.1 historically)
+            self.tr_normal_init_m = hk.initializers.TruncatedNormal(stddev=float(mlp.get("init_std_m", 0.1)), mean=0.0)
 
             self.num_hidden_layers_p = mlp["hidden_layers_p"]  # for mlp only
             self.hidden_dim_p = mlp["hidden_dim_p"]  # number of neurons per layer
             self.activation_p_fn = eval(mlp["activation_p"])  # nn.celu, jnp.sin, jnp.tanh, nn.swish, ...
-            self.tr_normal_init_p = hk.initializers.TruncatedNormal(stddev=0.1, mean=0.0)
+            self.tr_normal_init_p = hk.initializers.TruncatedNormal(stddev=float(mlp.get("init_std_p", 0.1)), mean=0.0)
         elif model_type == "resnet":
             # resnet
             self.num_res_blocks_m = resnet["res_blocks_m"]  # for resnet only

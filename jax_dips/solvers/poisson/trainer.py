@@ -602,7 +602,11 @@ class Trainer(Discretization):
     def solve_optax(self):
         reset_epoch_timing()
         start_time = time.time()
-        if self.multi_gpu:
+        if self.num_epochs == 0:
+            # Solve-only: keep the loaded weights (e.g. a float32 checkpoint continued under use_float64)
+            # and go straight to the last-layer solve and the evaluation, without a gradient pass.
+            logger.info("num_epochs = 0: no optimizer steps, the weights are used as loaded.")
+        elif self.multi_gpu:
             n_devices = jax.local_device_count()
             self.DD = data_management.DatasetDict(
                 batch_size=self.batch_size,
@@ -655,20 +659,21 @@ class Trainer(Discretization):
         state = {
             "opt_state": self.opt_state,
             "params": self.params,
-            "epoch": self.epoch_store[-1] + 1,
+            "epoch": int(self.epoch_store[-1]) + 1 if len(self.epoch_store) else 0,
             "batch_size": self.batch_size,
             "resolution": f"{self.train_dx}, {self.train_dy}, {self.train_dz}",
         }
         self.save_checkpoint(self.checkpoint_dir, state)
 
-        plot_loss_epochs(
-            self.epoch_store,
-            self.loss_epochs,
-            self.results_dir,
-            self.TD.base_level,
-            self.TD.alt_res,
-            self.loss_plot_name,
-        )
+        if self.num_epochs > 0:
+            plot_loss_epochs(
+                self.epoch_store,
+                self.loss_epochs,
+                self.results_dir,
+                self.TD.base_level,
+                self.TD.alt_res,
+                self.loss_plot_name,
+            )
         (
             final_solution,
             grad_u,
@@ -1110,7 +1115,9 @@ class Trainer(Discretization):
         (tools/jump_last_layer_ls.py). pinv keeps the singular values above last_layer_ls_rcond times
         the largest, which float32 resolves (G's entries carry ~1e-7 relative rounding) and which keeps
         the weights moderate; the solve is the correction to the trained weights, not the weights
-        themselves, so no large numbers are subtracted."""
+        themselves, so no large numbers are subtracted. G is built on the device and factorised on the
+        host (NumPy, in G's precision), so the tall QR needs no device memory: at Nx = 64 with 1 x 400
+        networks G alone is 262144 x 802."""
         t0 = time.time()
         keys = self._last_layer_keys(params)
         c0 = jnp.concatenate([jnp.concatenate([params[k]["w"].reshape(-1), params[k]["b"].reshape(-1)]) for k in keys])
@@ -1129,17 +1136,18 @@ class Trainer(Discretization):
                             jnp.eye(c0.size, dtype=c0.dtype)).T
             return residual(p, c0, points), G
 
-        @jit
-        def correction(G, r0):
-            Q, R = jnp.linalg.qr(G)                         # reduced QR, then the SVD of the small R
-            Ur, s, Vt = jnp.linalg.svd(R)
-            keep = s > self.last_layer_ls_rcond * s[0]
-            inv = jnp.where(keep, 1.0 / s, 0.0)
-            return -Vt.T @ (inv * (Ur.T @ (Q.T @ r0))), s, keep.sum()
-
         r0, G = build(params, c0, self.train_points)
-        dc, s, kept = correction(G, r0)
-        c = c0 + dc
+        G, r0 = onp.asarray(G), onp.asarray(r0)
+        Q, R = onp.linalg.qr(G)                             # reduced QR, then the SVD of the small R
+        del G
+        Ur, s, Vt = onp.linalg.svd(R)
+        keep = s > self.last_layer_ls_rcond * s[0]
+        inv = onp.zeros_like(s)
+        inv[keep] = 1.0 / s[keep]
+        dc = -(Vt.T @ (inv * (Ur.T @ (Q.T @ r0))))
+        kept = int(keep.sum())
+        r0 = jnp.asarray(r0)
+        c = c0 + jnp.asarray(dc, dtype=c0.dtype)
         new_params = self._with_last_layer(params, keys, c)
         r1 = residual(new_params, c, self.train_points)
         r1.block_until_ready()

@@ -87,6 +87,8 @@ model:
     hidden_layers_p: 2
     hidden_dim_p: 100
     activation_p: "jnp.tanh"
+    init_std_m: 0.1  # standard deviation of the hidden layers' initial weights
+    init_std_p: 0.1
   resnet:
     res_blocks_m: 3
     res_dim_m: 40
