@@ -386,6 +386,13 @@ def area_fn(A):
 
 
 def integrate_over_gamma_and_omega_m(get_vertices_fn, is_point_cell_crossed_by_interface, u_interp_fn):
+    def _piece(measure, values):
+        # A tetrahedron that Gamma does not cross still fills its slots, with zero area or volume and
+        # placeholder vertices. The integrand can be NaN there (the jump sphere's beta divides by |r|,
+        # 0 at the origin), and 0 * NaN would make the whole cell's integral NaN, which the rows then
+        # turn into 0. Empty pieces contribute exactly 0 instead.
+        return jnp.where(measure > 0, measure * values.mean(), 0.0)
+
     @jit
     def compute_interface_integral(point, dx, dy, dz):
         pieces = get_vertices_fn(point, dx, dy, dz)
@@ -399,20 +406,20 @@ def integrate_over_gamma_and_omega_m(get_vertices_fn, is_point_cell_crossed_by_i
 
         # vol_fn = lambda A: 0.5 * jnp.sqrt(jnp.linalg.det( (A[1:] - A[0]) @ (A[1:] - A[0]).T ) )
 
-        integral = area_fn(S1_Gamma[0]) * u_interp_fn(S1_Gamma[0]).mean()
-        integral += area_fn(S1_Gamma[1]) * u_interp_fn(S1_Gamma[1]).mean()
+        integral = _piece(area_fn(S1_Gamma[0]), u_interp_fn(S1_Gamma[0]))
+        integral += _piece(area_fn(S1_Gamma[1]), u_interp_fn(S1_Gamma[1]))
 
-        integral += area_fn(S2_Gamma[0]) * u_interp_fn(S2_Gamma[0]).mean()
-        integral += area_fn(S2_Gamma[1]) * u_interp_fn(S2_Gamma[1]).mean()
+        integral += _piece(area_fn(S2_Gamma[0]), u_interp_fn(S2_Gamma[0]))
+        integral += _piece(area_fn(S2_Gamma[1]), u_interp_fn(S2_Gamma[1]))
 
-        integral += area_fn(S3_Gamma[0]) * u_interp_fn(S3_Gamma[0]).mean()
-        integral += area_fn(S3_Gamma[1]) * u_interp_fn(S3_Gamma[1]).mean()
+        integral += _piece(area_fn(S3_Gamma[0]), u_interp_fn(S3_Gamma[0]))
+        integral += _piece(area_fn(S3_Gamma[1]), u_interp_fn(S3_Gamma[1]))
 
-        integral += area_fn(S4_Gamma[0]) * u_interp_fn(S4_Gamma[0]).mean()
-        integral += area_fn(S4_Gamma[1]) * u_interp_fn(S4_Gamma[1]).mean()
+        integral += _piece(area_fn(S4_Gamma[0]), u_interp_fn(S4_Gamma[0]))
+        integral += _piece(area_fn(S4_Gamma[1]), u_interp_fn(S4_Gamma[1]))
 
-        integral += area_fn(S5_Gamma[0]) * u_interp_fn(S5_Gamma[0]).mean()
-        integral += area_fn(S5_Gamma[1]) * u_interp_fn(S5_Gamma[1]).mean()
+        integral += _piece(area_fn(S5_Gamma[0]), u_interp_fn(S5_Gamma[0]))
+        integral += _piece(area_fn(S5_Gamma[1]), u_interp_fn(S5_Gamma[1]))
 
         return integral
 
@@ -437,25 +444,25 @@ def integrate_over_gamma_and_omega_m(get_vertices_fn, is_point_cell_crossed_by_i
 
         # vol_fn = lambda A: (1.0 / 6.0) * jnp.sqrt(jnp.linalg.det( (A[1:] - A[0]) @ (A[1:] - A[0]).T ) )
 
-        integral = vol_fn(S1_Omega_m[0]) * u_interp_fn(S1_Omega_m[0]).mean()
-        integral += vol_fn(S1_Omega_m[1]) * u_interp_fn(S1_Omega_m[1]).mean()
-        integral += vol_fn(S1_Omega_m[2]) * u_interp_fn(S1_Omega_m[2]).mean()
+        integral = _piece(vol_fn(S1_Omega_m[0]), u_interp_fn(S1_Omega_m[0]))
+        integral += _piece(vol_fn(S1_Omega_m[1]), u_interp_fn(S1_Omega_m[1]))
+        integral += _piece(vol_fn(S1_Omega_m[2]), u_interp_fn(S1_Omega_m[2]))
 
-        integral += vol_fn(S2_Omega_m[0]) * u_interp_fn(S2_Omega_m[0]).mean()
-        integral += vol_fn(S2_Omega_m[1]) * u_interp_fn(S2_Omega_m[1]).mean()
-        integral += vol_fn(S2_Omega_m[2]) * u_interp_fn(S2_Omega_m[2]).mean()
+        integral += _piece(vol_fn(S2_Omega_m[0]), u_interp_fn(S2_Omega_m[0]))
+        integral += _piece(vol_fn(S2_Omega_m[1]), u_interp_fn(S2_Omega_m[1]))
+        integral += _piece(vol_fn(S2_Omega_m[2]), u_interp_fn(S2_Omega_m[2]))
 
-        integral += vol_fn(S3_Omega_m[0]) * u_interp_fn(S3_Omega_m[0]).mean()
-        integral += vol_fn(S3_Omega_m[1]) * u_interp_fn(S3_Omega_m[1]).mean()
-        integral += vol_fn(S3_Omega_m[2]) * u_interp_fn(S3_Omega_m[2]).mean()
+        integral += _piece(vol_fn(S3_Omega_m[0]), u_interp_fn(S3_Omega_m[0]))
+        integral += _piece(vol_fn(S3_Omega_m[1]), u_interp_fn(S3_Omega_m[1]))
+        integral += _piece(vol_fn(S3_Omega_m[2]), u_interp_fn(S3_Omega_m[2]))
 
-        integral += vol_fn(S4_Omega_m[0]) * u_interp_fn(S4_Omega_m[0]).mean()
-        integral += vol_fn(S4_Omega_m[1]) * u_interp_fn(S4_Omega_m[1]).mean()
-        integral += vol_fn(S4_Omega_m[2]) * u_interp_fn(S4_Omega_m[2]).mean()
+        integral += _piece(vol_fn(S4_Omega_m[0]), u_interp_fn(S4_Omega_m[0]))
+        integral += _piece(vol_fn(S4_Omega_m[1]), u_interp_fn(S4_Omega_m[1]))
+        integral += _piece(vol_fn(S4_Omega_m[2]), u_interp_fn(S4_Omega_m[2]))
 
-        integral += vol_fn(S5_Omega_m[0]) * u_interp_fn(S5_Omega_m[0]).mean()
-        integral += vol_fn(S5_Omega_m[1]) * u_interp_fn(S5_Omega_m[1]).mean()
-        integral += vol_fn(S5_Omega_m[2]) * u_interp_fn(S5_Omega_m[2]).mean()
+        integral += _piece(vol_fn(S5_Omega_m[0]), u_interp_fn(S5_Omega_m[0]))
+        integral += _piece(vol_fn(S5_Omega_m[1]), u_interp_fn(S5_Omega_m[1]))
+        integral += _piece(vol_fn(S5_Omega_m[2]), u_interp_fn(S5_Omega_m[2]))
 
         return integral
 
