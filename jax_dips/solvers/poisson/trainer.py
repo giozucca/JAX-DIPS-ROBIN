@@ -1227,23 +1227,21 @@ class Trainer(Discretization):
         return grad_u
 
     # -------------------------------
+    def evaluate_solution_and_gradients(self, params, eval_gstate, chunk=1 << 17):
+        """Solution, gradient and normal gradient on the evaluation grid, chunk points at a time. Every
+        quantity is pointwise, so the result is that of one call over the whole grid, with the memory of
+        one chunk (one call over 128^3 points does not fit 8 GB for a 1 x 400 network)."""
+        R = eval_gstate.R
+        parts = [self._evaluate_chunk(params, R[i:i + chunk], eval_gstate.dx, eval_gstate.dy, eval_gstate.dz)
+                 for i in range(0, R.shape[0], chunk)]
+        final_solution, grad_u, grad_u_normal_to_interface = (jnp.concatenate([p[k] for p in parts]) for k in range(3))
+        return final_solution, grad_u, grad_u_normal_to_interface
+
     @partial(jit, static_argnums=(0))
-    def evaluate_solution_and_gradients(self, params, eval_gstate):
-        final_solution = self.evaluate_solution_fn(
-            params,
-            eval_gstate.R,
-        ).reshape(-1)
-        grad_u_normal_to_interface = self.compute_normal_gradient_solution_on_interface(
-            params,
-            eval_gstate.R,
-            eval_gstate.dx,
-            eval_gstate.dy,
-            eval_gstate.dz,
-        )
-        grad_u = self.compute_gradient_solution(
-            params,
-            eval_gstate.R,
-        )
+    def _evaluate_chunk(self, params, R, dx, dy, dz):
+        final_solution = self.evaluate_solution_fn(params, R).reshape(-1)
+        grad_u_normal_to_interface = self.compute_normal_gradient_solution_on_interface(params, R, dx, dy, dz)
+        grad_u = self.compute_gradient_solution(params, R)
         return final_solution, grad_u, grad_u_normal_to_interface
 
 
