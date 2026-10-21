@@ -367,7 +367,12 @@ class Trainer(Discretization):
             # ~zero learning rate. batch_size likewise stays at the configured
             # value rather than the checkpoint's, which may come from a different
             # resolution and would silently switch on mini-batching.
-            self.params = state["params"]
+            # Weights take the run's precision (util.f32 is float64 under use_float64), so a float32
+            # checkpoint continued in float64 is optimised in float64; a no-op for a float32 run.
+            self.params = jax.tree_util.tree_map(
+                lambda a: jnp.asarray(a, dtype=util.f32) if jnp.issubdtype(jnp.asarray(a).dtype, jnp.floating) else a,
+                state["params"],
+            )
             logger.info(
                 f"Warm-starting weights from {self.restart_checkpoint_dir} "
                 f"(checkpoint epoch {state.get('epoch')}, resolution {state.get('resolution')}). "
