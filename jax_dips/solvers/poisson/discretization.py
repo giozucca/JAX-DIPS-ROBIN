@@ -44,6 +44,20 @@ class Discretization:
     robin_weight_length = 1.0
     # Mirror the 5-tet split on odd i+j+k cells so neighbours share face diagonals; False is the original split.
     alternate_tets = True
+    # Jump problems. "original": the extrapolation rules as published (Bochkov & Gibou 2020, JAX-DIPS
+    # eqs. 2-6), fed the configs' stored -beta, with delta = phi, the gradient fitted in the faster
+    # region, and every row divided by its diagonal. "fixed": the rules derived and checked in
+    # tools/jump_replica3d.py (beta with its own sign, the [mu] term of both u- rules with the derived
+    # sign, delta = phi / |grad phi|), the gradient fitted in the slower region (Bochkov-Gibou's Bias
+    # Slow), and each row divided by sqrt(h^3 + jump_ell * (max(A_Gamma, jump_cut_floor h^2) + A_ghost)),
+    # A_ghost being h^2 per face of an uncut cell whose neighbour lies across Gamma.
+    jump_scheme = "original"
+    jump_ell = 1.0e4
+    jump_cut_floor = 0.05
+    # Jump problems: evaluate the network once per grid node per loss evaluation and build every row
+    # from those values (compute_Ax_and_b_from_values_fn), instead of 28 evaluations per extrapolation,
+    # 7 per row. The rows are the same; the memory is about 200 times smaller.
+    jump_eval_once = False
 
     def __init__(
         self,
@@ -149,6 +163,17 @@ class Discretization:
                 self.is_cell_crossed_by_interface,
                 lambda r: jnp.ones(r.shape[0]),
             )
+        if self.jump_scheme not in ("original", "fixed"):
+            raise ValueError(f"jump_scheme must be 'original' or 'fixed', not {self.jump_scheme!r}")
+        # Area of Gamma inside a cell (the integral of 1 over it); the "fixed" jump rows' weights use it.
+        (
+            self.interface_area_at_point,
+            _,
+        ) = geometric_integrations_per_point.integrate_over_gamma_and_omega_m(
+            self.get_vertices_of_cell_intersection_with_interface_at_point,
+            self.is_cell_crossed_by_interface,
+            lambda r: jnp.ones(r.shape[0]),
+        )
         self.compute_face_centroids_values_plus_minus_at_point = (
             geometric_integrations_per_point.compute_cell_faces_areas_values(
                 self.get_vertices_of_cell_intersection_with_interface_at_point,
@@ -425,11 +450,74 @@ class Discretization:
             compute the rhs of the linear system given currently passed-in u vector
             for solution estimate.
 
+        The network is evaluated inside the row: 28 times for each of the 7 nodes of the stencil
+        (get_u_mp_by_regression_at_point_fn). compute_Ax_and_b_from_values_fn builds the same row
+        from values computed once per node.
         """
 
         u_mp_at_point = partial(
             self.u_mp_fn, params, dx, dy, dz
         )  # Get the value of u at the current grid point using the BIAS SLOW algorithm (coded at 426 get_u_mp_by_regression_at_point_fn, which calls get_regression_coeffs_at_point where all the computations are done).
+        steps = jnp.array([dx, dy, dz], dtype=f32)
+
+        def u_mp_at(offset):
+            return u_mp_at_point(point + jnp.array(offset, dtype=f32) * steps)
+
+        def u_at_node():
+            return self.solution_at_point_fn(params, point, self.phi_interp_fn(point[jnp.newaxis]))
+
+        def precond_fn(coeffs_):
+            return self.precond_fn(params, coeffs_)  # TODO learning voxel-level preconditioner (Onur did this!)
+
+        return self._jump_row(point, dx, dy, dz, u_mp_at, u_at_node, precond_fn)
+
+    def compute_Ax_and_b_from_values_fn(self, U_pad, point, dx, dy, dz):
+        """
+        The same row as compute_Ax_and_b_preconditioned_fn, built from the network's values at the
+        grid nodes instead of evaluating the network inside the row.
+
+        U_pad: the solution at every node of the training grid (each node's value on its own side of
+        Gamma, as evaluate_solution_fn gives it), shape (Nx, Ny, Nz), padded with 2 zeros on every
+        side. The row of a node needs, for each of its 7 stencil nodes, the 27 values of that node's
+        3x3x3 neighbourhood (the extrapolation's least-squares fit), so it reads the 5x5x5 block of
+        nodes around it. All of them are grid nodes (get_Xijk steps by dx, dy, dz), so the values are
+        exactly those the network would give; padded values are read only by rows that do not use
+        them (wall rows, and cells away from Gamma near the walls). eval_once_origin is the grid's
+        lowest corner (set by the Trainer).
+
+        The learned preconditioner is not applied here (it needs params); with the default dummy
+        preconditioner it is 1 anyway.
+        """
+        steps = jnp.array([dx, dy, dz], dtype=f32)
+        ijk = jnp.round((point - self.eval_once_origin) / steps).astype(jnp.int32)
+        # The node is at ijk + 2 in U_pad, so its 5x5x5 block starts at ijk.
+        block = jax.lax.dynamic_slice(U_pad, (ijk[0], ijk[1], ijk[2]), (5, 5, 5))
+
+        def cube_at(offset):
+            # The 27 values around the stencil node at `offset`, in get_Xijk's order (x fastest).
+            a, b, c = 1 + offset[0], 1 + offset[1], 1 + offset[2]
+            return jnp.transpose(block[a:a + 3, b:b + 3, c:c + 3], (2, 1, 0)).reshape(27)
+
+        def u_mp_at(offset):
+            cube = cube_at(offset)
+            node = point + jnp.array(offset, dtype=f32) * steps
+            return self.u_mp_from_values(node, cube[13], cube, dx, dy, dz)
+
+        def u_at_node():
+            return block[2, 2, 2]
+
+        return self._jump_row(point, dx, dy, dz, u_mp_at, u_at_node, lambda coeffs_: 1.0)
+
+    def _jump_row(self, point, dx, dy, dz, u_mp_at, u_at_node, precond_fn):
+        """
+        One row of the jump discretization (Bochkov & Gibou 2020, JAX-DIPS eq. Standard), divided by
+        its weight: the diagonal for jump_scheme "original", the interface weight for "fixed".
+
+        u_mp_at(offset): (u-, u+) at the stencil node point + offset * (dx, dy, dz), offset one of
+        (0,0,0) and the 6 neighbours; u_at_node(): the solution at the node itself (wall rows).
+        Returns [lhs / w, rhs / w], shape (2, 1).
+        """
+        steps = jnp.array([dx, dy, dz], dtype=f32)
 
         def is_box_boundary_point(point):
             """
@@ -447,174 +535,104 @@ class Discretization:
             )
             return jnp.where(boundary == 0, True, False)
 
-        def evaluate_discretization_lhs_rhs_at_point(point, dx, dy, dz):
-            # --- LHS
-            coeffs_ = self.compute_face_centroids_values_plus_minus_at_point(
-                point, dx, dy, dz
+        # --- LHS
+        coeffs_ = self.compute_face_centroids_values_plus_minus_at_point(point, dx, dy, dz)
+        coeffs = coeffs_[:12]
+        precond = precond_fn(coeffs_)
+
+        vols = coeffs_[12:14]
+        V_m_ijk = vols[0]  # Volume of the partial cell in the minus region.
+        V_p_ijk = vols[1]  # Volume of the partial cell in the plus  region.
+        Vol_cell_nominal = dx * dy * dz  # Elementary volume
+
+        def get_lhs_at_interior_point(point):
+            k_m_ijk = self.k_m_interp_fn(point[jnp.newaxis])  # Reaction coefficient in the minus region.
+            k_p_ijk = self.k_p_interp_fn(point[jnp.newaxis])  # Reaction coefficient in the plus  region.
+
+            u_m_ijk, u_p_ijk = u_mp_at((0, 0, 0))  # Current point
+            u_m_imjk, u_p_imjk = u_mp_at((-1, 0, 0))  # u value at the grid point to the left.
+            u_m_ipjk, u_p_ipjk = u_mp_at((1, 0, 0))  # u value at the grid point to the right.
+            u_m_ijmk, u_p_ijmk = u_mp_at((0, -1, 0))  # u value at the grid point to the bottom
+            u_m_ijpk, u_p_ijpk = u_mp_at((0, 1, 0))  # u value at the grid point to the top.
+            u_m_ijkm, u_p_ijkm = u_mp_at((0, 0, -1))  # u value at the grid point to the back.
+            u_m_ijkp, u_p_ijkp = u_mp_at((0, 0, 1))  # u value at the grid point to the front.
+
+            # \sum_{\pm} k^s_{i,j} u^s_{i,j} u^s_{i,j}, i.e. the first term in (Equation Standard of JAX)
+            lhs = k_m_ijk * u_m_ijk * V_m_ijk
+            lhs += k_p_ijk * u_p_ijk * V_p_ijk
+
+            # Treating the case of a nonlinear \mu (not done here, i.e. setting it to zero). To do later if needed.
+            lhs += self.nonlinear_op_m(u_m_ijk) * V_m_ijk + self.nonlinear_op_p(u_p_ijk) * V_p_ijk
+
+            # We assume that the coeffs array gives the \mu_^s_{i-\frac12, j} A^s_{i-\frac12, j} / dx, etc. So the following gives
+            # all the coefficients of the matrix in front of u_{ijk} in the minus and plus regions:
+            lhs += (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10]) * u_m_ijk + (
+                coeffs[1] + coeffs[3] + coeffs[5] + coeffs[7] + coeffs[9] + coeffs[11]
+            ) * u_p_ijk
+            # Extra diagonal coefficients of the linear system, i.e. the matrix A
+            lhs += -1.0 * coeffs[0] * u_m_imjk - coeffs[1] * u_p_imjk
+            lhs += -1.0 * coeffs[2] * u_m_ipjk - coeffs[3] * u_p_ipjk
+            lhs += -1.0 * coeffs[4] * u_m_ijmk - coeffs[5] * u_p_ijmk
+            lhs += -1.0 * coeffs[6] * u_m_ijpk - coeffs[7] * u_p_ijpk
+            lhs += -1.0 * coeffs[8] * u_m_ijkm - coeffs[9] * u_p_ijkm
+            lhs += -1.0 * coeffs[10] * u_m_ijkp - coeffs[11] * u_p_ijkp
+
+            # At this point, the matrix A is defined.
+            # Compute the diagonal coefficient of the assembled matrix, which will serve as the (Jacobi) preconditioner.
+            diag_coeff = (
+                k_p_ijk * V_p_ijk
+                + k_m_ijk * V_m_ijk
+                + (coeffs[0] + coeffs[2] + coeffs[4] + coeffs[6] + coeffs[8] + coeffs[10])
+                + (coeffs[1] + coeffs[3] + coeffs[5] + coeffs[7] + coeffs[9] + coeffs[11])
             )
-            coeffs = coeffs_[:12]
-            precond = self.precond_fn(
-                params, coeffs_
-            )  # TODO learning voxel-level preconditioner
+            return jnp.array([lhs.reshape(), diag_coeff.reshape()])
 
-            vols = coeffs_[12:14]
-            V_m_ijk = vols[0]  # Volume of the partial cell in the minus region.
-            V_p_ijk = vols[1]  # Volume of the partial cell in the plus  region.
-            Vol_cell_nominal = dx * dy * dz  # Elementary volume
+        def get_lhs_on_box_boundary(point):  # Handle the boundary condition at the domain's wall
+            u_boundary = u_at_node()
+            lhs = u_boundary * Vol_cell_nominal
+            return jnp.array([lhs.reshape(), Vol_cell_nominal])
 
-            def get_lhs_at_interior_point(point):
-                point_ijk = point  # Current point
-                point_imjk = jnp.array(
-                    [point[0] - dx, point[1], point[2]], dtype=f32
-                )  # Coordinate of the grid point to the left.
-                point_ipjk = jnp.array(
-                    [point[0] + dx, point[1], point[2]], dtype=f32
-                )  # Coordinate of the grid point to the right.
-                point_ijmk = jnp.array(
-                    [point[0], point[1] - dy, point[2]], dtype=f32
-                )  # Coordinate of the grid point to the bottom.
-                point_ijpk = jnp.array(
-                    [point[0], point[1] + dy, point[2]], dtype=f32
-                )  # Coordinate of the grid point to the top.
-                point_ijkm = jnp.array(
-                    [point[0], point[1], point[2] - dz], dtype=f32
-                )  # Coordinate of the grid point to the back.
-                point_ijkp = jnp.array(
-                    [point[0], point[1], point[2] + dz], dtype=f32
-                )  # Coordinate of the grid point to the front.
+        on_wall = is_box_boundary_point(point)
+        lhs_diagcoeff = jnp.where(on_wall, get_lhs_on_box_boundary(point), get_lhs_at_interior_point(point))
+        lhs, diagcoeff = jnp.split(lhs_diagcoeff, [1], 0)
 
-                k_m_ijk = self.k_m_interp_fn(
-                    point[jnp.newaxis]
-                )  # Reaction coefficient in the minus region.
-                k_p_ijk = self.k_p_interp_fn(
-                    point[jnp.newaxis]
-                )  # Reaction coefficient in the plus  region.
-
-                u_m_ijk, u_p_ijk = u_mp_at_point(point_ijk)  # Current point
-                u_m_imjk, u_p_imjk = u_mp_at_point(
-                    point_imjk
-                )  # u value at the grid point to the left.
-                u_m_ipjk, u_p_ipjk = u_mp_at_point(
-                    point_ipjk
-                )  # u value at the grid point to the right.
-                u_m_ijmk, u_p_ijmk = u_mp_at_point(
-                    point_ijmk
-                )  # u value at the grid point to the bottom
-                u_m_ijpk, u_p_ijpk = u_mp_at_point(
-                    point_ijpk
-                )  # u value at the grid point to the top.
-                u_m_ijkm, u_p_ijkm = u_mp_at_point(
-                    point_ijkm
-                )  # u value at the grid point to the back.
-                u_m_ijkp, u_p_ijkp = u_mp_at_point(
-                    point_ijkp
-                )  # u value at the grid point to the front.
-
-                # \sum_{\pm} k^s_{i,j} u^s_{i,j} u^s_{i,j}, i.e. the first term in (Equation Standard of JAX)
-                lhs = k_m_ijk * u_m_ijk * V_m_ijk
-                lhs += k_p_ijk * u_p_ijk * V_p_ijk
-
-                # Treating the case of a nonlinear \mu (not done here, i.e. setting it to zero). To do later if needed.
-                lhs += (
-                    self.nonlinear_op_m(u_m_ijk) * V_m_ijk
-                    + self.nonlinear_op_p(u_p_ijk) * V_p_ijk
-                )
-
-                # We assume that the coeffs array gives the \mu_^s_{i-\frac12, j} A^s_{i-\frac12, j} / dx, etc. So the following gives
-                # all the coefficients of the matrix in front of u_{ijk} in the minus and plus regions:
-                lhs += (
-                    coeffs[0]
-                    + coeffs[2]
-                    + coeffs[4]
-                    + coeffs[6]
-                    + coeffs[8]
-                    + coeffs[10]
-                ) * u_m_ijk + (  # can take out +()upijk
-                    coeffs[1]
-                    + coeffs[3]
-                    + coeffs[5]
-                    + coeffs[7]
-                    + coeffs[9]
-                    + coeffs[11]
-                ) * u_p_ijk
-                # Extra diagonal coefficients of the linear system, i.e. the matrix A
-                lhs += -1.0 * coeffs[0] * u_m_imjk - coeffs[1] * u_p_imjk
-                lhs += -1.0 * coeffs[2] * u_m_ipjk - coeffs[3] * u_p_ipjk
-                lhs += -1.0 * coeffs[4] * u_m_ijmk - coeffs[5] * u_p_ijmk
-                lhs += -1.0 * coeffs[6] * u_m_ijpk - coeffs[7] * u_p_ijpk
-                lhs += -1.0 * coeffs[8] * u_m_ijkm - coeffs[9] * u_p_ijkm
-                lhs += -1.0 * coeffs[10] * u_m_ijkp - coeffs[11] * u_p_ijkp
-
-                # At this point, the matrix A is defined.
-                # Compute the diagonal coefficient of the assembled matrix, which will serve as the (Jacobi) preconditioner.
-                diag_coeff = (
-                    k_p_ijk * V_p_ijk
-                    + k_m_ijk * V_m_ijk
-                    + (
-                        coeffs[0]
-                        + coeffs[2]
-                        + coeffs[4]
-                        + coeffs[6]
-                        + coeffs[8]
-                        + coeffs[10]
-                    )
-                    + (
-                        coeffs[1]
-                        + coeffs[3]
-                        + coeffs[5]
-                        + coeffs[7]
-                        + coeffs[9]
-                        + coeffs[11]
-                    )
-                )
-                return jnp.array([lhs.reshape(), diag_coeff.reshape()])
-
-            def get_lhs_on_box_boundary(
-                point,
-            ):  # Handle the boundary condition at the domain's wall
-                phi_boundary = self.phi_interp_fn(point[jnp.newaxis])
-                u_boundary = self.solution_at_point_fn(params, point, phi_boundary)
-                lhs = u_boundary * Vol_cell_nominal
-                return jnp.array([lhs, Vol_cell_nominal])
-
-            lhs_diagcoeff = jnp.where(
-                is_box_boundary_point(point),
-                get_lhs_on_box_boundary(point),
-                get_lhs_at_interior_point(point),
+        # --- RHS
+        def get_rhs_at_interior_point(point):  # Implementation of the right-hand side of (Equation Standard)
+            rhs = (
+                self.f_m_interp_fn(point[jnp.newaxis]) * V_m_ijk
+                + self.f_p_interp_fn(point[jnp.newaxis]) * V_p_ijk
             )
-            lhs, diagcoeff = jnp.split(lhs_diagcoeff, [1], 0)
+            # The configs store beta = -[mu du/dn], so adding its integral is the -integral of [mu du/dn]
+            # that the divergence theorem gives.
+            rhs += self.beta_integrate_over_interface_at_point(point, dx, dy, dz)
+            return rhs
 
-            # --- RHS
-            def get_rhs_at_interior_point(
-                point,
-            ):  # Implementation of the right-hand side of (Equation Standard)
-                rhs = (
-                    self.f_m_interp_fn(point[jnp.newaxis]) * V_m_ijk
-                    + self.f_p_interp_fn(point[jnp.newaxis]) * V_p_ijk
-                )
-                rhs += self.beta_integrate_over_interface_at_point(point, dx, dy, dz)
-                return rhs
+        def get_rhs_on_box_boundary(point):  # Impose the boundary condition at the walls of the computational domain.
+            return self.dir_bc_fn(point[jnp.newaxis]).reshape() * Vol_cell_nominal
 
-            def get_rhs_on_box_boundary(
-                point,
-            ):  # Impose the boundary condition at the walls of the computational domain.
-                return self.dir_bc_fn(point[jnp.newaxis]).reshape() * Vol_cell_nominal
+        rhs = jnp.where(on_wall, get_rhs_on_box_boundary(point), get_rhs_at_interior_point(point))
 
-            rhs = jnp.where(
-                is_box_boundary_point(point),
-                get_rhs_on_box_boundary(point),
-                get_rhs_at_interior_point(point),
-            )
+        if self.jump_scheme == "fixed":
+            # Interface weight: a row with an O(1) local truncation error (a cut cell, or an uncut cell
+            # that reads a value extrapolated across Gamma) counts by its interface area times jump_ell,
+            # every other row by its volume. Wall rows (u = g) are divided by their volume, i.e. weight 1.
+            h3 = Vol_cell_nominal
+            h2 = h3 ** (2.0 / 3.0)
+            cut = self.is_cell_crossed_by_interface(point, dx, dy, dz) == 0
+            area = self.interface_area_at_point(point, dx, dy, dz).reshape()
+            area = jnp.where(cut, jnp.maximum(area, self.jump_cut_floor * h2), 0.0)
+            minus = self.phi_interp_fn(point[jnp.newaxis])[0] < 0
+            nbrs = point + jnp.array([[-1, 0, 0], [1, 0, 0], [0, -1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1]], dtype=f32) * steps
+            across = (self.phi_interp_fn(nbrs) < 0) != minus
+            face_areas = jnp.array([dy * dz, dy * dz, dx * dz, dx * dz, dx * dy, dx * dy], dtype=f32)
+            a_ghost = jnp.where(cut | on_wall, 0.0, (across * face_areas).sum())
+            weight = jnp.where(on_wall, Vol_cell_nominal, jnp.sqrt(h3 + self.jump_ell * (area + a_ghost)))
+        else:
+            weight = diagcoeff  # Jacobi: "precond" is short for "we need to do better but we have not done it yet).
 
-            # Apply the preconditioning of the linear system:
-            lhs_over_diag = (
-                jnp.nan_to_num(lhs / diagcoeff) * precond
-            )  # "precond" is short for "we need to do better but we have not done it yet).
-            rhs_over_diag = jnp.nan_to_num(rhs / diagcoeff) * precond
-            return jnp.array([lhs_over_diag, rhs_over_diag])
-
-        lhs_rhs = evaluate_discretization_lhs_rhs_at_point(point, dx, dy, dz)
-        return lhs_rhs
+        lhs_over_w = jnp.nan_to_num(lhs / weight) * precond
+        rhs_over_w = jnp.nan_to_num(rhs / weight) * precond
+        return jnp.array([lhs_over_w.reshape(1), rhs_over_w.reshape(1)])
 
     def compute_Ax_and_b_preconditioned_fn_Robin(self, params, point, dx, dy, dz):
         """
@@ -664,7 +682,7 @@ class Discretization:
             coeffs = coeffs_[:12]
             precond = self.precond_fn(
                 params, coeffs_
-            )  # TODO learning voxel-level preconditioner
+            )  # TODO learning voxel-level preconditioner (Onur did this!)
 
             vols = coeffs_[12:14]
             V_m_ijk = vols[0]  # Volume of the partial cell in the minus region.
@@ -942,6 +960,91 @@ class Discretization:
 
         curr_vertices = jnp.add(point, Xijk)
         u_cube_ijk = self.evaluate_solution_fn(params, curr_vertices)
+        return self.u_mp_from_values(point, u_ijk, u_cube_ijk.reshape(27), dx, dy, dz)
+
+    def u_mp_from_values(self, point, u_ijk, u_cube_ijk, dx, dy, dz):
+        """(u-, u+) at a grid node from the solution's values at the node (u_ijk) and at its 27-point
+        neighbourhood (u_cube_ijk, get_Xijk's order), each on its own side of Gamma. In an uncut cell
+        the value on the cell's side and 0 on the other; in a cut cell the node's own value and the
+        other side's value extrapolated across Gamma, by jump_scheme's rules."""
+        if self.jump_scheme == "fixed":
+            return self._u_mp_fixed(point, u_ijk, u_cube_ijk, dx, dy, dz)
+        return self._u_mp_original(point, u_ijk, u_cube_ijk, dx, dy, dz)
+
+    def _jump_fixed_extrapolation(self, point, dx, dy, dz):
+        """The other side's value at a node whose cell is cut, as coef . u_cube + const, with the
+        corrected rules (tools/jump_replica3d.py::extrapolation, fixed=True, bias="slow"):
+
+          Taylor step to the projection of the node on Gamma, distance d = phi / |grad phi|:
+              u+ - u- = alpha + d (du+/dn - du-/dn)
+          the flux jump mu+ du+/dn - mu- du-/dn = beta eliminates one normal derivative, and the other
+          comes from a least-squares fit of the gradient over the node's 3x3x3 neighbours in the
+          slower-diffusing region (Bias Slow): du/dn = cc u_node + sum_q c_q u_q.
+        Fit in Omega- (mu- <= mu+), K = d (mu+ - mu-)/mu+:
+              node in Omega+: u- = (u+ - alpha - d beta/mu+ + K sum c_q u_q) / (1 - K cc)
+              node in Omega-: u+ = (1 - K cc) u- - K sum c_q u_q + alpha + d beta/mu+
+        Fit in Omega+ (mu+ < mu-), L = d (mu+ - mu-)/mu-:
+              node in Omega+: u- = (1 + L cc) u+ + L sum c_q u_q - alpha - d beta/mu-
+              node in Omega-: u+ = (u- - L sum c_q u_q + alpha + d beta/mu-) / (1 + L cc)
+        beta is [mu du/dn] (the configs store -beta); beta/mu and alpha are taken at the projection,
+        the mu in K and L at the node. Returns (node in Omega+, coef (27,), const)."""
+        X = self.get_Xijk(dx, dy, dz)
+        e = jnp.diag(jnp.array([dx, dy, dz], dtype=f32))
+        phi_at = lambda p: self.phi_interp_fn(p[jnp.newaxis])[0]
+        g = jnp.array([(phi_at(point + e[i]) - phi_at(point - e[i])) / (2.0 * e[i, i]) for i in range(3)])
+        g_norm = jnp.linalg.norm(g)
+        n = g / g_norm
+        d = phi_at(point) / g_norm  # signed distance to Gamma, phi need not be one
+        mu_m = self.mu_m_interp_fn(point[jnp.newaxis])[0]
+        mu_p = self.mu_p_interp_fn(point[jnp.newaxis])[0]
+        r_proj = (point - d * n)[jnp.newaxis]
+        alpha = self.alpha_interp_fn(r_proj)[0]
+        beta = -1.0 * self.beta_interp_fn(r_proj)[0]  # the configs store -[mu du/dn]
+        mu_m_proj = self.mu_m_interp_fn(r_proj)[0]
+        mu_p_proj = self.mu_p_interp_fn(r_proj)[0]
+
+        fit_minus = mu_m <= mu_p  # Bias Slow: fit the gradient in the slower region
+        phi_cube = self.phi_interp_fn(point + X)
+        W = jnp.where(fit_minus, phi_cube < 0, phi_cube > 0).astype(X.dtype)
+        WX = W[:, jnp.newaxis] * X
+        D = jnp.nan_to_num(jnp.linalg.pinv(X.T @ WX) @ WX.T)
+        c = n @ D
+        cc = -1.0 * c.sum()
+        e13 = jnp.zeros(27, dtype=X.dtype).at[13].set(1.0)
+        node_plus = d > 0
+
+        K = d * (mu_p - mu_m) / mu_p
+        jb1 = alpha + d * beta / mu_p_proj
+        den1 = 1.0 - K * cc
+        coef_1m, const_1m = (e13 + K * c) / den1, -1.0 * jb1 / den1
+        coef_1p, const_1p = e13 * (1.0 - K * cc) - K * c, jb1
+        L = d * (mu_p - mu_m) / mu_m
+        jb2 = alpha + d * beta / mu_m_proj
+        den2 = 1.0 + L * cc
+        coef_2m, const_2m = e13 * (1.0 + L * cc) + L * c, -1.0 * jb2
+        coef_2p, const_2p = (e13 - L * c) / den2, jb2 / den2
+
+        coef = jnp.where(fit_minus, jnp.where(node_plus, coef_1m, coef_1p), jnp.where(node_plus, coef_2m, coef_2p))
+        const = jnp.where(fit_minus, jnp.where(node_plus, const_1m, const_1p), jnp.where(node_plus, const_2m, const_2p))
+        # Away from Gamma these are computed and then discarded; keep them finite so that the
+        # discarded branch cannot turn gradients into NaN.
+        coef = jnp.where(jnp.isfinite(coef), coef, 0.0)
+        const = jnp.where(jnp.isfinite(const), const, 0.0)
+        return node_plus, coef, const
+
+    def _u_mp_fixed(self, point, u_ijk, u_cube_ijk, dx, dy, dz):
+        node_plus, coef, const = self._jump_fixed_extrapolation(point, dx, dy, dz)
+        u_ijk = jnp.reshape(u_ijk, ())
+        u_other = jnp.dot(coef, u_cube_ijk) + const
+        # 0: crossed by interface, -1: in Omega^-, +1: in Omega^+
+        is_interface = self.is_cell_crossed_by_interface(point, dx, dy, dz)
+        u_m = jnp.where(is_interface == 0, jnp.where(node_plus, u_other, u_ijk), jnp.where(is_interface == -1, u_ijk, 0.0))
+        u_p = jnp.where(is_interface == 0, jnp.where(node_plus, u_ijk, u_other), jnp.where(is_interface == 1, u_ijk, 0.0))
+        return jnp.array([u_m, u_p])
+
+    def _u_mp_original(self, point, u_ijk, u_cube_ijk, dx, dy, dz):
+        """The published rules, as the code had them (see jump_scheme)."""
+        delta_ijk = self.phi_interp_fn(point[jnp.newaxis])
 
         (
             normal_ijk,

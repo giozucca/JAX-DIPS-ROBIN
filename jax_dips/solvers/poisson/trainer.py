@@ -121,6 +121,10 @@ class Trainer(Discretization):
         train_omega_minus_only: bool = False,
         robin_weight_length=1.0,
         alternate_tets: bool = True,
+        jump_scheme: str = "original",
+        jump_ell: float = 1.0e4,
+        jump_cut_floor: float = 0.05,
+        jump_eval_once: bool = False,
         model_dict: dict = {
             "name": None,
             "model_type": "mlp",
@@ -143,6 +147,10 @@ class Trainer(Discretization):
         },
     ) -> None:
         self.alternate_tets = alternate_tets  # read while the parent builds the cell geometry
+        self.jump_scheme = jump_scheme  # jump problems; see Discretization.jump_scheme
+        self.jump_ell = float(jump_ell)
+        self.jump_cut_floor = float(jump_cut_floor)
+        self.jump_eval_once = bool(jump_eval_once)
         super().__init__(
             lvl_gstate,
             sim_state,
@@ -151,6 +159,13 @@ class Trainer(Discretization):
             algorithm=algorithm,
         )
         logger.info(f"Alternating tetrahedral split: {alternate_tets}")
+        if not self.robin:
+            logger.info(
+                f"Jump scheme: {self.jump_scheme}"
+                + (f" (row weight sqrt(h^3 + {self.jump_ell:g} * (max(A_Gamma, {self.jump_cut_floor:g} h^2) + A_ghost)))"
+                   if self.jump_scheme == "fixed" else " (rows divided by their diagonal)")
+                + f"; network evaluated once per node: {self.jump_eval_once}"
+            )
         self.robin_weight_length = robin_weight_length
         logger.info(f"Robin row weight: sqrt(V + l * A) with l = {robin_weight_length}")
         #########################################################################
@@ -202,6 +217,15 @@ class Trainer(Discretization):
                 f"({100.0 * _n_after / _n_before:.1f}%); Omega+ is no longer trained, so the "
                 f"solution there (and in any Omega+ visualization) is meaningless."
             )
+        if self.jump_eval_once and not self.robin:
+            # The rows read the network's values at the training grid's nodes (Discretization.
+            # compute_Ax_and_b_from_values_fn), so the stencil must stay on that grid.
+            if self.TD.zoom_levels != 1:
+                raise ValueError("jump_eval_once needs the stencil at the grid spacing (zoom_levels == 1).")
+            _gs = self.TD.gstate
+            self._eval_once_R = _gs.R
+            self._eval_once_shape = (len(_gs.x), len(_gs.y), len(_gs.z))
+            self.eval_once_origin = jnp.array([_gs.xmin(), _gs.ymin(), _gs.zmin()], dtype=f32)
         # phis_at_points = vmap(lvl_set_fn)(self.train_points)
         # train_points_m, train_points_p = self.TD.split_train_points_by_region(phis_at_points, self.train_points)
         #########################################################################
@@ -1016,10 +1040,20 @@ class Trainer(Discretization):
         mask_p = sign_p_fn(phi_points)
         return mask_p
 
+    def rows_lhs_rhs(self, params, points, dx, dy, dz):
+        """[lhs, rhs] of the rows at `points`. For a jump problem with jump_eval_once, the network is
+        evaluated once at every node of the training grid and each row reads those values;
+        otherwise each row evaluates the network itself."""
+        if self.jump_eval_once and not self.robin:
+            U = self.evaluate_solution_fn(params, self._eval_once_R).reshape(self._eval_once_shape)
+            U_pad = jnp.pad(U, 2)
+            return vmap(self.compute_Ax_and_b_from_values_fn, (None, 0, None, None, None))(U_pad, points, dx, dy, dz)
+        return vmap(self.compute_Ax_and_b_fn, (None, 0, None, None, None))(params, points, dx, dy, dz)
+
     @partial(jit, static_argnums=(0))
     def residual_vector_params(self, params, points, dx, dy, dz):
         r"""Loss function of the neural network."""
-        lhs_rhs = vmap(self.compute_Ax_and_b_fn, (None, 0, None, None, None))(params, points, dx, dy, dz)
+        lhs_rhs = self.rows_lhs_rhs(params, points, dx, dy, dz)
         lhs, rhs = jnp.split(lhs_rhs, [1], axis=1)
         return lhs - rhs
 
@@ -1039,7 +1073,7 @@ class Trainer(Discretization):
         # # one_period = jnp.where(one_period < len(points), one_period, 1) # TODO: do we need this?
         # divisible_indices = jnp.arange(len(points)) % one_period == 0
 
-        lhs_rhs = vmap(self.compute_Ax_and_b_fn, (None, 0, None, None, None))(params, points, dx, dy, dz)
+        lhs_rhs = self.rows_lhs_rhs(params, points, dx, dy, dz)
         lhs, rhs = jnp.split(lhs_rhs, [1], axis=1)
         tot_loss = jnp.mean(optax.l2_loss(lhs, rhs))
         # residuals = optax.l2_loss(lhs, rhs)
@@ -1220,6 +1254,10 @@ def setup(
             restart_checkpoint_dir: str = "./checkpoints",
             print_rate: int = 1,
             alternate_tets: bool = True,
+            jump_scheme: str = "original",
+            jump_ell: float = 1.0e4,
+            jump_cut_floor: float = 0.05,
+            jump_eval_once: bool = False,
     ) -> Tuple[PoissonSimState, SolveFn]:
         R = eval_gstate.R
         PHI = phi_fn(R)
@@ -1256,6 +1294,10 @@ def setup(
                 restart_checkpoint_dir=restart_checkpoint_dir,
                 print_rate=print_rate,
                 alternate_tets=alternate_tets,
+                jump_scheme=jump_scheme,
+                jump_ell=jump_ell,
+                jump_cut_floor=jump_cut_floor,
+                jump_eval_once=jump_eval_once,
                 model_dict=model_dict,
             )
             (

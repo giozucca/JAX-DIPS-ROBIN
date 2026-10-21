@@ -31,6 +31,12 @@ solver:
 
   alternate_tets: true
 
+  # Jump problems only (sphere, star, sphere_jaxrobin, star_jaxrobin).
+  jump_scheme: original  # original: rules as published, rows / diagonal; fixed: corrected rules (tools/jump_replica3d.py), Bias Slow, interface weights
+  jump_ell: 1.0e4        # fixed scheme: row weight sqrt(h^3 + jump_ell * (max(A_Gamma, jump_cut_floor h^2) + A_ghost))
+  jump_cut_floor: 0.05
+  jump_eval_once: false  # true: evaluate the network once per grid node (same rows, ~200x less memory)
+
   use_float64: false
   multi_gpu: false
   num_gpus_ddp: 2
@@ -57,6 +63,8 @@ experiment:
   star_Robin: false
   star_Robin3: false
   star_Robin2: false # the star of the JAX-DIPS paper (section 4.3), sphere_Robin's problem otherwise
+  sphere_jaxrobin: false # jump sphere with JAX-Robin's radius 2/3
+  star_jaxrobin: false # jump star's data on JAX-Robin's star (corrected f- and unit-normal beta)
 
 
   logging:

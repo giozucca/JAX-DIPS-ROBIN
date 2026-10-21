@@ -99,8 +99,10 @@ from jax_dips.utils import io
 from tests.confs.experiment_configs import (
     no_jump,
     sphere,
+    sphere_jaxrobin,
     sphere_Robin,
     star,
+    star_jaxrobin,
     star_Robin,
     star_Robin2,
     star_Robin3,
@@ -146,6 +148,12 @@ def test_poisson(cfg: DictConfig):
             test_name="star",
             exp_fn=star,
         )
+    if cfg.experiment.get("sphere_jaxrobin", False):
+        logger.info("Performing jump experiment on JAX-Robin's sphere (radius 2/3)...\n")
+        poisson_solve(cfg, test_name=f"sphere_jaxrobin_{cfg.solver.Nx_tr}", exp_fn=sphere_jaxrobin)
+    if cfg.experiment.get("star_jaxrobin", False):
+        logger.info("Performing jump experiment on JAX-Robin's star...\n")
+        poisson_solve(cfg, test_name=f"star_jaxrobin_{cfg.solver.Nx_tr}", exp_fn=star_jaxrobin)
     if cfg.experiment.no_jump:
         logger.info("Performing bulk/no jump experiment...\n")
         poisson_solve(
@@ -368,6 +376,10 @@ def poisson_solve(
             restart_checkpoint_dir=cfg.solver.restart_checkpoint_dir,
             print_rate=cfg.solver.print_rate,
             alternate_tets=cfg.solver.get("alternate_tets", True),
+            jump_scheme=cfg.solver.get("jump_scheme", "original"),
+            jump_ell=float(cfg.solver.get("jump_ell", 1.0e4)),
+            jump_cut_floor=float(cfg.solver.get("jump_cut_floor", 0.05)),
+            jump_eval_once=bool(cfg.solver.get("jump_eval_once", False)),
             model_dict=model_dict,
         )
         t1 = time.time()

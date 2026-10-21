@@ -23,8 +23,9 @@ dim = 3
 #   Sphere Interface with Jump
 #
 #####################################################
-def sphere():
+def sphere(radius=0.5):
     # -- 3d example according to 4.6 in Guittet 2015 (VIM) paper
+    # radius 0.5 is the original JAX-DIPS sphere; sphere_jaxrobin() uses JAX-Robin's 2/3.
     @jit
     def exact_sol_m_fn(r):
         x = r[0]
@@ -51,7 +52,7 @@ def sphere():
         x = r[0]
         y = r[1]
         z = r[2]
-        return jnp.sqrt(x**2 + y**2 + z**2) - 0.5  # the original JAX-DIPS sphere
+        return jnp.sqrt(x**2 + y**2 + z**2) - radius
 
     phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
 
@@ -1363,6 +1364,98 @@ def no_jump():
         y = r[1]
         z = r[2]
         return 3.0 * jnp.sin(y) * jnp.cos(x) * jnp.cos(z)
+
+    return (
+        initial_value_fn,
+        dirichlet_bc_fn,
+        phi_fn,
+        mu_m_fn,
+        mu_p_fn,
+        k_m_fn,
+        k_p_fn,
+        f_m_fn,
+        f_p_fn,
+        alpha_fn,
+        beta_fn,
+        exact_sol_m_fn,
+        exact_sol_p_fn,
+        evaluate_exact_solution_fn,
+    )
+
+
+#####################################################
+#
+#   Jump problems on JAX-Robin's shapes
+#
+#####################################################
+def sphere_jaxrobin():
+    """The JAX-DIPS jump sphere (sphere()) with JAX-Robin's radius, 2/3."""
+    return sphere(radius=2.0 / 3.0)
+
+
+def star_jaxrobin():
+    """The JAX-DIPS jump star's solution and coefficients (star()) on JAX-Robin's star (star_Robin's
+    level set, scaled to the common half-extent 2/3). Two corrections to star():
+      - f-: star()'s f_m_fn has the sign of its mu_y u_y term flipped, so its stated exact solution
+        does not solve the equation (off by up to 45%, checked by finite differences). Here
+        f- = -div(mu- grad u-) = -grad mu- . grad u- + 7 mu- u-, since Lap u- = -7 u-.
+      - beta: star() dots the flux jump with grad(phi), which is not a unit vector for this level
+        set; here it is divided by |grad phi|. As in every jump config, beta stores -[mu du/dn].
+    """
+    (
+        initial_value_fn,
+        dirichlet_bc_fn,
+        _,
+        mu_m_fn,
+        mu_p_fn,
+        k_m_fn,
+        k_p_fn,
+        _,
+        f_p_fn,
+        _,
+        _,
+        exact_sol_m_fn,
+        exact_sol_p_fn,
+        _,
+    ) = star()
+
+    @custom_jit
+    def unperturbed_phi_fn(r):
+        S = 0.5089048  # as star_Robin: the reference star scaled to the half-extent 2/3
+        x = r[0] / S
+        y = r[1] / S
+        z = r[2] / S
+        rho2 = x**2 + y**2
+        r2 = x**2 + y**2 + z**2
+        azimuth = jnp.arctan2(y, x)
+        taper = rho2 / (r2 + 1e-8)
+        perturbation = (
+            -0.05 * taper ** (3 / 2.0) * jnp.cos(3 * (azimuth - 0.05))
+            + 0.05 * taper ** (4 / 2.0) * jnp.cos(4 * (azimuth - 0.05))
+            - 0.10 * taper ** (3 / 2.0) * jnp.cos(3 * (azimuth - 0.05))
+        )
+        return S * (jnp.sqrt(r2) - 1.183 * (1.0 + (rho2 / 10.0) ** 2) + perturbation)
+
+    phi_fn = level_set.perturb_level_set_fn(unperturbed_phi_fn)
+
+    @custom_jit
+    def evaluate_exact_solution_fn(r):
+        return jnp.where(phi_fn(r) >= 0, exact_sol_p_fn(r), exact_sol_m_fn(r))
+
+    @custom_jit
+    def alpha_fn(r):
+        return exact_sol_p_fn(r) - exact_sol_m_fn(r)
+
+    @custom_jit
+    def beta_fn(r):
+        g = grad(phi_fn)(r)
+        n_vec = g / jnp.linalg.norm(g)
+        flux_jump = mu_p_fn(r) * grad(exact_sol_p_fn)(r) - mu_m_fn(r) * grad(exact_sol_m_fn)(r)
+        return jnp.nan_to_num(jnp.dot(flux_jump, n_vec) * (-1.0))
+
+    @custom_jit
+    def f_m_fn(r):
+        return -1.0 * jnp.dot(grad(mu_m_fn)(r), grad(exact_sol_m_fn)(r)) + 7.0 * mu_m_fn(r) * exact_sol_m_fn(r)
 
     return (
         initial_value_fn,
