@@ -127,6 +127,8 @@ class Trainer(Discretization):
         jump_eval_once: bool = False,
         last_layer_ls: bool = False,
         last_layer_ls_rcond: float = 1.0e-6,
+        last_layer_ls_refine: int = 1,
+        last_layer_ls_columns: int = 1,
         model_dict: dict = {
             "name": None,
             "model_type": "mlp",
@@ -172,11 +174,14 @@ class Trainer(Discretization):
         logger.info(f"Robin row weight: sqrt(V + l * A) with l = {robin_weight_length}")
         self.last_layer_ls = bool(last_layer_ls)
         self.last_layer_ls_rcond = float(last_layer_ls_rcond)
+        self.last_layer_ls_refine = int(last_layer_ls_refine)
+        self.last_layer_ls_columns = max(1, int(last_layer_ls_columns))
         if self.last_layer_ls:
             if multi_gpu:
                 raise NotImplementedError("last_layer_ls is single-GPU only.")
             logger.info(f"Hybrid training: after the optimizer, the output layers are solved by least squares "
-                        f"(singular values kept above {self.last_layer_ls_rcond:g} x the largest)")
+                        f"(singular values kept above {self.last_layer_ls_rcond:g} x the largest, "
+                        f"{self.last_layer_ls_refine} refinement step(s), {self.last_layer_ls_columns} column(s) at a time)")
         #########################################################################
         global stop_training
         self.key = random.PRNGKey(758493)
@@ -1117,7 +1122,11 @@ class Trainer(Discretization):
         the weights moderate; the solve is the correction to the trained weights, not the weights
         themselves, so no large numbers are subtracted. G is built on the device and factorised on the
         host (NumPy, in G's precision), so the tall QR needs no device memory: at Nx = 64 with 1 x 400
-        networks G alone is 262144 x 802."""
+        networks G alone is 262144 x 802. last_layer_ls_columns columns of G are computed together
+        (vmap), which is faster on a large GPU and costs that many row evaluations' memory.
+        last_layer_ls_refine steps of iterative refinement follow: the residual of the new weights is
+        solved again with the same factorisation. In float32 one step recovers what the factorisation's
+        rounding loses (tools/jump_basis_screen.py: Chebyshev basis, sphere Nx = 64, 5.5e-5 -> 1.8e-5)."""
         t0 = time.time()
         keys = self._last_layer_keys(params)
         c0 = jnp.concatenate([jnp.concatenate([params[k]["w"].reshape(-1), params[k]["b"].reshape(-1)]) for k in keys])
@@ -1128,15 +1137,21 @@ class Trainer(Discretization):
         def residual(p, c, points):
             return self.residual_vector_params(self._with_last_layer(p, keys, c), points, dx, dy, dz).reshape(-1)
 
+        k, nb = c0.size, self.last_layer_ls_columns
+        E = jnp.eye(k, dtype=c0.dtype)
+        if (-k) % nb:
+            E = jnp.concatenate([E, jnp.zeros(((-k) % nb, k), dtype=c0.dtype)])
+        E = E.reshape(-1, nb, k)
+
         @jit
-        def build(p, c0, points):
+        def build(p, c0, points, E):
             # Column j of G is the derivative of the rows along the j-th output weight, by forward-mode
-            # differentiation, one column at a time (the memory of one row evaluation).
-            G = jax.lax.map(lambda e: jax.jvp(lambda c: residual(p, c, points), (c0,), (e,))[1],
-                            jnp.eye(c0.size, dtype=c0.dtype)).T
+            # differentiation, nb columns at a time (the memory of nb row evaluations).
+            col = lambda e: jax.jvp(lambda c: residual(p, c, points), (c0,), (e,))[1]
+            G = jax.lax.map(lambda Eb: vmap(col)(Eb), E).reshape(-1, points.shape[0])[:k].T
             return residual(p, c0, points), G
 
-        r0, G = build(params, c0, self.train_points)
+        r0, G = build(params, c0, self.train_points, E)
         G, r0 = onp.asarray(G), onp.asarray(r0)
         Q, R = onp.linalg.qr(G)                             # reduced QR, then the SVD of the small R
         del G
@@ -1144,19 +1159,22 @@ class Trainer(Discretization):
         keep = s > self.last_layer_ls_rcond * s[0]
         inv = onp.zeros_like(s)
         inv[keep] = 1.0 / s[keep]
-        dc = -(Vt.T @ (inv * (Ur.T @ (Q.T @ r0))))
-        kept = int(keep.sum())
-        r0 = jnp.asarray(r0)
-        c = c0 + jnp.asarray(dc, dtype=c0.dtype)
-        new_params = self._with_last_layer(params, keys, c)
-        r1 = residual(new_params, c, self.train_points)
-        r1.block_until_ready()
+        pinv_apply = lambda r: -(Vt.T @ (inv * (Ur.T @ (Q.T @ r))))
+        c = c0 + jnp.asarray(pinv_apply(r0), dtype=c0.dtype)
+        losses = [0.5 * float(onp.mean(r0.astype(float) ** 2))]
+        for _ in range(self.last_layer_ls_refine + 1):
+            r = onp.asarray(residual(params, c, self.train_points))
+            losses.append(0.5 * float(onp.mean(r.astype(float) ** 2)))
+            if len(losses) > self.last_layer_ls_refine + 1:
+                break
+            c = c + jnp.asarray(pinv_apply(r), dtype=c0.dtype)  # iterative refinement, same factorisation
         logger.info(
-            f"Last-layer least squares: loss {0.5 * float(jnp.mean(r0 ** 2)):.4e} -> {0.5 * float(jnp.mean(r1 ** 2)):.4e}; "
-            f"{int(kept)} of {c0.size} directions kept (singular values {float(s[0]):.3e} .. {float(s[-1]):.3e}); "
+            f"Last-layer least squares: loss {losses[0]:.4e} -> " + " -> ".join(f"{L:.4e}" for L in losses[1:])
+            + f" (solve, then {self.last_layer_ls_refine} refinement step(s)); "
+            f"{int(keep.sum())} of {k} directions kept (singular values {float(s[0]):.3e} .. {float(s[-1]):.3e}); "
             f"|c| {float(jnp.linalg.norm(c0)):.3e} -> {float(jnp.linalg.norm(c)):.3e}; {time.time() - t0:.1f} s"
         )
-        return new_params
+        return self._with_last_layer(params, keys, c)
 
     @partial(jit, static_argnums=(0))
     def residual_vector(self, u_vec):
@@ -1359,6 +1377,8 @@ def setup(
             jump_eval_once: bool = False,
             last_layer_ls: bool = False,
             last_layer_ls_rcond: float = 1.0e-6,
+            last_layer_ls_refine: int = 1,
+            last_layer_ls_columns: int = 1,
     ) -> Tuple[PoissonSimState, SolveFn]:
         R = eval_gstate.R
         PHI = phi_fn(R)
@@ -1401,6 +1421,8 @@ def setup(
                 jump_eval_once=jump_eval_once,
                 last_layer_ls=last_layer_ls,
                 last_layer_ls_rcond=last_layer_ls_rcond,
+                last_layer_ls_refine=last_layer_ls_refine,
+                last_layer_ls_columns=last_layer_ls_columns,
                 model_dict=model_dict,
             )
             (

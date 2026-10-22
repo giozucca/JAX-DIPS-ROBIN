@@ -40,6 +40,8 @@ solver:
   # squares on the same rows, hidden layers fixed (Trainer.solve_last_layer, tools/jump_last_layer_ls.py).
   last_layer_ls: false
   last_layer_ls_rcond: 1.0e-6  # keep singular values above this times the largest (float32 resolves ~1e-7)
+  last_layer_ls_refine: 1      # iterative-refinement steps after the solve (same factorisation)
+  last_layer_ls_columns: 1     # columns of the solve's matrix computed together (raise on a large GPU)
 
   use_float64: false
   multi_gpu: false
@@ -89,6 +91,8 @@ model:
     activation_p: "jnp.tanh"
     init_std_m: 0.1  # standard deviation of the hidden layers' initial weights
     init_std_p: 0.1
+    bias_range_m: 0.0  # hidden-layer biases uniform in [-r, r]; 0 = zeros (use 3.14159 with jnp.sin)
+    bias_range_p: 0.0
   resnet:
     res_blocks_m: 3
     res_dim_m: 40

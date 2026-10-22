@@ -64,11 +64,17 @@ class DoubleMLP(hk.Module):
             self.activation_m_fn = eval(mlp["activation_m"])  # nn.celu, jnp.sin, jnp.tanh, nn.swish, ...
             # standard deviation of the hidden layers' initial weights (0.1 historically)
             self.tr_normal_init_m = hk.initializers.TruncatedNormal(stddev=float(mlp.get("init_std_m", 0.1)), mean=0.0)
+            # hidden-layer biases uniform in [-bias_range, bias_range]; 0 keeps haiku's zeros. With jnp.sin,
+            # zero biases make every unit sin(w.x) odd in x; pi gives random phases (tools/jump_basis_screen.py)
+            _r = float(mlp.get("bias_range_m", 0.0))
+            self.bias_init_m = hk.initializers.RandomUniform(-_r, _r) if _r > 0 else None
 
             self.num_hidden_layers_p = mlp["hidden_layers_p"]  # for mlp only
             self.hidden_dim_p = mlp["hidden_dim_p"]  # number of neurons per layer
             self.activation_p_fn = eval(mlp["activation_p"])  # nn.celu, jnp.sin, jnp.tanh, nn.swish, ...
             self.tr_normal_init_p = hk.initializers.TruncatedNormal(stddev=float(mlp.get("init_std_p", 0.1)), mean=0.0)
+            _r = float(mlp.get("bias_range_p", 0.0))
+            self.bias_init_p = hk.initializers.RandomUniform(-_r, _r) if _r > 0 else None
         elif model_type == "resnet":
             # resnet
             self.num_res_blocks_m = resnet["res_blocks_m"]  # for resnet only
@@ -110,7 +116,7 @@ class DoubleMLP(hk.Module):
         # h = self.positional_encoding_p(h)
         # h = jnp.linalg.norm(h)[jnp.newaxis]
         for _ in range(self.num_hidden_layers_p):
-            h = hk.Linear(output_size=self.hidden_dim_p, w_init=self.tr_normal_init_p)(h)
+            h = hk.Linear(output_size=self.hidden_dim_p, w_init=self.tr_normal_init_p, b_init=self.bias_init_p)(h)
             # h = layer_norm(h)
             h = self.activation_p_fn(h)
         h = hk.Linear(output_size=1)(h)
@@ -127,7 +133,7 @@ class DoubleMLP(hk.Module):
         # h = self.positional_encoding_m(h)
         # h = jnp.linalg.norm(h)[jnp.newaxis]
         for _ in range(self.num_hidden_layers_m):
-            h = hk.Linear(output_size=self.hidden_dim_m, w_init=self.tr_normal_init_m)(h)
+            h = hk.Linear(output_size=self.hidden_dim_m, w_init=self.tr_normal_init_m, b_init=self.bias_init_m)(h)
             # h = layer_norm(h)
             h = self.activation_m_fn(h)
         # bias_init = hk.initializers.Constant(-273.0)
