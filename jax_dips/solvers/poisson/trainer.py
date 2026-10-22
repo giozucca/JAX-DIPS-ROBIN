@@ -1155,7 +1155,9 @@ class Trainer(Discretization):
         G, r0 = onp.asarray(G), onp.asarray(r0)
         Q, R = onp.linalg.qr(G)                             # reduced QR, then the SVD of the small R
         del G
-        Ur, s, Vt = onp.linalg.svd(R)
+        # full_matrices=False: with fewer rows than weights (Nx = 8 against 802 weights) R is wide, and the
+        # full SVD's Vt would be k x k instead of min(n, k) x k.
+        Ur, s, Vt = onp.linalg.svd(R, full_matrices=False)
         keep = s > self.last_layer_ls_rcond * s[0]
         inv = onp.zeros_like(s)
         inv[keep] = 1.0 / s[keep]
